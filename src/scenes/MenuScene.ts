@@ -5,19 +5,19 @@ export type Difficulty = "Fácil" | "Médio" | "Difícil";
 export class MenuScene extends Phaser.Scene {
   private selectedDifficulty: Difficulty = "Médio";
   private diffButtons: Map<Difficulty, Phaser.GameObjects.Text> = new Map();
+  private diffBgs: Map<Difficulty, Phaser.GameObjects.Graphics> = new Map();
 
   constructor() {
     super("MenuScene");
   }
 
   preload() {
-    this.load.image("background", "../../public/assets/menu_background.jpg");
+    this.load.image("background", "assets/menu_background.jpg");
   }
 
   create() {
     const bg = this.add.image(640, 360, "background");
     bg.setDisplaySize(1280, 900);
-
     this.add.rectangle(640, 360, 1280, 720, 0x000000, 0.5);
 
     this.add
@@ -32,8 +32,8 @@ export class MenuScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     this.add
-      .text(640, 250, "Selecione a Dificuldade:", {
-        fontSize: "24px",
+      .text(640, 260, "Selecione a Dificuldade:", {
+        fontSize: "22px",
         color: "#ffffff",
         fontStyle: "bold",
       })
@@ -45,18 +45,20 @@ export class MenuScene extends Phaser.Scene {
       { label: "Difícil", color: "#ff0000" },
     ];
 
-    const spacing = 170;
+    const spacing = 180;
     const totalWidth = (diffs.length - 1) * spacing;
     const startX = 640 - totalWidth / 2;
 
     diffs.forEach((diff, index) => {
       const xPos = startX + index * spacing;
+      const yPos = 360;
+
+      const bgGraphics = this.add.graphics();
+      this.diffBgs.set(diff.label, bgGraphics);
+
       const btn = this.add
-        .text(xPos, 340, diff.label, {
-          fontSize: "28px",
-          color: diff.label === this.selectedDifficulty ? diff.color : "#666",
-          backgroundColor: "#222",
-          padding: { x: 20, y: 20 },
+        .text(xPos, yPos, diff.label, {
+          fontSize: "26px",
           fontStyle: "bold",
         })
         .setOrigin(0.5)
@@ -69,37 +71,75 @@ export class MenuScene extends Phaser.Scene {
       this.diffButtons.set(diff.label, btn);
     });
 
-    const startBtn = this.add
-      .text(640, 580, "INICIAR JOGO", {
-        fontSize: "36px",
-        backgroundColor: "#222",
-        padding: { x: 40, y: 20 },
+    this.updateDifficulty("Médio", "#ffff00");
+
+    const startX_pos = 640;
+    const startY_pos = 580;
+    const colorNormal = 0xffcc00;
+    const colorHover = 0xffe066;
+
+    const startBg = this.add.graphics();
+
+    this.add
+      .text(startX_pos, startY_pos, "INICIAR JOGO", {
+        fontSize: "32px",
+        color: "#000",
+        fontStyle: "bold",
       })
       .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true });
+      .setDepth(1);
 
-    startBtn.on("pointerdown", () => {
-      console.log(`Iniciando no modo: ${this.selectedDifficulty}`);
-      //TO DO: Battle scene transition
+    const hitArea = new Phaser.Geom.Rectangle(
+      startX_pos - 150,
+      startY_pos - 35,
+      300,
+      70
+    );
+    startBg.setInteractive(hitArea, Phaser.Geom.Rectangle.Contains);
+    startBg.input!.cursor = "pointer";
+
+    const drawStartBtn = (color: number) => {
+      startBg.clear();
+      startBg.fillStyle(color, 1);
+      startBg.fillRoundedRect(startX_pos - 150, startY_pos - 35, 300, 70, 10);
+    };
+
+    drawStartBtn(colorNormal);
+
+    startBg.on("pointerover", () => drawStartBtn(colorHover));
+    startBg.on("pointerout", () => drawStartBtn(colorNormal));
+
+    startBg.on("pointerdown", () => {
+      console.log(`Iniciando: ${this.selectedDifficulty}`);
+      // TODO: battle scene transition
     });
-
-    startBtn.on("pointerover", () =>
-      startBtn.setStyle({ backgroundColor: "#444" })
-    );
-    startBtn.on("pointerout", () =>
-      startBtn.setStyle({ backgroundColor: "#222" })
-    );
   }
 
   private updateDifficulty(difficulty: Difficulty, activeColor: string) {
     this.selectedDifficulty = difficulty;
 
     this.diffButtons.forEach((btn, label) => {
-      if (label === difficulty) {
+      const graphics = this.diffBgs.get(label)!;
+      const isSelected = label === difficulty;
+
+      graphics.clear();
+
+      if (isSelected) {
+        graphics.lineStyle(
+          3,
+          Phaser.Display.Color.HexStringToColor(activeColor).color,
+          1
+        );
+        graphics.fillStyle(0x111111, 0.9);
         btn.setStyle({ color: activeColor }).setScale(1.0);
       } else {
+        graphics.lineStyle(2, 0x000000, 0.5);
+        graphics.fillStyle(0x111111, 0.7);
         btn.setStyle({ color: "#666" }).setScale(1.0);
       }
+
+      graphics.fillRoundedRect(btn.x - 75, btn.y - 35, 150, 70, 10);
+      graphics.strokeRoundedRect(btn.x - 75, btn.y - 35, 150, 70, 10);
     });
   }
 }
