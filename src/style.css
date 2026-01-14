@@ -1,0 +1,14 @@
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #1a1a1a; /* Mesma cor que definimos no main.ts */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  overflow: hidden; /* Remove barras de rolagem */
+}
+
+canvas {
+  display: block;
+}
