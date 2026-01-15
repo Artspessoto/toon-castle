@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { MenuScene } from "./scenes/MenuScene";
 import { NameScene } from "./scenes/NameScene";
 import "./styles/ui.css";
+import { GuideScene } from "./scenes/GuideScene";
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -16,7 +17,7 @@ const config: Phaser.Types.Core.GameConfig = {
   dom: {
     createContainer: true,
   },
-  scene: [MenuScene, NameScene],
+  scene: [MenuScene, NameScene, GuideScene],
 };
 
 new Phaser.Game(config);

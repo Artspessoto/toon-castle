@@ -75,7 +75,7 @@ export class MenuScene extends Phaser.Scene {
     this.updateDifficulty("Médio", "#ffff00");
 
     const startX_pos = 640;
-    const startY_pos = 550;
+    const startY_pos = 520;
 
     const startBtn = new ToonButton(this, {
       x: startX_pos,
@@ -86,8 +86,22 @@ export class MenuScene extends Phaser.Scene {
     startBtn.on("pointerdown", () => {
       console.log(`Iniciando: ${this.selectedDifficulty}`);
       this.scene.start("NameScene", { difficulty: this.selectedDifficulty });
-      // TODO: battle scene transition
     });
+
+    const guideBtn = new ToonButton(this, {
+      x: startX_pos,
+      y: 590,
+      text: "GUIA",
+      fontSize: "1.2rem",
+      textColor: "#fff",
+      color: 0x333333,
+      hoverColor: 0x222222
+    });
+
+    guideBtn.on("pointerdown", () => {
+      this.scene.pause();
+      this.scene.launch('GuideScene')
+    })
   }
 
   private updateDifficulty(difficulty: Difficulty, activeColor: string) {
