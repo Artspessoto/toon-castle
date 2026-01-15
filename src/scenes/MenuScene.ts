@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { ToonButton } from "../objects/ToonButton";
 
 export type Difficulty = "Fácil" | "Médio" | "Difícil";
 
@@ -74,43 +75,17 @@ export class MenuScene extends Phaser.Scene {
     this.updateDifficulty("Médio", "#ffff00");
 
     const startX_pos = 640;
-    const startY_pos = 580;
-    const colorNormal = 0xffcc00;
-    const colorHover = 0xffe066;
+    const startY_pos = 550;
 
-    const startBg = this.add.graphics();
+    const startBtn = new ToonButton(this, {
+      x: startX_pos,
+      y: startY_pos,
+      text: "INICIAR JOGO",
+    })
 
-    this.add
-      .text(startX_pos, startY_pos, "INICIAR JOGO", {
-        fontSize: "32px",
-        color: "#000",
-        fontStyle: "bold",
-      })
-      .setOrigin(0.5)
-      .setDepth(1);
-
-    const hitArea = new Phaser.Geom.Rectangle(
-      startX_pos - 150,
-      startY_pos - 35,
-      300,
-      70
-    );
-    startBg.setInteractive(hitArea, Phaser.Geom.Rectangle.Contains);
-    startBg.input!.cursor = "pointer";
-
-    const drawStartBtn = (color: number) => {
-      startBg.clear();
-      startBg.fillStyle(color, 1);
-      startBg.fillRoundedRect(startX_pos - 150, startY_pos - 35, 300, 70, 10);
-    };
-
-    drawStartBtn(colorNormal);
-
-    startBg.on("pointerover", () => drawStartBtn(colorHover));
-    startBg.on("pointerout", () => drawStartBtn(colorNormal));
-
-    startBg.on("pointerdown", () => {
+    startBtn.on("pointerdown", () => {
       console.log(`Iniciando: ${this.selectedDifficulty}`);
+      this.scene.start("NameScene", { difficulty: this.selectedDifficulty });
       // TODO: battle scene transition
     });
   }
