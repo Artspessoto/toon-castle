@@ -1,10 +1,12 @@
 import Phaser from "phaser";
 import { ToonButton } from "../objects/ToonButton";
+import { LanguageManager } from "../utils/LanguageManager";
+import { TRANSLATIONS } from "../constants/Translations";
 
-export type Difficulty = "Fácil" | "Médio" | "Difícil";
+export type Difficulty = "EASY" | "MEDIUM" | "HARD";
 
 export class MenuScene extends Phaser.Scene {
-  private selectedDifficulty: Difficulty = "Médio";
+  private selectedDifficulty: Difficulty = "MEDIUM";
   private diffButtons: Map<Difficulty, Phaser.GameObjects.Text> = new Map();
   private diffBgs: Map<Difficulty, Phaser.GameObjects.Graphics> = new Map();
 
@@ -17,6 +19,9 @@ export class MenuScene extends Phaser.Scene {
   }
 
   create() {
+    const lang = LanguageManager.getInstance().currentLanguage;
+    const strings = TRANSLATIONS[lang].menu;
+
     const bg = this.add.image(640, 360, "background");
     bg.setDisplaySize(1280, 900);
     this.add.rectangle(640, 360, 1280, 720, 0x000000, 0.5);
@@ -33,17 +38,17 @@ export class MenuScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     this.add
-      .text(640, 260, "Selecione a Dificuldade:", {
+      .text(640, 260, strings.select_diff, {
         fontSize: "22px",
         color: "#ffffff",
         fontStyle: "bold",
       })
       .setOrigin(0.5);
 
-    const diffs: { label: Difficulty; color: string }[] = [
-      { label: "Fácil", color: "#00ff00" },
-      { label: "Médio", color: "#ffff00" },
-      { label: "Difícil", color: "#ff0000" },
+    const diffs: { id: Difficulty; label: string; color: string }[] = [
+      { id: "EASY", label: strings.easy, color: "#00ff00" },
+      { id: "MEDIUM", label: strings.medium, color: "#ffff00" },
+      { id: "HARD", label: strings.hard, color: "#ff0000" },
     ];
 
     const spacing = 180;
@@ -55,7 +60,7 @@ export class MenuScene extends Phaser.Scene {
       const yPos = 360;
 
       const bgGraphics = this.add.graphics();
-      this.diffBgs.set(diff.label, bgGraphics);
+      this.diffBgs.set(diff.id, bgGraphics);
 
       const btn = this.add
         .text(xPos, yPos, diff.label, {
@@ -65,14 +70,12 @@ export class MenuScene extends Phaser.Scene {
         .setOrigin(0.5)
         .setInteractive({ useHandCursor: true });
 
-      btn.on("pointerdown", () =>
-        this.updateDifficulty(diff.label, diff.color)
-      );
+      btn.on("pointerdown", () => this.updateDifficulty(diff.id, diff.color));
 
-      this.diffButtons.set(diff.label, btn);
+      this.diffButtons.set(diff.id, btn);
     });
 
-    this.updateDifficulty("Médio", "#ffff00");
+    this.updateDifficulty("MEDIUM", "#ffff00");
 
     const startX_pos = 640;
     const startY_pos = 520;
@@ -80,36 +83,53 @@ export class MenuScene extends Phaser.Scene {
     const startBtn = new ToonButton(this, {
       x: startX_pos,
       y: startY_pos,
-      text: "INICIAR JOGO",
-    })
+      text: strings.start,
+    });
 
     startBtn.on("pointerdown", () => {
-      console.log(`Iniciando: ${this.selectedDifficulty}`);
       this.scene.start("NameScene", { difficulty: this.selectedDifficulty });
     });
 
     const guideBtn = new ToonButton(this, {
       x: startX_pos,
       y: 590,
-      text: "GUIA",
+      text: strings.guide,
       fontSize: "1.2rem",
       textColor: "#fff",
       color: 0x333333,
-      hoverColor: 0x222222
+      hoverColor: 0x222222,
     });
 
     guideBtn.on("pointerdown", () => {
       this.scene.pause();
-      this.scene.launch('GuideScene')
-    })
+      this.scene.launch("GuideScene");
+    });
+
+    const btnPT = this.add
+      .text(1150, 50, "PT", { fontSize: "20px", color: "#fff" })
+      .setInteractive({ useHandCursor: true });
+
+    const btnEN = this.add
+      .text(1210, 50, "EN", { fontSize: "20px", color: "#fff" })
+      .setInteractive({ useHandCursor: true });
+
+    btnPT.on("pointerdown", () => {
+      LanguageManager.getInstance().setLanguage("pt-br");
+      this.scene.restart();
+    });
+
+    btnEN.on("pointerdown", () => {
+      LanguageManager.getInstance().setLanguage("en");
+      this.scene.restart();
+    });
   }
 
   private updateDifficulty(difficulty: Difficulty, activeColor: string) {
     this.selectedDifficulty = difficulty;
 
-    this.diffButtons.forEach((btn, label) => {
-      const graphics = this.diffBgs.get(label)!;
-      const isSelected = label === difficulty;
+    this.diffButtons.forEach((btn, id) => {
+      const graphics = this.diffBgs.get(id)!;
+      const isSelected = id === difficulty;
 
       graphics.clear();
 

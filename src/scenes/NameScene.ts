@@ -1,5 +1,7 @@
 import Phaser from "phaser";
 import { ToonButton } from "../objects/ToonButton";
+import { LanguageManager } from "../utils/LanguageManager";
+import { TRANSLATIONS } from "../constants/Translations";
 
 export class NameScene extends Phaser.Scene {
   private difficulty: string = "";
@@ -17,6 +19,9 @@ export class NameScene extends Phaser.Scene {
   }
 
   create() {
+    const lang = LanguageManager.getInstance().currentLang;
+    const text = TRANSLATIONS[lang].name_scene;
+
     this.add
       .image(640, 360, "background")
       .setDisplaySize(1280, 900)
@@ -24,7 +29,7 @@ export class NameScene extends Phaser.Scene {
     this.add.rectangle(640, 360, 1280, 720, 0x000000, 0.7);
 
     this.add
-      .text(640, 200, "Digite seu nome", {
+      .text(640, 200, text.title, {
         fontSize: "40px",
         color: "#ffcc00",
         fontStyle: "bold",
@@ -36,13 +41,13 @@ export class NameScene extends Phaser.Scene {
     const confirmBtn = new ToonButton(this, {
       x: 640,
       y: 480,
-      text: "Confirmar",
+      text: text.confirm,
     });
 
     const backToMenuBtn = new ToonButton(this, {
         x: 640,
         y: 560,
-        text: "Voltar ao Menu",
+        text: text.back,
         fontSize: "1.5rem",
         textColor: "#fff",
         color: 0x1a1a1a,
