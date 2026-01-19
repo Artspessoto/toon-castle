@@ -1,6 +1,6 @@
 import Phaser, { Scene } from "phaser";
 import type { CardData, CardType } from "../types/CardData";
-import { CARD_CONFIG } from "../constants/Cards";
+import { CARD_CONFIG } from "../constants/CardConfig";
 
 export class Card extends Phaser.GameObjects.Container {
   private frame: Phaser.GameObjects.Image;
@@ -16,7 +16,7 @@ export class Card extends Phaser.GameObjects.Container {
 
     const { NAME, MANA, DESC, ATK, DEF } = CARD_CONFIG.POSITIONS;
     const width = data.width ?? CARD_CONFIG.WIDTH;
-    const height = data.heigth ?? CARD_CONFIG.HEIGHT;
+    const height = data.height ?? CARD_CONFIG.HEIGHT;
 
     //define model image by type
     const frameKey = this.getFrameKey(data.type);
@@ -31,53 +31,37 @@ export class Card extends Phaser.GameObjects.Container {
     // this.cardImage.setDisplaySize(CARD_CONFIG.WIDTH, CARD_CONFIG.HEIGHT);
     // this.add(this.cardImage);
 
-    const textStyle: Phaser.Types.GameObjects.Text.TextStyle = {
-      fontSize: "14px",
-      color: "#FFFFFF",
-      fontStyle: "bold",
-    };
-
-    const descStyle: Phaser.Types.GameObjects.Text.TextStyle = {
-      fontSize: "11px",
-      color: "#000000",
-      wordWrap: { width: 150 },
-    };
-
     //text position
-    this.nameText = scene.add.text(
-      NAME.x,
-      NAME.y,
-      data.nameKey.toUpperCase(),
-      textStyle,
-    );
-
-    this.manaText = scene.add
-      .text(MANA.x, MANA.y, data.manaCost.toString(), {
-        ...textStyle,
-        fontSize: "16px",
+    this.nameText = scene.add
+      .text(NAME.x, NAME.y, data.nameKey.toUpperCase(), {
+        ...CARD_CONFIG.STYLES.NAME,
+        align: "center",
+        fixedWidth: 160,
       })
       .setOrigin(0.5);
 
-    this.descText = scene.add.text(
-      DESC.x,
-      DESC.y,
-      data.descriptionKey || "...",
-      descStyle,
-    );
+    this.manaText = scene.add
+      .text(MANA.x, MANA.y, data.manaCost.toString(), CARD_CONFIG.STYLES.STATS)
+      .setOrigin(0.5);
+
+    this.descText = scene.add
+      .text(DESC.x, DESC.y, data.descriptionKey || "...", {
+        ...CARD_CONFIG.STYLES.DESC,
+      })
+      .setOrigin(0.5);
 
     this.add([this.nameText, this.manaText, this.descText]);
 
     if (data.type == "MONSTER" || data.type == "EFFECT_MONSTER") {
-      const statStyle = { ...textStyle, fontSize: "12px" };
-      const atkValue = `ATK/${data.atk?.toString() || 0}`;
-      const defValue = `DEF/${data.def?.toString() || 0}`;
+      const atkValue = `${data.atk?.toString() || 0}`;
+      const defValue = `${data.def?.toString() || 0}`;
 
       this.atkText = this.scene.add
-        .text(ATK.x, ATK.y, atkValue, statStyle)
+        .text(ATK.x, ATK.y, atkValue, CARD_CONFIG.STYLES.STATS)
         .setOrigin(0.5);
 
       this.defText = this.scene.add
-        .text(DEF.x, DEF.y, defValue, statStyle)
+        .text(DEF.x, DEF.y, defValue, CARD_CONFIG.STYLES.STATS)
         .setOrigin(0.5);
 
       this.add([this.atkText, this.defText]);
