@@ -10,5 +10,5 @@ export interface CardData {
   imageKey: string;
   descriptionKey: string;
   width?: number;
-  heigth?: number;
+  height?: number;
 }
