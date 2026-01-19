@@ -72,7 +72,7 @@ export class NameScene extends Phaser.Scene {
         //Battle scene transition
         this.cameras.main.fadeOut(500, 0, 0, 0);
         this.cameras.main.once("camerafadeoutcomplete", () => {
-          this.scene.start("MenuScene", {
+          this.scene.start("BattleScene", {
             playerName: playerName,
             difficulty: this.difficulty,
           });
