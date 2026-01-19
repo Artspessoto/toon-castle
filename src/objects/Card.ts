@@ -10,6 +10,7 @@ export class Card extends Phaser.GameObjects.Container {
   private descText: Phaser.GameObjects.Text;
   private atkText?: Phaser.GameObjects.Text;
   private defText?: Phaser.GameObjects.Text;
+  public cardType: CardType;
 
   constructor(scene: Scene, x: number, y: number, data: CardData) {
     super(scene, x, y);
@@ -52,6 +53,8 @@ export class Card extends Phaser.GameObjects.Container {
 
     this.add([this.nameText, this.manaText, this.descText]);
 
+    this.cardType = data.type;
+
     if (data.type == "MONSTER" || data.type == "EFFECT_MONSTER") {
       const atkValue = `${data.atk?.toString() || 0}`;
       const defValue = `${data.def?.toString() || 0}`;
@@ -83,5 +86,9 @@ export class Card extends Phaser.GameObjects.Container {
       default:
         return "card_template_monster";
     }
+  }
+
+  public getType(): string {
+    return this.cardType;
   }
 }
