@@ -29,6 +29,9 @@ export const TRANSLATIONS = {
       confirm: "Confirmar",
       back: "Voltar ao Menu",
     },
+    battle_scene: {
+      draw_phase: "Espaço: Comprar Carta | Arraste para jogar",
+    },
   },
   en: {
     menu: {
@@ -59,6 +62,9 @@ export const TRANSLATIONS = {
       title: "Enter your name",
       confirm: "Confirm",
       back: "Back to Menu",
+    },
+    battle_scene: {
+      draw_phase: "Space: Draw Card | Drag to play",
     },
   },
 };
