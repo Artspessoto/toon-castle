@@ -5,11 +5,18 @@ import { LanguageManager } from "../utils/LanguageManager";
 
 export class BattleScene extends Phaser.Scene {
   private hand: Card[] = [];
+  private readonly maxHandSize = 7;
+  private readonly deckPosition: { x: number; y: number } = { x: 1122, y: 542 };
+  private readonly handConfig = {
+    y: 710,
+    hoverY: 550,
+    scale: 0.45,
+    hoverScale: 0.7,
+  };
+
   private drawText!: Phaser.GameObjects.Text;
   private drawTextBg!: Phaser.GameObjects.Rectangle;
   private canDrawCard: boolean = true;
-  private deckX: number = 1122;
-  private deckY: number = 542;
 
   constructor() {
     super("BattleScene");
@@ -43,7 +50,11 @@ export class BattleScene extends Phaser.Scene {
     this.createDeckVisual();
 
     this.input.on("pointerdown", (pointer: { x: number; y: number }) => {
-      console.log(`X: ${Math.round(pointer.x)}, Y: ${Math.round(pointer.y)}`);
+      console.log(
+        `Slot em: X: ${Math.round(pointer.x)}, Y: ${Math.round(pointer.y)}`,
+      );
+      //monster zones: x: 490, y: 467, X: 636, Y: 441, X: 787, Y: 457
+      //trap/spell zones: 474, Y: 588, X: 638, Y: 585, X: 809, Y: 585
     });
 
     this.drawTextBg = this.add.rectangle(640, 40, 500, 40, 0x000000, 0.6);
@@ -83,8 +94,8 @@ export class BattleScene extends Phaser.Scene {
       const xOffset = i * 4;
       const yOffset = 0;
       const deckCard = this.add.plane(
-        this.deckX - xOffset,
-        this.deckY - yOffset,
+        this.deckPosition.x - xOffset,
+        this.deckPosition.y - yOffset,
         "card_back",
       );
 
@@ -107,37 +118,88 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private drawCard() {
-    if (this.hand.length >= 7) return;
+    if (this.hand.length >= this.maxHandSize) return;
 
+    const cardData = this.getRandomCardData();
+
+    const newCard = new Card(
+      this,
+      this.deckPosition.x,
+      this.deckPosition.y,
+      cardData,
+    );
+    // newCard.setAngle(-22);
+
+    this.setupCardInteractions(newCard);
+
+    this.hand.push(newCard);
+    this.animateCardEntry(newCard);
+    this.reorganizeHand();
+  }
+
+  private getRandomCardData() {
     const keys = Object.keys(CARD_DATABASE);
     const randomKey = keys[Phaser.Math.Between(0, keys.length - 1)];
-    const cardData = CARD_DATABASE[randomKey];
+    return CARD_DATABASE[randomKey];
+  }
 
-    const newCard = new Card(this, this.deckX, this.deckY, cardData);
-    // newCard.setScale(0.58);
-    newCard.setAngle(-22);
-    // newCard.setScale(0.58, 0.4);
-    newCard.setInteractive();
+  private setupCardInteractions(card: Card) {
+    card.setInteractive({ draggable: true });
+    this.input.setDraggable(card);
 
-    newCard.on("pointerover", () => {
+    // hover effect (Zoom)
+    card.on("pointerover", () => this.handleCardHover(card));
+    card.on("pointerout", () => this.handleCardOut(card));
+
+    this.setupDragEvents(card);
+  }
+
+  private handleCardHover(card: Card) {
+    this.tweens.add({
+      targets: card,
+      y: this.handConfig.hoverY,
+      scale: this.handConfig.hoverScale,
+      duration: 300,
+      ease: "Power2",
+    });
+    card.setDepth(200);
+  }
+
+  private handleCardOut(_card: Card) {
+    this.reorganizeHand();
+  }
+
+  private setupDragEvents(card: Card) {
+    card.on("dragstart", () => {
+      this.tweens.killTweensOf(card);
       this.tweens.add({
-        targets: newCard,
-        y: 550,
-        scale: 0.7,
-        duration: 300,
+        targets: card,
+        scale: 0.35,
+        duration: 150,
         ease: "Power2",
       });
-      newCard.setDepth(200);
+      card.setDepth(2000);
     });
 
-    newCard.on("pointerout", () => {
-      this.reorganizeHand();
+    card.on("drag", (_pointer: any, dragX: number, dragY: number) => {
+      card.setPosition(dragX, dragY);
     });
 
-    newCard.setAlpha(0);
-    this.tweens.add({ targets: newCard, alpha: 1, duration: 100 });
-    this.hand.push(newCard);
-    this.reorganizeHand();
+    card.on("dragend", (_pointer: any, dropped: boolean) => {
+      if (!dropped) this.reorganizeHand();
+      this.tweens.add({
+        targets: card,
+        scale: 0.35,
+        duration: 200,
+        ease: "Back.easeOut",
+      });
+    });
+  }
+
+  private animateCardEntry(card: Card) {
+    card.setAngle(-22);
+    card.setAlpha(0);
+    this.tweens.add({ targets: card, alpha: 1, duration: 100 });
   }
 
   private reorganizeHand() {
