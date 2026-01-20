@@ -91,4 +91,26 @@ export class Card extends Phaser.GameObjects.Container {
   public getType(): string {
     return this.cardType;
   }
+
+  public setFieldVisuals() {
+    const FIELD_W = 320;
+    const FIELD_H = 360;
+
+    this.frame.setDisplaySize(FIELD_W, FIELD_H);
+    
+    this.setSize(FIELD_W, FIELD_H);
+}
+
+  public setFaceDown() {
+    this.frame.setTexture("card_back");
+
+    this.nameText.setVisible(false);
+    this.manaText.setVisible(false);
+    this.descText.setVisible(false);
+
+    if (this.atkText) this.atkText.setVisible(false);
+    if (this.defText) this.defText.setVisible(false);
+    
+    this.setFieldVisuals();
+  }
 }

@@ -18,7 +18,7 @@ const config: Phaser.Types.Core.GameConfig = {
   dom: {
     createContainer: true,
   },
-  scene: [MenuScene, NameScene, GuideScene, BattleScene ],
+  scene: [MenuScene, NameScene, GuideScene, BattleScene],
 };
 
 new Phaser.Game(config);
