@@ -3,6 +3,8 @@ import { TRANSLATIONS } from "../constants/Translations";
 import { Card } from "../objects/Card";
 import { LanguageManager } from "../utils/LanguageManager";
 
+export type GamePhase = "DRAW" | "MAIN" | "BATTLE" | "ENEMY_TURN";
+
 export class BattleScene extends Phaser.Scene {
   private hand: Card[] = [];
   private readonly maxHandSize = 7;
@@ -16,7 +18,8 @@ export class BattleScene extends Phaser.Scene {
 
   private drawText!: Phaser.GameObjects.Text;
   private drawTextBg!: Phaser.GameObjects.Rectangle;
-  private canDrawCard: boolean = true;
+  private currentPhase: GamePhase = "DRAW";
+  private isDragging: boolean = false;
 
   constructor() {
     super("BattleScene");
@@ -49,12 +52,12 @@ export class BattleScene extends Phaser.Scene {
 
     this.createDeckVisual();
 
+    this.setupFieldZones();
+
     this.input.on("pointerdown", (pointer: { x: number; y: number }) => {
       console.log(
         `Slot em: X: ${Math.round(pointer.x)}, Y: ${Math.round(pointer.y)}`,
       );
-      //monster zones: x: 490, y: 467, X: 636, Y: 441, X: 787, Y: 457
-      //trap/spell zones: 474, Y: 588, X: 638, Y: 585, X: 809, Y: 585
     });
 
     this.drawTextBg = this.add.rectangle(640, 40, 500, 40, 0x000000, 0.6);
@@ -67,7 +70,7 @@ export class BattleScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     this.input.keyboard?.on("keydown-SPACE", () => {
-      if (this.canDrawCard) {
+      if (this.currentPhase == "DRAW") {
         this.drawCard();
         this.endDrawPhase();
       }
@@ -83,9 +86,25 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private endDrawPhase() {
-    this.canDrawCard = false;
+    this.currentPhase = "MAIN";
+
     this.drawText.setVisible(false);
     this.drawTextBg.setVisible(false);
+
+    this.drawTextBg.setVisible(true);
+    this.drawText.setText("Fase Principal").setVisible(true);
+
+    this.time.delayedCall(1500, () => {
+      this.tweens.add({
+        targets: [this.drawText, this.drawTextBg],
+        alpha: 0,
+        duration: 150,
+        onComplete: () => {
+          this.drawText.setVisible(false).setAlpha(1);
+          this.drawTextBg.setVisible(false).setAlpha(0.6);
+        },
+      });
+    });
   }
 
   private createDeckVisual() {
@@ -155,6 +174,8 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private handleCardHover(card: Card) {
+    if (this.isDragging) return;
+
     this.tweens.add({
       targets: card,
       y: this.handConfig.hoverY,
@@ -171,7 +192,9 @@ export class BattleScene extends Phaser.Scene {
 
   private setupDragEvents(card: Card) {
     card.on("dragstart", () => {
+      this.isDragging = true;
       this.tweens.killTweensOf(card);
+
       this.tweens.add({
         targets: card,
         scale: 0.35,
@@ -193,6 +216,23 @@ export class BattleScene extends Phaser.Scene {
         duration: 200,
         ease: "Back.easeOut",
       });
+    });
+
+    card.on("drop", (_pointer: any, targetZone: Phaser.GameObjects.Zone) => {
+      const zoneType = targetZone.getData("type");
+      const cardType = card.getType();
+      const monsterCardValidation =
+        cardType.includes("MONSTER") && zoneType === "MONSTER";
+      const spellOrTrapCardValidation =
+        (cardType === "SPELL" || cardType === "TRAP") && zoneType === "SPELL";
+
+      const canPlay = monsterCardValidation || spellOrTrapCardValidation;
+
+      if (canPlay) {
+        this.playCardOnFieldZone(card, targetZone);
+      } else {
+        this.reorganizeHand();
+      }
     });
   }
 
@@ -227,6 +267,66 @@ export class BattleScene extends Phaser.Scene {
         // ease: "Power2",
         ease: "Back.easeOut",
       });
+    });
+  }
+
+  private setupFieldZones() {
+    //monster zones: x: 490, y: 467, X: 636, Y: 441, X: 787, Y: 457
+    //trap/spell zones: 474, Y: 588, X: 638, Y: 585, X: 809, Y: 585
+    const monsterCoords = [
+      { x: 490, y: 467 },
+      { x: 636, y: 441 },
+      { x: 787, y: 457 },
+    ];
+    const spellCoords = [
+      { x: 474, y: 588 },
+      { x: 638, y: 585 },
+      { x: 809, y: 585 },
+    ];
+
+    monsterCoords.forEach((pos) => {
+      this.add
+        .zone(pos.x, pos.y, 110, 150)
+        .setRectangleDropZone(110, 150)
+        .setData("type", "MONSTER");
+    });
+
+    spellCoords.forEach((pos) => {
+      this.add
+        .zone(pos.x, pos.y, 110, 150)
+        .setRectangleDropZone(110, 150)
+        .setData("type", "SPELL");
+    });
+  }
+
+  private playCardOnFieldZone(card: Card, zone: Phaser.GameObjects.Zone) {
+    this.hand = this.hand.filter((handCard) => handCard !== card);
+    this.reorganizeHand();
+
+    const isTrapOrSpellCard =
+      card.getType() == "TRAP" || card.getType() == "SPELL";
+
+    card.disableInteractive();
+    card.setFieldVisuals();
+
+    const targetScale = isTrapOrSpellCard ? 0.4 : 0.32;
+
+    if (isTrapOrSpellCard) {
+      card.setFaceDown();
+    }
+
+    this.tweens.add({
+      targets: card,
+      x: zone.x,
+      y: zone.y,
+      angle: 0,
+      scale: targetScale,
+      duration: 250,
+      ease: "Back.easeOut",
+      onComplete: () => {
+        this.cameras.main.shake(100, 0.002);
+        card.setDepth(10);
+      },
     });
   }
 }
