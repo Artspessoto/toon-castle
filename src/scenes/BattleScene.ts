@@ -28,9 +28,9 @@ export class BattleScene extends Phaser.Scene {
   preload() {
     this.load.image(
       "battle-scene-background",
-      "assets/frameCards/battle_scene.png",
+      "assets/frameCards/playmatch2.png",
     );
-    this.load.image("card_back", "assets/frameCards/card_back.png");
+    this.load.image("card_back", "assets/frameCards/card_back2.png");
     this.load.image(
       "card_template_monster",
       "assets/frameCards/monster_card.png",
@@ -60,9 +60,9 @@ export class BattleScene extends Phaser.Scene {
       );
     });
 
-    this.drawTextBg = this.add.rectangle(640, 40, 500, 40, 0x000000, 0.6);
+    this.drawTextBg = this.add.rectangle(640, 360, 500, 40, 0x000000, 0.8);
     this.drawText = this.add
-      .text(640, 40, strings.draw_phase, {
+      .text(640, 360, strings.draw_phase, {
         fontSize: "18px",
         color: "#FFFFFF",
         fontStyle: "bold",
@@ -98,7 +98,7 @@ export class BattleScene extends Phaser.Scene {
       this.tweens.add({
         targets: [this.drawText, this.drawTextBg],
         alpha: 0,
-        duration: 150,
+        duration: 300,
         onComplete: () => {
           this.drawText.setVisible(false).setAlpha(1);
           this.drawTextBg.setVisible(false).setAlpha(0.6);
@@ -118,15 +118,15 @@ export class BattleScene extends Phaser.Scene {
         "card_back",
       );
 
-      deckCard.setViewHeight(600);
+      deckCard.setViewHeight(400);
 
       // deckCard.setScale(0.35);
       deckCard.scaleX = 0.36;
       deckCard.scaleY = 0.55;
 
-      deckCard.modelRotation.x = -1.02; // deep card
-      deckCard.modelRotation.y = 0.29;
-      deckCard.modelRotation.z = Phaser.Math.DegToRad(0.12);
+      // deckCard.modelRotation.x = -1.02; // deep card
+      // deckCard.modelRotation.y = 0.29;
+      // deckCard.modelRotation.z = Phaser.Math.DegToRad(0.12);
 
       deckCard.setDepth(10 - i);
 
@@ -274,15 +274,19 @@ export class BattleScene extends Phaser.Scene {
     //monster zones: x: 490, y: 467, X: 636, Y: 441, X: 787, Y: 457
     //trap/spell zones: 474, Y: 588, X: 638, Y: 585, X: 809, Y: 585
     const monsterCoords = [
-      { x: 490, y: 467 },
-      { x: 636, y: 441 },
-      { x: 787, y: 457 },
+      { x: 505, y: 450 },
+      { x: 645, y: 450 },
+      { x: 787, y: 450 },
     ];
     const spellCoords = [
-      { x: 474, y: 588 },
-      { x: 638, y: 585 },
-      { x: 809, y: 585 },
+      { x: 505, y: 600 },
+      { x: 645, y: 600 },
+      { x: 787, y: 600 },
     ];
+
+
+    // spell/trap zone enemy: x 505, y: 120, x: 645, y: 120, x: 787, y: 120
+    // monster zone enemy: x: 505, y: 270, x: 645, y: 270, x: 787, y: 270
 
     monsterCoords.forEach((pos) => {
       this.add
@@ -309,7 +313,7 @@ export class BattleScene extends Phaser.Scene {
     card.disableInteractive();
     card.setFieldVisuals();
 
-    const targetScale = isTrapOrSpellCard ? 0.4 : 0.32;
+    // const targetScale = isTrapOrSpellCard ? 0.4 : 0.32;
 
     if (isTrapOrSpellCard) {
       card.setFaceDown();
@@ -320,7 +324,7 @@ export class BattleScene extends Phaser.Scene {
       x: zone.x,
       y: zone.y,
       angle: 0,
-      scale: targetScale,
+      scale: 0.32,
       duration: 250,
       ease: "Back.easeOut",
       onComplete: () => {

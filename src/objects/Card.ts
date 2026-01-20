@@ -94,7 +94,7 @@ export class Card extends Phaser.GameObjects.Container {
 
   public setFieldVisuals() {
     const FIELD_W = 320;
-    const FIELD_H = 360;
+    const FIELD_H = 450;
 
     this.frame.setDisplaySize(FIELD_W, FIELD_H);
     
