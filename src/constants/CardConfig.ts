@@ -12,17 +12,18 @@ export const CARD_CONFIG = {
   },
   STYLES: {
     NAME: {
-      fontSize: "12px",
+      fontSize: "14.5px",
       fontStyle: "bold",
       color: "#4a3d28",
       fontFamily: "Arial",
     },
     DESC: {
-      fontSize: "12px",
+      fontSize: "16px",
       color: "#4a3d28",
       wordWrap: { width: 200 },
       align: "left",
       fontFamily: "Arial",
+      fontStyle: "bold"
     },
     STATS: {
       fontSize: "18px",
