@@ -95,6 +95,7 @@ export class BattleScene extends Phaser.Scene {
     this.input.keyboard?.on("keydown-SPACE", () => {
       if (this.currentPhase == "DRAW") {
         this.setPhase("MAIN");
+        this.drawCard();
       }
     });
 
