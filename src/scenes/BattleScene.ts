@@ -1,25 +1,31 @@
 import { CARD_DATABASE } from "../constants/CardDatabase";
 import { TRANSLATIONS } from "../constants/Translations";
 import { Card } from "../objects/Card";
+import { ToonButton } from "../objects/ToonButton";
 import { LanguageManager } from "../utils/LanguageManager";
 
 export type GamePhase = "DRAW" | "MAIN" | "BATTLE" | "ENEMY_TURN";
+type Languages = keyof typeof TRANSLATIONS;
+type TranslationStructure = (typeof TRANSLATIONS)[Languages];
+export type BattleTranslations = TranslationStructure["battle_scene"];
 
 export class BattleScene extends Phaser.Scene {
   private hand: Card[] = [];
   private readonly maxHandSize = 7;
   private readonly deckPosition: { x: number; y: number } = { x: 1122, y: 542 };
-  private readonly handConfig = {
-    y: 710,
-    hoverY: 550,
-    scale: 0.45,
-    hoverScale: 0.7,
-  };
+  // private readonly handConfig = {
+  //   y: 710,
+  //   hoverY: 550,
+  //   scale: 0.45,
+  //   hoverScale: 0.7,
+  // };
 
-  private drawText!: Phaser.GameObjects.Text;
-  private drawTextBg!: Phaser.GameObjects.Rectangle;
+  private phaseText!: Phaser.GameObjects.Text;
+  private phaseTextBg!: Phaser.GameObjects.Rectangle;
   private currentPhase: GamePhase = "DRAW";
   private isDragging: boolean = false;
+  private phaseButton!: ToonButton;
+  private translationText!: BattleTranslations;
 
   constructor() {
     super("BattleScene");
@@ -28,7 +34,7 @@ export class BattleScene extends Phaser.Scene {
   preload() {
     this.load.image(
       "battle-scene-background",
-      "assets/frameCards/playmatch2.png",
+      "assets/frameCards/battle_scene_2d.png",
     );
     this.load.image("card_back", "assets/frameCards/card_back2.png");
     this.load.image(
@@ -45,7 +51,7 @@ export class BattleScene extends Phaser.Scene {
 
   create() {
     const lang = LanguageManager.getInstance().currentLanguage;
-    const strings = TRANSLATIONS[lang].battle_scene;
+    this.translationText = TRANSLATIONS[lang].battle_scene;
     const bg = this.add.image(640, 360, "battle-scene-background");
     bg.setDisplaySize(1280, 720);
     bg.setDepth(-100);
@@ -60,57 +66,53 @@ export class BattleScene extends Phaser.Scene {
       );
     });
 
-    this.drawTextBg = this.add.rectangle(640, 360, 500, 40, 0x000000, 0.8);
-    this.drawText = this.add
-      .text(640, 360, strings.draw_phase, {
+    this.phaseTextBg = this.add.rectangle(640, 360, 500, 40, 0x000000, 0.8);
+    this.phaseText = this.add
+      .text(640, 360, this.translationText.draw_phase, {
         fontSize: "18px",
         color: "#FFFFFF",
         fontStyle: "bold",
       })
       .setOrigin(0.5);
 
+    this.phaseButton = new ToonButton(this, {
+      x: 1120,
+      y: 420,
+      text: "Pular Fase",
+      fontSize: "18px",
+      textColor: "#fff",
+      color: 0x000000,
+      hoverColor: 0x242424,
+      width: 200,
+      height: 60,
+    });
+    this.phaseButton.setVisible(false).setDepth(5000);
+
+    this.phaseButton.on("pointerdown", () => {
+      this.handleNextPhase();
+    });
+
     this.input.keyboard?.on("keydown-SPACE", () => {
       if (this.currentPhase == "DRAW") {
-        this.drawCard();
-        this.endDrawPhase();
+        this.setPhase("MAIN");
       }
     });
 
     let delay = 0;
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 4; i++) {
       this.time.delayedCall(delay, () => {
         this.drawCard();
       });
       delay += 200;
     }
-  }
 
-  private endDrawPhase() {
-    this.currentPhase = "MAIN";
-
-    this.drawText.setVisible(false);
-    this.drawTextBg.setVisible(false);
-
-    this.drawTextBg.setVisible(true);
-    this.drawText.setText("Fase Principal").setVisible(true);
-
-    this.time.delayedCall(1500, () => {
-      this.tweens.add({
-        targets: [this.drawText, this.drawTextBg],
-        alpha: 0,
-        duration: 300,
-        onComplete: () => {
-          this.drawText.setVisible(false).setAlpha(1);
-          this.drawTextBg.setVisible(false).setAlpha(0.6);
-        },
-      });
-    });
+    this.time.delayedCall(delay, () => this.setPhase("DRAW"));
   }
 
   private createDeckVisual() {
     for (let i = 3; i >= 0; i--) {
       // const heightOffset = i * 3;
-      const xOffset = i * 4;
+      const xOffset = i * 2;
       const yOffset = 0;
       const deckCard = this.add.plane(
         this.deckPosition.x - xOffset,
@@ -122,7 +124,7 @@ export class BattleScene extends Phaser.Scene {
 
       // deckCard.setScale(0.35);
       deckCard.scaleX = 0.36;
-      deckCard.scaleY = 0.55;
+      deckCard.scaleY = 0.4;
 
       // deckCard.modelRotation.x = -1.02; // deep card
       // deckCard.modelRotation.y = 0.29;
@@ -177,27 +179,43 @@ export class BattleScene extends Phaser.Scene {
     if (this.isDragging) return;
 
     this.tweens.add({
-      targets: card,
-      y: this.handConfig.hoverY,
-      scale: this.handConfig.hoverScale,
-      duration: 300,
-      ease: "Power2",
+      targets: card.visualElements,
+      y: -280,
+      scale: 1.5,
+      duration: 200,
+      ease: "Back.easeOut",
     });
     card.setDepth(200);
   }
 
-  private handleCardOut(_card: Card) {
+  private handleCardOut(card: Card) {
+    if (this.isDragging) return;
+
+    this.tweens.add({
+      targets: card.visualElements,
+      y: 0,
+      scale: 1,
+      duration: 200,
+      ease: "Power2",
+    });
+
     this.reorganizeHand();
   }
 
   private setupDragEvents(card: Card) {
-    card.on("dragstart", () => {
+    card.on("dragstart", (pointer: Phaser.Input.Pointer) => {
+      if (this.currentPhase !== "MAIN") {
+        this.input.setDragState(pointer, 0);
+        return;
+      }
+
       this.isDragging = true;
       this.tweens.killTweensOf(card);
+      this.tweens.killTweensOf(card.visualElements);
 
       this.tweens.add({
         targets: card,
-        scale: 0.35,
+        scale: 0.25,
         duration: 150,
         ease: "Power2",
       });
@@ -205,10 +223,13 @@ export class BattleScene extends Phaser.Scene {
     });
 
     card.on("drag", (_pointer: any, dragX: number, dragY: number) => {
+      card.visualElements.setY(0);
+      card.visualElements.setScale(1);
       card.setPosition(dragX, dragY);
     });
 
     card.on("dragend", (_pointer: any, dropped: boolean) => {
+      this.isDragging = false;
       if (!dropped) this.reorganizeHand();
       this.tweens.add({
         targets: card,
@@ -226,7 +247,9 @@ export class BattleScene extends Phaser.Scene {
       const spellOrTrapCardValidation =
         (cardType === "SPELL" || cardType === "TRAP") && zoneType === "SPELL";
 
-      const canPlay = monsterCardValidation || spellOrTrapCardValidation;
+      const canPlay =
+        (monsterCardValidation || spellOrTrapCardValidation) &&
+        this.currentPhase == "MAIN";
 
       if (canPlay) {
         this.playCardOnFieldZone(card, targetZone);
@@ -271,8 +294,6 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private setupFieldZones() {
-    //monster zones: x: 490, y: 467, X: 636, Y: 441, X: 787, Y: 457
-    //trap/spell zones: 474, Y: 588, X: 638, Y: 585, X: 809, Y: 585
     const monsterCoords = [
       { x: 505, y: 450 },
       { x: 645, y: 450 },
@@ -283,7 +304,6 @@ export class BattleScene extends Phaser.Scene {
       { x: 645, y: 600 },
       { x: 787, y: 600 },
     ];
-
 
     // spell/trap zone enemy: x 505, y: 120, x: 645, y: 120, x: 787, y: 120
     // monster zone enemy: x: 505, y: 270, x: 645, y: 270, x: 787, y: 270
@@ -304,6 +324,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private playCardOnFieldZone(card: Card, zone: Phaser.GameObjects.Zone) {
+    this.isDragging = false;
     this.hand = this.hand.filter((handCard) => handCard !== card);
     this.reorganizeHand();
 
@@ -311,9 +332,12 @@ export class BattleScene extends Phaser.Scene {
       card.getType() == "TRAP" || card.getType() == "SPELL";
 
     card.disableInteractive();
-    card.setFieldVisuals();
 
-    // const targetScale = isTrapOrSpellCard ? 0.4 : 0.32;
+    this.tweens.killTweensOf(card.visualElements);
+    card.visualElements.setY(0);
+    card.visualElements.setScale(1);
+
+    card.setFieldVisuals();
 
     if (isTrapOrSpellCard) {
       card.setFaceDown();
@@ -330,6 +354,90 @@ export class BattleScene extends Phaser.Scene {
       onComplete: () => {
         this.cameras.main.shake(100, 0.002);
         card.setDepth(10);
+      },
+    });
+  }
+
+  private setPhase(newPhase: GamePhase) {
+    this.currentPhase = newPhase;
+
+    this.tweens.killTweensOf([this.phaseText, this.phaseTextBg]);
+    this.phaseText.setVisible(true).setAlpha(1);
+    this.phaseTextBg.setVisible(true).setAlpha(0.8);
+
+    switch (newPhase) {
+      case "DRAW":
+        this.phaseButton.setVisible(false);
+        this.drawCard();
+        break;
+
+      case "MAIN":
+        this.phaseText.setText(this.translationText.main_phase);
+        this.phaseButton.setVisible(false);
+
+        this.time.delayedCall(500, () => {
+          if (this.currentPhase == "MAIN") {
+            this.phaseButton.setVisible(true);
+            this.phaseButton.setText(
+              this.translationText.battle_buttons.to_battle,
+            );
+
+            this.phaseButton.setAlpha(0);
+            this.tweens.add({
+              targets: this.phaseButton,
+              alpha: 1,
+              duration: 300,
+            });
+          }
+        });
+        break;
+
+      case "BATTLE":
+        this.phaseText.setText(this.translationText.battle_phase);
+        this.phaseButton.setVisible(true);
+        this.phaseButton.setText(this.translationText.battle_buttons.end_turn);
+        break;
+
+      case "ENEMY_TURN":
+        this.phaseButton.setVisible(false);
+        this.phaseText.setText(this.translationText.turn_change);
+
+        this.time.delayedCall(1200, () => {
+          if (this.currentPhase !== "ENEMY_TURN") return;
+
+          this.phaseText.setText(this.translationText.opponent_turn);
+          this.tweens.add({
+            targets: this.phaseText,
+            scale: 1.1,
+            duration: 100,
+            yoyo: true,
+          });
+
+          this.time.delayedCall(1500, () => this.hidePhaseText());
+        });
+
+        return;
+    }
+
+    this.time.delayedCall(1500, () => this.hidePhaseText());
+  }
+
+  private handleNextPhase() {
+    if (this.currentPhase === "MAIN") {
+      this.setPhase("BATTLE");
+    } else if (this.currentPhase === "BATTLE") {
+      this.setPhase("ENEMY_TURN");
+    }
+  }
+
+  private hidePhaseText() {
+    this.tweens.add({
+      targets: [this.phaseText, this.phaseTextBg],
+      alpha: 0,
+      duration: 500,
+      onComplete: () => {
+        this.phaseText.setVisible(false);
+        this.phaseTextBg.setVisible(false);
       },
     });
   }
