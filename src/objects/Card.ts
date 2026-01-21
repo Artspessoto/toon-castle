@@ -10,10 +10,17 @@ export class Card extends Phaser.GameObjects.Container {
   private descText: Phaser.GameObjects.Text;
   private atkText?: Phaser.GameObjects.Text;
   private defText?: Phaser.GameObjects.Text;
+  private originalData: CardData;
   public cardType: CardType;
+
+  public visualElements: Phaser.GameObjects.Container;
 
   constructor(scene: Scene, x: number, y: number, data: CardData) {
     super(scene, x, y);
+    this.originalData = data;
+
+    this.visualElements = scene.add.container(0, 0);
+    this.add(this.visualElements);
 
     const { NAME, MANA, DESC, ATK, DEF } = CARD_CONFIG.POSITIONS;
     const width = data.width ?? CARD_CONFIG.WIDTH;
@@ -25,7 +32,7 @@ export class Card extends Phaser.GameObjects.Container {
     // model image
     this.frame = scene.add.image(0, 0, frameKey);
     this.frame.setDisplaySize(width, height);
-    this.add(this.frame);
+    this.visualElements.add(this.frame);
 
     //add cart art
     // this.cardImage = scene.add.image(0, -28, data.imageKey);
@@ -51,7 +58,7 @@ export class Card extends Phaser.GameObjects.Container {
       })
       .setOrigin(0.5);
 
-    this.add([this.nameText, this.manaText, this.descText]);
+    this.visualElements.add([this.nameText, this.manaText, this.descText]);
 
     this.cardType = data.type;
 
@@ -67,7 +74,7 @@ export class Card extends Phaser.GameObjects.Container {
         .text(DEF.x, DEF.y, defValue, CARD_CONFIG.STYLES.STATS)
         .setOrigin(0.5);
 
-      this.add([this.atkText, this.defText]);
+      this.visualElements.add([this.atkText, this.defText]);
     }
 
     this.setSize(width, height);
@@ -97,9 +104,9 @@ export class Card extends Phaser.GameObjects.Container {
     const FIELD_H = 450;
 
     this.frame.setDisplaySize(FIELD_W, FIELD_H);
-    
+
     this.setSize(FIELD_W, FIELD_H);
-}
+  }
 
   public setFaceDown() {
     this.frame.setTexture("card_back");
@@ -110,7 +117,11 @@ export class Card extends Phaser.GameObjects.Container {
 
     if (this.atkText) this.atkText.setVisible(false);
     if (this.defText) this.defText.setVisible(false);
-    
+
     this.setFieldVisuals();
+  }
+
+  public getCardData(): CardData {
+    return this.originalData;
   }
 }
