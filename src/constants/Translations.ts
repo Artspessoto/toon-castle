@@ -30,7 +30,16 @@ export const TRANSLATIONS = {
       back: "Voltar ao Menu",
     },
     battle_scene: {
-      draw_phase: "Espaço: Comprar Carta | Arraste para jogar",
+      turn_change: "MUDANÇA DE TURNO",
+      your_turn: "SEU TURNO",
+      opponent_turn: "TURNO DO OPONENTE",
+      draw_phase: "ESPAÇO: COMPRAR CARTA | ARRASTE PARA JOGAR",
+      main_phase: "FASE PRINCIPAL",
+      battle_phase: "FASE DE BATALHA",
+      battle_buttons: {
+        to_battle: "INICIAR BATALHA",
+        end_turn: "ENCERRAR TURNO",
+      },
     },
   },
   en: {
@@ -64,7 +73,16 @@ export const TRANSLATIONS = {
       back: "Back to Menu",
     },
     battle_scene: {
-      draw_phase: "Space: Draw Card | Drag to play",
+      turn_change: "TURN CHANGE",
+      your_turn: "YOUR TURN",
+      opponent_turn: "OPPONENT'S TURN",
+      draw_phase: "SPACE: DRAW CARD | DRAG TO PLAY",
+      main_phase: "MAIN PHASE",
+      battle_phase: "BATTLE PHASE",
+      battle_buttons: {
+        to_battle: "START BATTLE",
+        end_turn: "END TURN",
+      },
     },
   },
 };
