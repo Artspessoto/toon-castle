@@ -1,5 +1,5 @@
 import Phaser, { Scene } from "phaser";
-import type { CardData, CardType } from "../types/CardData";
+import type { CardData, CardType } from "../types/GameTypes";
 import { CARD_CONFIG } from "../constants/CardConfig";
 
 export class Card extends Phaser.GameObjects.Container {

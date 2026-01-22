@@ -1,4 +1,4 @@
-import type { CardData } from "../types/CardData";
+import type { CardData } from "../types/GameTypes";
 
 export const CARD_DATABASE: Record<string, CardData> = {
   SENTINEL_01: {
