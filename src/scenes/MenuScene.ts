@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { ToonButton } from "../objects/ToonButton";
-import { LanguageManager } from "../utils/LanguageManager";
+import { LanguageManager } from "../managers/LanguageManager";
 import { TRANSLATIONS } from "../constants/Translations";
 
 export type Difficulty = "EASY" | "MEDIUM" | "HARD";
