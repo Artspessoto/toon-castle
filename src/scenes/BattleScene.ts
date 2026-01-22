@@ -8,6 +8,7 @@ import type { BattleTranslations, GamePhase } from "../types/GameTypes";
 import { LanguageManager } from "../managers/LanguageManager";
 import { FieldManager } from "../managers/FieldManager";
 import { InputManager } from "../managers/InputManager";
+import { DeckManager } from "../managers/DeckManager";
 
 export class BattleScene extends Phaser.Scene {
   public gameState: GameState;
@@ -15,8 +16,7 @@ export class BattleScene extends Phaser.Scene {
   public handManager: HandManager;
   public fieldManager: FieldManager;
   public inputManager: InputManager;
-
-  private readonly deckPosition: { x: number; y: number } = { x: 1122, y: 542 };
+  public deckManager: DeckManager;
 
   public phaseText!: Phaser.GameObjects.Text;
   public phaseTextBg!: Phaser.GameObjects.Rectangle;
@@ -32,6 +32,7 @@ export class BattleScene extends Phaser.Scene {
     this.handManager = new HandManager(this);
     this.fieldManager = new FieldManager(this);
     this.inputManager = new InputManager(this);
+    this.deckManager = new DeckManager(this);
   }
 
   public get currentPhase(): GamePhase {
@@ -63,7 +64,7 @@ export class BattleScene extends Phaser.Scene {
     const bg = this.add.image(640, 360, "battle-scene-background");
     bg.setDisplaySize(1280, 720).setDepth(-100);
 
-    this.createDeckVisual();
+    this.deckManager.createDeckVisual();
     this.fieldManager.setupFieldZones();
 
     this.input.on("pointerdown", (pointer: { x: number; y: number }) => {
@@ -101,48 +102,19 @@ export class BattleScene extends Phaser.Scene {
     this.input.keyboard?.on("keydown-SPACE", () => {
       if (this.currentPhase == "DRAW") {
         this.setPhase("MAIN");
-        this.handManager.drawCard(this.deckPosition);
+        this.handManager.drawCard(this.deckManager.position);
       }
     });
 
     let delay = 0;
     for (let i = 0; i < 4; i++) {
       this.time.delayedCall(delay, () => {
-        this.handManager.drawCard(this.deckPosition);
+        this.handManager.drawCard(this.deckManager.position);
       });
       delay += 200;
     }
 
     this.time.delayedCall(delay, () => this.setPhase("DRAW"));
-  }
-
-  private createDeckVisual() {
-    for (let i = 3; i >= 0; i--) {
-      // const heightOffset = i * 3;
-      const xOffset = i * 2;
-      const yOffset = 0;
-      const deckCard = this.add.plane(
-        this.deckPosition.x - xOffset,
-        this.deckPosition.y - yOffset,
-        "card_back",
-      );
-
-      deckCard.setViewHeight(400);
-
-      // deckCard.setScale(0.35);
-      deckCard.scaleX = 0.36;
-      deckCard.scaleY = 0.4;
-
-      // deckCard.modelRotation.x = -1.02; // deep card
-      // deckCard.modelRotation.y = 0.29;
-      // deckCard.modelRotation.z = Phaser.Math.DegToRad(0.12);
-
-      deckCard.setDepth(10 - i);
-
-      if (i > 0) {
-        deckCard.setTint(0x999999);
-      }
-    }
   }
 
   public playCardOnFieldZone(card: Card, zone: Phaser.GameObjects.Zone) {
@@ -155,7 +127,7 @@ export class BattleScene extends Phaser.Scene {
     this.phaseManager.updateUI(newPhase, this.translationText);
 
     if (newPhase === "DRAW") {
-      this.handManager.drawCard(this.deckPosition);
+      this.handManager.drawCard(this.deckManager.position);
     }
   }
 
