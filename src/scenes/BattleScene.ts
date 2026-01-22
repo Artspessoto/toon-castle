@@ -1,6 +1,7 @@
 import { CARD_DATABASE } from "../constants/CardDatabase";
 import { TRANSLATIONS } from "../constants/Translations";
 import { GameState } from "../domain/GameState";
+import { HandManager } from "../managers/HandManager";
 import { PhaseManager } from "../managers/PhaseManager";
 import { Card } from "../objects/Card";
 import { ToonButton } from "../objects/ToonButton";
@@ -10,9 +11,8 @@ import { LanguageManager } from "../utils/LanguageManager";
 export class BattleScene extends Phaser.Scene {
   private gameState: GameState;
   private phaseManager: PhaseManager;
+  private handManager: HandManager;
 
-  private hand: Card[] = [];
-  private readonly maxHandSize = 7;
   private readonly deckPosition: { x: number; y: number } = { x: 1122, y: 542 };
   // private readonly handConfig = {
   //   y: 710,
@@ -32,6 +32,7 @@ export class BattleScene extends Phaser.Scene {
 
     this.gameState = new GameState();
     this.phaseManager = new PhaseManager(this);
+    this.handManager = new HandManager(this);
   }
 
   public get currentPhase(): GamePhase {
@@ -101,14 +102,14 @@ export class BattleScene extends Phaser.Scene {
     this.input.keyboard?.on("keydown-SPACE", () => {
       if (this.currentPhase == "DRAW") {
         this.setPhase("MAIN");
-        this.drawCard();
+        this.handManager.drawCard(this.deckPosition);
       }
     });
 
     let delay = 0;
     for (let i = 0; i < 4; i++) {
       this.time.delayedCall(delay, () => {
-        this.drawCard();
+        this.handManager.drawCard(this.deckPosition);
       });
       delay += 200;
     }
@@ -145,33 +146,7 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
-  private drawCard() {
-    if (this.hand.length >= this.maxHandSize) return;
-
-    const cardData = this.getRandomCardData();
-
-    const newCard = new Card(
-      this,
-      this.deckPosition.x,
-      this.deckPosition.y,
-      cardData,
-    );
-    // newCard.setAngle(-22);
-
-    this.setupCardInteractions(newCard);
-
-    this.hand.push(newCard);
-    this.animateCardEntry(newCard);
-    this.reorganizeHand();
-  }
-
-  private getRandomCardData() {
-    const keys = Object.keys(CARD_DATABASE);
-    const randomKey = keys[Phaser.Math.Between(0, keys.length - 1)];
-    return CARD_DATABASE[randomKey];
-  }
-
-  private setupCardInteractions(card: Card) {
+  public setupCardInteractions(card: Card) {
     card.setInteractive({ draggable: true });
     this.input.setDraggable(card);
 
@@ -206,7 +181,7 @@ export class BattleScene extends Phaser.Scene {
       ease: "Power2",
     });
 
-    this.reorganizeHand();
+    this.handManager.reorganizeHand();
   }
 
   private setupDragEvents(card: Card) {
@@ -237,7 +212,7 @@ export class BattleScene extends Phaser.Scene {
 
     card.on("dragend", (_pointer: any, dropped: boolean) => {
       this.gameState.setDragging(false);
-      if (!dropped) this.reorganizeHand();
+      if (!dropped) this.handManager.reorganizeHand();
       this.tweens.add({
         targets: card,
         scale: 0.35,
@@ -261,42 +236,8 @@ export class BattleScene extends Phaser.Scene {
       if (canPlay) {
         this.playCardOnFieldZone(card, targetZone);
       } else {
-        this.reorganizeHand();
+        this.handManager.reorganizeHand();
       }
-    });
-  }
-
-  private animateCardEntry(card: Card) {
-    card.setAngle(-22);
-    card.setAlpha(0);
-    this.tweens.add({ targets: card, alpha: 1, duration: 100 });
-  }
-
-  private reorganizeHand() {
-    // position config
-    const cardWidth = 180 * 0.58; // card large (base x scale)
-    const spacing = cardWidth + 10; // cards gap between
-    const startY = 710;
-    const centerX = 640;
-
-    const totalHandWidth = (this.hand.length - 1) * spacing;
-    const startX = centerX - totalHandWidth / 2;
-
-    this.hand.forEach((card, index) => {
-      const targetX = startX + index * spacing;
-
-      card.setDepth(100 + index);
-
-      this.tweens.add({
-        targets: card,
-        x: targetX,
-        y: startY,
-        angle: 0,
-        scale: 0.45,
-        duration: 500, // 0.5s
-        // ease: "Power2",
-        ease: "Back.easeOut",
-      });
     });
   }
 
@@ -332,8 +273,8 @@ export class BattleScene extends Phaser.Scene {
 
   private playCardOnFieldZone(card: Card, zone: Phaser.GameObjects.Zone) {
     this.gameState.setDragging(false);
-    this.hand = this.hand.filter((handCard) => handCard !== card);
-    this.reorganizeHand();
+    this.handManager.removeCard(card);
+    this.handManager.reorganizeHand();
 
     const isTrapOrSpellCard =
       card.getType() == "TRAP" || card.getType() == "SPELL";
@@ -371,7 +312,7 @@ export class BattleScene extends Phaser.Scene {
     this.phaseManager.updateUI(newPhase, this.translationText)
 
     if (newPhase === "DRAW") {
-      this.drawCard();
+      this.handManager.drawCard(this.deckPosition);
     }
   }
 
