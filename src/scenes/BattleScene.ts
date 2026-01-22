@@ -7,20 +7,16 @@ import { ToonButton } from "../objects/ToonButton";
 import type { BattleTranslations, GamePhase } from "../types/GameTypes";
 import { LanguageManager } from "../managers/LanguageManager";
 import { FieldManager } from "../managers/FieldManager";
+import { InputManager } from "../managers/InputManager";
 
 export class BattleScene extends Phaser.Scene {
-  private gameState: GameState;
-  private phaseManager: PhaseManager;
-  private handManager: HandManager;
-  private fieldManager: FieldManager;
+  public gameState: GameState;
+  public phaseManager: PhaseManager;
+  public handManager: HandManager;
+  public fieldManager: FieldManager;
+  public inputManager: InputManager;
 
   private readonly deckPosition: { x: number; y: number } = { x: 1122, y: 542 };
-  // private readonly handConfig = {
-  //   y: 710,
-  //   hoverY: 550,
-  //   scale: 0.45,
-  //   hoverScale: 0.7,
-  // };
 
   public phaseText!: Phaser.GameObjects.Text;
   public phaseTextBg!: Phaser.GameObjects.Rectangle;
@@ -35,6 +31,7 @@ export class BattleScene extends Phaser.Scene {
     this.phaseManager = new PhaseManager(this);
     this.handManager = new HandManager(this);
     this.fieldManager = new FieldManager(this);
+    this.inputManager = new InputManager(this);
   }
 
   public get currentPhase(): GamePhase {
@@ -148,112 +145,13 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
-  public setupCardInteractions(card: Card) {
-    card.setInteractive({ draggable: true });
-    this.input.setDraggable(card);
-
-    // hover effect (Zoom)
-    card.on("pointerover", () => this.handleCardHover(card));
-    card.on("pointerout", () => this.handleCardOut(card));
-
-    this.setupDragEvents(card);
-  }
-
-  private handleCardHover(card: Card) {
-    if (this.gameState.isDragging) return;
-
-    this.tweens.add({
-      targets: card.visualElements,
-      y: -280,
-      scale: 1.5,
-      duration: 200,
-      ease: "Back.easeOut",
-    });
-    card.setDepth(200);
-  }
-
-  private handleCardOut(card: Card) {
-    if (this.gameState.isDragging) return;
-
-    this.tweens.add({
-      targets: card.visualElements,
-      y: 0,
-      scale: 1,
-      duration: 200,
-      ease: "Power2",
-    });
-
+  public playCardOnFieldZone(card: Card, zone: Phaser.GameObjects.Zone) {
     this.handManager.reorganizeHand();
-  }
-
-  private setupDragEvents(card: Card) {
-    card.on("dragstart", (pointer: Phaser.Input.Pointer) => {
-      if (this.currentPhase !== "MAIN") {
-        this.input.setDragState(pointer, 0);
-        return;
-      }
-
-      this.gameState.setDragging(true);
-      this.tweens.killTweensOf(card);
-      this.tweens.killTweensOf(card.visualElements);
-
-      this.tweens.add({
-        targets: card,
-        scale: 0.25,
-        duration: 150,
-        ease: "Power2",
-      });
-      card.setDepth(2000);
-    });
-
-    card.on("drag", (_pointer: any, dragX: number, dragY: number) => {
-      card.visualElements.setY(0);
-      card.visualElements.setScale(1);
-      card.setPosition(dragX, dragY);
-    });
-
-    card.on("dragend", (_pointer: any, dropped: boolean) => {
-      this.gameState.setDragging(false);
-      if (!dropped) this.handManager.reorganizeHand();
-      this.tweens.add({
-        targets: card,
-        scale: 0.35,
-        duration: 200,
-        ease: "Back.easeOut",
-      });
-    });
-
-    card.on("drop", (_pointer: any, targetZone: Phaser.GameObjects.Zone) => {
-      const zoneType = targetZone.getData("type");
-      const cardType = card.getType();
-      const monsterCardValidation =
-        cardType.includes("MONSTER") && zoneType === "MONSTER";
-      const spellOrTrapCardValidation =
-        (cardType === "SPELL" || cardType === "TRAP") && zoneType === "SPELL";
-
-      const canPlay =
-        (monsterCardValidation || spellOrTrapCardValidation) &&
-        this.currentPhase == "MAIN";
-
-      if (canPlay) {
-        this.playCardOnFieldZone(card, targetZone);
-      } else {
-        this.handManager.reorganizeHand();
-      }
-    });
-  }
-
-  private playCardOnFieldZone(card: Card, zone: Phaser.GameObjects.Zone) {
-    this.gameState.setDragging(false);
-    this.handManager.removeCard(card);
-    this.handManager.reorganizeHand();
-
     this.fieldManager.playCardToZone(card, zone);
   }
 
   private setPhase(newPhase: GamePhase) {
     this.gameState.setPhase(newPhase);
-
     this.phaseManager.updateUI(newPhase, this.translationText);
 
     if (newPhase === "DRAW") {

@@ -28,7 +28,7 @@ export class HandManager {
     );
     // newCard.setAngle(-22);
 
-    this.scene.setupCardInteractions(newCard);
+    this.scene.inputManager.setupCardInteractions(newCard);
 
     this.hand.push(newCard);
     this.animateCardEntry(newCard);
