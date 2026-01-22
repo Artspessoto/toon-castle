@@ -1,15 +1,16 @@
 import { CARD_DATABASE } from "../constants/CardDatabase";
 import { TRANSLATIONS } from "../constants/Translations";
+import { GameState } from "../domain/GameState";
+import { PhaseManager } from "../managers/PhaseManager";
 import { Card } from "../objects/Card";
 import { ToonButton } from "../objects/ToonButton";
+import type { BattleTranslations, GamePhase } from "../types/GameTypes";
 import { LanguageManager } from "../utils/LanguageManager";
 
-export type GamePhase = "DRAW" | "MAIN" | "BATTLE" | "ENEMY_TURN";
-type Languages = keyof typeof TRANSLATIONS;
-type TranslationStructure = (typeof TRANSLATIONS)[Languages];
-export type BattleTranslations = TranslationStructure["battle_scene"];
-
 export class BattleScene extends Phaser.Scene {
+  private gameState: GameState;
+  private phaseManager: PhaseManager;
+
   private hand: Card[] = [];
   private readonly maxHandSize = 7;
   private readonly deckPosition: { x: number; y: number } = { x: 1122, y: 542 };
@@ -20,15 +21,21 @@ export class BattleScene extends Phaser.Scene {
   //   hoverScale: 0.7,
   // };
 
-  private phaseText!: Phaser.GameObjects.Text;
-  private phaseTextBg!: Phaser.GameObjects.Rectangle;
-  private currentPhase: GamePhase = "DRAW";
-  private isDragging: boolean = false;
-  private phaseButton!: ToonButton;
+  public phaseText!: Phaser.GameObjects.Text;
+  public phaseTextBg!: Phaser.GameObjects.Rectangle;
+  public phaseButton!: ToonButton;
+
   private translationText!: BattleTranslations;
 
   constructor() {
     super("BattleScene");
+
+    this.gameState = new GameState();
+    this.phaseManager = new PhaseManager(this);
+  }
+
+  public get currentPhase(): GamePhase {
+    return this.gameState.currentPhase;
   }
 
   preload() {
@@ -52,12 +59,11 @@ export class BattleScene extends Phaser.Scene {
   create() {
     const lang = LanguageManager.getInstance().currentLanguage;
     this.translationText = TRANSLATIONS[lang].battle_scene;
+
     const bg = this.add.image(640, 360, "battle-scene-background");
-    bg.setDisplaySize(1280, 720);
-    bg.setDepth(-100);
+    bg.setDisplaySize(1280, 720).setDepth(-100);
 
     this.createDeckVisual();
-
     this.setupFieldZones();
 
     this.input.on("pointerdown", (pointer: { x: number; y: number }) => {
@@ -72,8 +78,8 @@ export class BattleScene extends Phaser.Scene {
         fontSize: "18px",
         color: "#FFFFFF",
         fontStyle: "bold",
-      })
-      .setOrigin(0.5);
+      }).
+      setOrigin(0.5);
 
     this.phaseButton = new ToonButton(this, {
       x: 1120,
@@ -177,7 +183,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private handleCardHover(card: Card) {
-    if (this.isDragging) return;
+    if (this.gameState.isDragging) return;
 
     this.tweens.add({
       targets: card.visualElements,
@@ -190,7 +196,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private handleCardOut(card: Card) {
-    if (this.isDragging) return;
+    if (this.gameState.isDragging) return;
 
     this.tweens.add({
       targets: card.visualElements,
@@ -210,7 +216,7 @@ export class BattleScene extends Phaser.Scene {
         return;
       }
 
-      this.isDragging = true;
+      this.gameState.setDragging(true);
       this.tweens.killTweensOf(card);
       this.tweens.killTweensOf(card.visualElements);
 
@@ -230,7 +236,7 @@ export class BattleScene extends Phaser.Scene {
     });
 
     card.on("dragend", (_pointer: any, dropped: boolean) => {
-      this.isDragging = false;
+      this.gameState.setDragging(false);
       if (!dropped) this.reorganizeHand();
       this.tweens.add({
         targets: card,
@@ -325,7 +331,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private playCardOnFieldZone(card: Card, zone: Phaser.GameObjects.Zone) {
-    this.isDragging = false;
+    this.gameState.setDragging(false);
     this.hand = this.hand.filter((handCard) => handCard !== card);
     this.reorganizeHand();
 
@@ -360,67 +366,13 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private setPhase(newPhase: GamePhase) {
-    this.currentPhase = newPhase;
+    this.gameState.setPhase(newPhase)
 
-    this.tweens.killTweensOf([this.phaseText, this.phaseTextBg]);
-    this.phaseText.setVisible(true).setAlpha(1);
-    this.phaseTextBg.setVisible(true).setAlpha(0.8);
+    this.phaseManager.updateUI(newPhase, this.translationText)
 
-    switch (newPhase) {
-      case "DRAW":
-        this.phaseButton.setVisible(false);
-        this.drawCard();
-        break;
-
-      case "MAIN":
-        this.phaseText.setText(this.translationText.main_phase);
-        this.phaseButton.setVisible(false);
-
-        this.time.delayedCall(500, () => {
-          if (this.currentPhase == "MAIN") {
-            this.phaseButton.setVisible(true);
-            this.phaseButton.setText(
-              this.translationText.battle_buttons.to_battle,
-            );
-
-            this.phaseButton.setAlpha(0);
-            this.tweens.add({
-              targets: this.phaseButton,
-              alpha: 1,
-              duration: 300,
-            });
-          }
-        });
-        break;
-
-      case "BATTLE":
-        this.phaseText.setText(this.translationText.battle_phase);
-        this.phaseButton.setVisible(true);
-        this.phaseButton.setText(this.translationText.battle_buttons.end_turn);
-        break;
-
-      case "ENEMY_TURN":
-        this.phaseButton.setVisible(false);
-        this.phaseText.setText(this.translationText.turn_change);
-
-        this.time.delayedCall(1200, () => {
-          if (this.currentPhase !== "ENEMY_TURN") return;
-
-          this.phaseText.setText(this.translationText.opponent_turn);
-          this.tweens.add({
-            targets: this.phaseText,
-            scale: 1.1,
-            duration: 100,
-            yoyo: true,
-          });
-
-          this.time.delayedCall(1500, () => this.hidePhaseText());
-        });
-
-        return;
+    if (newPhase === "DRAW") {
+      this.drawCard();
     }
-
-    this.time.delayedCall(1500, () => this.hidePhaseText());
   }
 
   private handleNextPhase() {
@@ -429,17 +381,5 @@ export class BattleScene extends Phaser.Scene {
     } else if (this.currentPhase === "BATTLE") {
       this.setPhase("ENEMY_TURN");
     }
-  }
-
-  private hidePhaseText() {
-    this.tweens.add({
-      targets: [this.phaseText, this.phaseTextBg],
-      alpha: 0,
-      duration: 500,
-      onComplete: () => {
-        this.phaseText.setVisible(false);
-        this.phaseTextBg.setVisible(false);
-      },
-    });
   }
 }
