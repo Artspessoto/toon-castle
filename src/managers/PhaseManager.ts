@@ -13,7 +13,7 @@ export class PhaseManager {
 
     this.scene.tweens.killTweensOf([phaseText, phaseTextBg]);
     phaseText.setVisible(true).setAlpha(1);
-    phaseTextBg.setVisible(true).setAlpha(0.8);
+    phaseTextBg.setVisible(true).setAlpha(1);
 
     switch (phase) {
       case "DRAW":
