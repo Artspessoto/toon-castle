@@ -1,4 +1,3 @@
-import { CARD_DATABASE } from "../constants/CardDatabase";
 import { TRANSLATIONS } from "../constants/Translations";
 import { GameState } from "../domain/GameState";
 import { HandManager } from "../managers/HandManager";
@@ -6,12 +5,14 @@ import { PhaseManager } from "../managers/PhaseManager";
 import { Card } from "../objects/Card";
 import { ToonButton } from "../objects/ToonButton";
 import type { BattleTranslations, GamePhase } from "../types/GameTypes";
-import { LanguageManager } from "../utils/LanguageManager";
+import { LanguageManager } from "../managers/LanguageManager";
+import { FieldManager } from "../managers/FieldManager";
 
 export class BattleScene extends Phaser.Scene {
   private gameState: GameState;
   private phaseManager: PhaseManager;
   private handManager: HandManager;
+  private fieldManager: FieldManager;
 
   private readonly deckPosition: { x: number; y: number } = { x: 1122, y: 542 };
   // private readonly handConfig = {
@@ -33,6 +34,7 @@ export class BattleScene extends Phaser.Scene {
     this.gameState = new GameState();
     this.phaseManager = new PhaseManager(this);
     this.handManager = new HandManager(this);
+    this.fieldManager = new FieldManager(this);
   }
 
   public get currentPhase(): GamePhase {
@@ -65,7 +67,7 @@ export class BattleScene extends Phaser.Scene {
     bg.setDisplaySize(1280, 720).setDepth(-100);
 
     this.createDeckVisual();
-    this.setupFieldZones();
+    this.fieldManager.setupFieldZones();
 
     this.input.on("pointerdown", (pointer: { x: number; y: number }) => {
       console.log(
@@ -79,8 +81,8 @@ export class BattleScene extends Phaser.Scene {
         fontSize: "18px",
         color: "#FFFFFF",
         fontStyle: "bold",
-      }).
-      setOrigin(0.5);
+      })
+      .setOrigin(0.5);
 
     this.phaseButton = new ToonButton(this, {
       x: 1120,
@@ -241,75 +243,18 @@ export class BattleScene extends Phaser.Scene {
     });
   }
 
-  private setupFieldZones() {
-    const monsterCoords = [
-      { x: 505, y: 450 },
-      { x: 645, y: 450 },
-      { x: 787, y: 450 },
-    ];
-    const spellCoords = [
-      { x: 505, y: 600 },
-      { x: 645, y: 600 },
-      { x: 787, y: 600 },
-    ];
-
-    // spell/trap zone enemy: x 505, y: 120, x: 645, y: 120, x: 787, y: 120
-    // monster zone enemy: x: 505, y: 270, x: 645, y: 270, x: 787, y: 270
-
-    monsterCoords.forEach((pos) => {
-      this.add
-        .zone(pos.x, pos.y, 110, 150)
-        .setRectangleDropZone(110, 150)
-        .setData("type", "MONSTER");
-    });
-
-    spellCoords.forEach((pos) => {
-      this.add
-        .zone(pos.x, pos.y, 110, 150)
-        .setRectangleDropZone(110, 150)
-        .setData("type", "SPELL");
-    });
-  }
-
   private playCardOnFieldZone(card: Card, zone: Phaser.GameObjects.Zone) {
     this.gameState.setDragging(false);
     this.handManager.removeCard(card);
     this.handManager.reorganizeHand();
 
-    const isTrapOrSpellCard =
-      card.getType() == "TRAP" || card.getType() == "SPELL";
-
-    card.disableInteractive();
-
-    this.tweens.killTweensOf(card.visualElements);
-    card.visualElements.setY(0);
-    card.visualElements.setScale(1);
-
-    card.setFieldVisuals();
-
-    if (isTrapOrSpellCard) {
-      card.setFaceDown();
-    }
-
-    this.tweens.add({
-      targets: card,
-      x: zone.x,
-      y: zone.y,
-      angle: 0,
-      scale: 0.32,
-      duration: 250,
-      ease: "Back.easeOut",
-      onComplete: () => {
-        this.cameras.main.shake(100, 0.002);
-        card.setDepth(10);
-      },
-    });
+    this.fieldManager.playCardToZone(card, zone);
   }
 
   private setPhase(newPhase: GamePhase) {
-    this.gameState.setPhase(newPhase)
+    this.gameState.setPhase(newPhase);
 
-    this.phaseManager.updateUI(newPhase, this.translationText)
+    this.phaseManager.updateUI(newPhase, this.translationText);
 
     if (newPhase === "DRAW") {
       this.handManager.drawCard(this.deckPosition);
