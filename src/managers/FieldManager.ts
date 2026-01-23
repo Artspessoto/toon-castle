@@ -69,7 +69,12 @@ export class FieldManager {
     );
   }
 
-  public playCardToZone(card: Card, targetX: number, targetY: number) {
+  public playCardToZone(
+    card: Card,
+    targetX: number,
+    targetY: number,
+    isDefense: boolean = false,
+  ) {
     const isTrapOrSpellCard =
       card.getType() === "TRAP" || card.getType() === "SPELL";
 
@@ -80,6 +85,9 @@ export class FieldManager {
     card.visualElements.setScale(1);
     card.setFieldVisuals();
 
+    const finalAngle = isDefense ? 270 : 0;
+    const finalScale = isDefense ? 0.3 : 0.32;
+
     if (isTrapOrSpellCard) {
       card.setFaceDown();
     }
@@ -89,8 +97,8 @@ export class FieldManager {
       targets: card,
       x: targetX,
       y: targetY,
-      angle: 0,
-      scale: 0.32,
+      angle: finalAngle,
+      scale: finalScale,
       duration: 250,
       ease: "Back.easeOut",
       onComplete: () => {

@@ -85,6 +85,9 @@ export class UIManager {
         onComplete: () => {
           this.bannerText.setVisible(false).setY(360);
           this.bannerBg.setVisible(false).setY(360);
+
+          this.bannerText.setX(640);
+          this.bannerBg.setX(640);
         },
       });
     });
