@@ -9,47 +9,36 @@ export class PhaseManager {
   }
 
   public updateUI(phase: GamePhase, translations: BattleTranslations) {
-    const { phaseText, phaseTextBg, phaseButton } = this.scene;
-
-    this.scene.tweens.killTweensOf([phaseText, phaseTextBg]);
-    phaseText.setVisible(true).setAlpha(1);
-    phaseTextBg.setVisible(true).setAlpha(1);
+    const { phaseButton, uiManager } = this.scene;
 
     switch (phase) {
       case "DRAW":
         phaseButton.setVisible(false);
-        phaseText.setText(translations.draw_phase);
+        uiManager.showNotice(translations.draw_phase, "PHASE");
         break;
       case "MAIN":
-        phaseText.setText(translations.main_phase);
+        uiManager.showNotice(translations.main_phase, "PHASE");
         this.handleButtonTransition(translations.battle_buttons.to_battle);
         break;
       case "BATTLE":
-        phaseText.setText(translations.battle_phase);
+        uiManager.showNotice(translations.battle_phase, "PHASE");
+        phaseButton
+          .setVisible(true)
+          .setText(translations.battle_buttons.end_turn);
         phaseButton.setVisible(true);
-        phaseButton.setText(translations.battle_buttons.end_turn);
         break;
       case "ENEMY_TURN":
         phaseButton.setVisible(false);
-        phaseText.setText(translations.turn_change);
+        uiManager.showNotice(translations.turn_change, "PHASE");
 
         this.scene.time.delayedCall(1200, () => {
           if (this.scene.currentPhase !== "ENEMY_TURN") return;
 
-          phaseText.setText(translations.opponent_turn);
-          this.scene.tweens.add({
-            targets: phaseText,
-            scale: 1.1,
-            duration: 100,
-            yoyo: true,
-          });
-
-          this.scene.time.delayedCall(1500, () => this.hidePhaseText());
+          uiManager.showNotice(translations.opponent_turn, "PHASE");
         });
 
         return;
     }
-    this.scene.time.delayedCall(1500, () => this.hidePhaseText());
   }
 
   private handleButtonTransition(text: string) {
@@ -62,18 +51,6 @@ export class PhaseManager {
         alpha: 1,
         duration: 300,
       });
-    });
-  }
-
-  private hidePhaseText() {
-    this.scene.tweens.add({
-      targets: [this.scene.phaseText, this.scene.phaseTextBg],
-      alpha: 0,
-      duration: 500,
-      onComplete: () => {
-        this.scene.phaseText.setVisible(false);
-        this.scene.phaseTextBg.setVisible(false);
-      },
     });
   }
 }

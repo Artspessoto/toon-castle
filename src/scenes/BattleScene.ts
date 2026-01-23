@@ -9,6 +9,7 @@ import { LanguageManager } from "../managers/LanguageManager";
 import { FieldManager } from "../managers/FieldManager";
 import { InputManager } from "../managers/InputManager";
 import { DeckManager } from "../managers/DeckManager";
+import { UIManager } from "../managers/UIManager";
 
 export class BattleScene extends Phaser.Scene {
   public gameState: GameState;
@@ -17,13 +18,9 @@ export class BattleScene extends Phaser.Scene {
   public fieldManager: FieldManager;
   public inputManager: InputManager;
   public deckManager: DeckManager;
+  public uiManager: UIManager;
 
-  public phaseText!: Phaser.GameObjects.Text;
-  public phaseTextBg!: Phaser.GameObjects.Rectangle;
   public phaseButton!: ToonButton;
-  public warningText!: Phaser.GameObjects.Text;
-  public warningTextBg!: Phaser.GameObjects.Rectangle;
-
   private translationText!: BattleTranslations;
 
   constructor() {
@@ -35,6 +32,7 @@ export class BattleScene extends Phaser.Scene {
     this.fieldManager = new FieldManager(this);
     this.inputManager = new InputManager(this);
     this.deckManager = new DeckManager(this);
+    this.uiManager = new UIManager(this);
   }
 
   public get currentPhase(): GamePhase {
@@ -66,65 +64,11 @@ export class BattleScene extends Phaser.Scene {
     const bg = this.add.image(640, 360, "battle-scene-background");
     bg.setDisplaySize(1280, 720).setDepth(-100);
 
+    this.uiManager.setupUI();
     this.deckManager.createDeckVisual();
     this.fieldManager.setupFieldZones();
 
-    this.input.on("pointerdown", (pointer: { x: number; y: number }) => {
-      console.log(
-        `Slot em: X: ${Math.round(pointer.x)}, Y: ${Math.round(pointer.y)}`,
-      );
-    });
-
     // this.phaseTextBg = this.add.rectangle(640, 360, 500, 40, 0x000000, 0.8);
-    this.phaseTextBg = this.add
-      .rectangle(640, 360, 1280, 80, 0x000000, 0.85)
-      .setStrokeStyle(4, 0xffcc00)
-      .setVisible(false)
-      .setDepth(10000);
-    this.phaseText = this.add
-      .text(640, 360, this.translationText.draw_phase, {
-        fontSize: "28px",
-        color: "#FFFFFF",
-        fontStyle: "bold italic",
-        fontFamily: "Arial Black",
-        stroke: "#000000",
-        strokeThickness: 6,
-        shadow: {
-          offsetX: 2,
-          offsetY: 2,
-          blur: 5,
-          fill: true,
-        },
-      })
-      .setOrigin(0.5)
-      .setVisible(false)
-      .setDepth(10001);
-
-    this.warningTextBg = this.add
-      .rectangle(640, 360, 1280, 80, 0x000000, 0.85)
-      .setStrokeStyle(4, 0xcc0000)
-      .setVisible(false)
-      .setDepth(10000);
-    this.warningText = this.add
-      .text(640, 360, "", {
-        fontSize: "28px",
-        color: "#ffffff",
-        fontStyle: "bold italic",
-        fontFamily: "Arial Black",
-        stroke: "#000000",
-        strokeThickness: 6,
-        shadow: {
-          offsetX: 2,
-          offsetY: 2,
-          color: "#ff0000",
-          blur: 5,
-          fill: true,
-        },
-      })
-      .setOrigin(0.5)
-      .setVisible(false)
-      .setDepth(10001);
-
     this.phaseButton = new ToonButton(this, {
       x: 1120,
       y: 420,
@@ -142,6 +86,12 @@ export class BattleScene extends Phaser.Scene {
       this.handleNextPhase();
     });
 
+    this.setupGlobalInputs();
+
+    this.startInitialDraw();
+  }
+
+  private setupGlobalInputs() {
     this.input.keyboard?.on("keydown-SPACE", () => {
       if (this.currentPhase == "DRAW") {
         this.setPhase("MAIN");
@@ -149,6 +99,14 @@ export class BattleScene extends Phaser.Scene {
       }
     });
 
+    this.input.on("pointerdown", (pointer: { x: number; y: number }) => {
+      console.log(
+        `Debug: X: ${Math.round(pointer.x)}, Y: ${Math.round(pointer.y)}`,
+      );
+    });
+  }
+
+  private startInitialDraw() {
     let delay = 0;
     for (let i = 0; i < 4; i++) {
       this.time.delayedCall(delay, () => {
@@ -156,7 +114,6 @@ export class BattleScene extends Phaser.Scene {
       });
       delay += 200;
     }
-
     this.time.delayedCall(delay, () => this.setPhase("DRAW"));
   }
 
@@ -202,62 +159,14 @@ export class BattleScene extends Phaser.Scene {
         this.fieldManager.occupySlot(zoneType, availableSlot.index, card);
         this.playCardOnFieldZone(card, availableSlot.x, availableSlot.y);
       } else {
-        this.messageUI("ÁREA OCUPADA", this.warningText, this.warningTextBg);
+        this.uiManager.showNotice(
+          this.translationText.zone_occupied,
+          "WARNING",
+        );
         this.handManager.reorganizeHand();
       }
     } else {
       this.handManager.reorganizeHand();
     }
-  }
-
-  public messageUI(
-    message: string,
-    textObj: Phaser.GameObjects.Text,
-    textBg: Phaser.GameObjects.Rectangle,
-  ) {
-    textObj
-      .setText(message.toUpperCase())
-      .setAlpha(1)
-      .setVisible(true)
-      .setScale(0.5);
-    textBg.setAlpha(1).setVisible(true).setScale(1, 0);
-
-    this.tweens.add({
-      targets: textBg,
-      scaleY: 1,
-      duration: 150,
-      ease: "Quad.easeOut",
-    });
-
-    // pop animation
-    this.tweens.add({
-      targets: textObj,
-      scale: 1,
-      duration: 200,
-      ease: "Back.easeOut",
-      onComplete: () => {
-        //shake effect
-        this.tweens.add({
-          targets: [textObj, textBg],
-          x: "+=3",
-          yoyo: true,
-          duration: 40,
-          repeat: 3,
-        });
-      },
-    });
-
-    this.time.delayedCall(1500, () => {
-      this.tweens.add({
-        targets: [textObj, textBg],
-        alpha: 0,
-        y: "-=20",
-        duration: 400,
-        onComplete: () => {
-          textObj.setVisible(false).setY(360);
-          textBg.setVisible(false).setY(360);
-        },
-      });
-    });
   }
 }
