@@ -84,25 +84,7 @@ export class InputManager {
     });
 
     card.on("drop", (_pointer: any, targetZone: Phaser.GameObjects.Zone) => {
-      const zoneType = targetZone.getData("type");
-      const cardType = card.getType();
-
-      const monsterCardValidation =
-        cardType.includes("MONSTER") && zoneType === "MONSTER";
-      const spellOrTrapCardValidation =
-        (cardType === "SPELL" || cardType === "TRAP") && zoneType === "SPELL";
-
-      const canPlay =
-        (monsterCardValidation || spellOrTrapCardValidation) &&
-        this.scene.currentPhase == "MAIN";
-
-      if (canPlay) {
-        this.scene.gameState.setDragging(false);
-        this.scene.handManager.removeCard(card);
-        this.scene.playCardOnFieldZone(card, targetZone);
-      } else {
-        this.scene.handManager.reorganizeHand();
-      }
+      this.scene.handleCardDrop(targetZone, card);
     });
   }
 }
