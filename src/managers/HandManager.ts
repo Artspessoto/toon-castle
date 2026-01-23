@@ -26,7 +26,6 @@ export class HandManager {
       deckPosition.y,
       cardData,
     );
-    // newCard.setAngle(-22);
 
     this.scene.inputManager.setupCardInteractions(newCard);
 

@@ -119,6 +119,7 @@ export class BattleScene extends Phaser.Scene {
 
   public playCardOnFieldZone(card: Card, x: number, y: number) {
     this.handManager.reorganizeHand();
+    //set true to defense mode
     this.fieldManager.playCardToZone(card, x, y);
   }
 
