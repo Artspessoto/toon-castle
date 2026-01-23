@@ -3,6 +3,11 @@ import { BattleScene } from "../scenes/BattleScene";
 
 export class FieldManager {
   private scene: BattleScene;
+
+  //null = empty slot, Card = slot full
+  private monsterSlots: (Card | null)[] = [null, null, null];
+  private spellSlots: (Card | null)[] = [null, null, null];
+
   private readonly monsterCoords = [
     { x: 505, y: 450 },
     { x: 645, y: 450 },
@@ -24,23 +29,47 @@ export class FieldManager {
 
   public setupFieldZones() {
     //Monster Zones
-    this.monsterCoords.forEach((pos) => {
+    this.monsterCoords.forEach((pos, i) => {
       this.scene.add
         .zone(pos.x, pos.y, 110, 150)
         .setRectangleDropZone(110, 150)
-        .setData("type", "MONSTER");
+        .setData("type", "MONSTER")
+        .setData("index", i);
     });
 
     //Spell/Trap Zones
-    this.spellCoords.forEach((pos) => {
+    this.spellCoords.forEach((pos, i) => {
       this.scene.add
         .zone(pos.x, pos.y, 110, 150)
         .setRectangleDropZone(110, 150)
-        .setData("type", "SPELL");
+        .setData("type", "SPELL")
+        .setData("index", i);
     });
   }
 
-  public playCardToZone(card: Card, zone: Phaser.GameObjects.Zone) {
+  public getFirstAvailableSlot(type: "MONSTER" | "SPELL") {
+    const slots = type == "MONSTER" ? this.monsterSlots : this.spellSlots;
+    const coords = type === "MONSTER" ? this.monsterCoords : this.spellCoords;
+
+    for (let i = 0; i < slots.length; i++) {
+      if (slots[i] == null) {
+        //response format: { x: 505, y: 450, index: i }
+        return { ...coords[i], index: i };
+      }
+    }
+
+    return null;
+  }
+
+  public occupySlot(type: "MONSTER" | "SPELL", index: number, card: Card) {
+    if (type == "MONSTER") this.monsterSlots[index] = card;
+    else this.spellSlots[index] = card;
+    console.log(
+      `monster slots: ${this.monsterSlots}, spell slots: ${this.spellSlots}`,
+    );
+  }
+
+  public playCardToZone(card: Card, targetX: number, targetY: number) {
     const isTrapOrSpellCard =
       card.getType() === "TRAP" || card.getType() === "SPELL";
 
@@ -58,8 +87,8 @@ export class FieldManager {
     // Slot animation movement
     this.scene.tweens.add({
       targets: card,
-      x: zone.x,
-      y: zone.y,
+      x: targetX,
+      y: targetY,
       angle: 0,
       scale: 0.32,
       duration: 250,

@@ -21,6 +21,8 @@ export class BattleScene extends Phaser.Scene {
   public phaseText!: Phaser.GameObjects.Text;
   public phaseTextBg!: Phaser.GameObjects.Rectangle;
   public phaseButton!: ToonButton;
+  public warningText!: Phaser.GameObjects.Text;
+  public warningTextBg!: Phaser.GameObjects.Rectangle;
 
   private translationText!: BattleTranslations;
 
@@ -73,19 +75,60 @@ export class BattleScene extends Phaser.Scene {
       );
     });
 
-    this.phaseTextBg = this.add.rectangle(640, 360, 500, 40, 0x000000, 0.8);
+    // this.phaseTextBg = this.add.rectangle(640, 360, 500, 40, 0x000000, 0.8);
+    this.phaseTextBg = this.add
+      .rectangle(640, 360, 1280, 80, 0x000000, 0.85)
+      .setStrokeStyle(4, 0xffcc00)
+      .setVisible(false)
+      .setDepth(10000);
     this.phaseText = this.add
       .text(640, 360, this.translationText.draw_phase, {
-        fontSize: "18px",
+        fontSize: "28px",
         color: "#FFFFFF",
-        fontStyle: "bold",
+        fontStyle: "bold italic",
+        fontFamily: "Arial Black",
+        stroke: "#000000",
+        strokeThickness: 6,
+        shadow: {
+          offsetX: 2,
+          offsetY: 2,
+          blur: 5,
+          fill: true,
+        },
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setVisible(false)
+      .setDepth(10001);
+
+    this.warningTextBg = this.add
+      .rectangle(640, 360, 1280, 80, 0x000000, 0.85)
+      .setStrokeStyle(4, 0xcc0000)
+      .setVisible(false)
+      .setDepth(10000);
+    this.warningText = this.add
+      .text(640, 360, "", {
+        fontSize: "28px",
+        color: "#ffffff",
+        fontStyle: "bold italic",
+        fontFamily: "Arial Black",
+        stroke: "#000000",
+        strokeThickness: 6,
+        shadow: {
+          offsetX: 2,
+          offsetY: 2,
+          color: "#ff0000",
+          blur: 5,
+          fill: true,
+        },
+      })
+      .setOrigin(0.5)
+      .setVisible(false)
+      .setDepth(10001);
 
     this.phaseButton = new ToonButton(this, {
       x: 1120,
       y: 420,
-      text: "Pular Fase",
+      text: "",
       fontSize: "18px",
       textColor: "#fff",
       color: 0x000000,
@@ -117,9 +160,9 @@ export class BattleScene extends Phaser.Scene {
     this.time.delayedCall(delay, () => this.setPhase("DRAW"));
   }
 
-  public playCardOnFieldZone(card: Card, zone: Phaser.GameObjects.Zone) {
+  public playCardOnFieldZone(card: Card, x: number, y: number) {
     this.handManager.reorganizeHand();
-    this.fieldManager.playCardToZone(card, zone);
+    this.fieldManager.playCardToZone(card, x, y);
   }
 
   private setPhase(newPhase: GamePhase) {
@@ -137,5 +180,84 @@ export class BattleScene extends Phaser.Scene {
     } else if (this.currentPhase === "BATTLE") {
       this.setPhase("ENEMY_TURN");
     }
+  }
+
+  public handleCardDrop(targetZone: Phaser.GameObjects.Zone, card: Card) {
+    const zoneType: "MONSTER" | "SPELL" = targetZone.getData("type");
+    const cardType = card.getType();
+
+    const monsterValid = cardType.includes("MONSTER") && zoneType === "MONSTER";
+    const suportValid =
+      (cardType === "SPELL" || cardType === "TRAP") && zoneType === "SPELL";
+    const canPlay =
+      (monsterValid || suportValid) && this.currentPhase == "MAIN";
+
+    if (canPlay) {
+      const availableSlot = this.fieldManager.getFirstAvailableSlot(zoneType);
+
+      if (availableSlot) {
+        this.gameState.setDragging(false);
+        this.handManager.removeCard(card);
+
+        this.fieldManager.occupySlot(zoneType, availableSlot.index, card);
+        this.playCardOnFieldZone(card, availableSlot.x, availableSlot.y);
+      } else {
+        this.messageUI("ÁREA OCUPADA", this.warningText, this.warningTextBg);
+        this.handManager.reorganizeHand();
+      }
+    } else {
+      this.handManager.reorganizeHand();
+    }
+  }
+
+  public messageUI(
+    message: string,
+    textObj: Phaser.GameObjects.Text,
+    textBg: Phaser.GameObjects.Rectangle,
+  ) {
+    textObj
+      .setText(message.toUpperCase())
+      .setAlpha(1)
+      .setVisible(true)
+      .setScale(0.5);
+    textBg.setAlpha(1).setVisible(true).setScale(1, 0);
+
+    this.tweens.add({
+      targets: textBg,
+      scaleY: 1,
+      duration: 150,
+      ease: "Quad.easeOut",
+    });
+
+    // pop animation
+    this.tweens.add({
+      targets: textObj,
+      scale: 1,
+      duration: 200,
+      ease: "Back.easeOut",
+      onComplete: () => {
+        //shake effect
+        this.tweens.add({
+          targets: [textObj, textBg],
+          x: "+=3",
+          yoyo: true,
+          duration: 40,
+          repeat: 3,
+        });
+      },
+    });
+
+    this.time.delayedCall(1500, () => {
+      this.tweens.add({
+        targets: [textObj, textBg],
+        alpha: 0,
+        y: "-=20",
+        duration: 400,
+        onComplete: () => {
+          textObj.setVisible(false).setY(360);
+          textBg.setVisible(false).setY(360);
+        },
+      });
+    });
   }
 }
