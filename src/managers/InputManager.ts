@@ -67,6 +67,7 @@ export class InputManager {
     });
 
     card.on("drag", (_pointer: any, dragX: number, dragY: number) => {
+      //TODO option to drop card into zone (defense, attack, back card)
       card.visualElements.setY(0);
       card.visualElements.setScale(1);
       card.setPosition(dragX, dragY);
