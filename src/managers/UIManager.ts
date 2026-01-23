@@ -1,0 +1,92 @@
+import { BattleScene } from "../scenes/BattleScene";
+
+export class UIManager {
+  private scene: BattleScene;
+  private bannerText!: Phaser.GameObjects.Text;
+  private bannerBg!: Phaser.GameObjects.Rectangle;
+
+  constructor(scene: BattleScene) {
+    this.scene = scene;
+  }
+
+  public setupUI() {
+    this.bannerBg = this.scene.add
+      .rectangle(640, 360, 1280, 80, 0x000000, 0.85)
+      .setVisible(false)
+      .setDepth(10000);
+
+    this.bannerText = this.scene.add
+      .text(640, 360, "", {
+        fontSize: "25px",
+        color: "#FFFFFF",
+        fontStyle: "bold italic",
+        fontFamily: "Arial Black",
+        stroke: "#000000",
+        strokeThickness: 6,
+      })
+      .setOrigin(0.5)
+      .setVisible(false)
+      .setDepth(10001);
+  }
+
+  public showNotice(message: string, type: "PHASE" | "WARNING") {
+    if (!this.bannerBg || !this.bannerText) return;
+
+    const color = type === "PHASE" ? 0xffcc00 : 0xcc0000;
+    this.bannerBg.setStrokeStyle(4, color);
+
+    this.animateBanner(message, type);
+  }
+
+  private animateBanner(message: string, type: "PHASE" | "WARNING") {
+    this.bannerText
+      .setText(message.toUpperCase())
+      .setAlpha(1)
+      .setVisible(true)
+      .setScale(0.5);
+    this.bannerBg.setAlpha(1).setVisible(true).setScale(1, 0);
+
+    this.scene.tweens.killTweensOf([this.bannerText, this.bannerBg]);
+
+    // start animation
+    this.scene.tweens.add({
+      targets: this.bannerBg,
+      scaleY: 1,
+      duration: 150,
+      ease: "Quad.easeOut",
+    });
+
+    // pop animation
+    this.scene.tweens.add({
+      targets: this.bannerText,
+      scale: 1,
+      duration: 200,
+      ease: "Back.easeOut",
+      onComplete: () => {
+        //shake effect
+        if (type === "WARNING") {
+          this.scene.tweens.add({
+            targets: [this.bannerText, this.bannerBg],
+            x: "+=3",
+            yoyo: true,
+            duration: 40,
+            repeat: 3,
+          });
+        }
+      },
+    });
+
+    this.scene.time.delayedCall(1500, () => {
+      this.scene.tweens.add({
+        targets: [this.bannerText, this.bannerBg],
+        alpha: 0,
+        y: "-=20",
+        duration: 400,
+        onComplete: () => {
+          this.bannerText.setVisible(false).setY(360);
+          this.bannerBg.setVisible(false).setY(360);
+        },
+      });
+    });
+  }
+}

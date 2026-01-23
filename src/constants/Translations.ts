@@ -36,6 +36,7 @@ export const TRANSLATIONS = {
       draw_phase: "ESPAÇO: COMPRAR CARTA | ARRASTE PARA JOGAR",
       main_phase: "FASE PRINCIPAL",
       battle_phase: "FASE DE BATALHA",
+      zone_occupied: "ZONA JÁ OCUPADA",
       battle_buttons: {
         to_battle: "INICIAR BATALHA",
         end_turn: "ENCERRAR TURNO",
@@ -79,6 +80,7 @@ export const TRANSLATIONS = {
       draw_phase: "SPACE: DRAW CARD | DRAG TO PLAY",
       main_phase: "MAIN PHASE",
       battle_phase: "BATTLE PHASE",
+      zone_occupied: "ZONE ALREADY OCCUPIED",
       battle_buttons: {
         to_battle: "START BATTLE",
         end_turn: "END TURN",
