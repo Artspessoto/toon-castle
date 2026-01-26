@@ -14,6 +14,7 @@ export interface ButtonConfig {
   fontFamily?: string
   borderWidth?: number;
   borderColor?: number;
+  alpha?: number // 0 = invisible, 1 = solid, 0.5 = 50% transparent
 }
 
 export class ToonButton extends Phaser.GameObjects.Container {
@@ -37,6 +38,7 @@ export class ToonButton extends Phaser.GameObjects.Container {
       icon: "",
       borderWidth: 3,
       borderColor: 0x000000,
+      alpha: 1,
       ...config,
     };
 
@@ -91,11 +93,11 @@ export class ToonButton extends Phaser.GameObjects.Container {
     const borderColor = this.config.borderColor ?? 0x000000
 
     // background
-    this.bg.fillStyle(color, 1);
+    this.bg.fillStyle(color, this.config.alpha);
     this.bg.fillRoundedRect(-halfW, -halfH, this.config.width, this.config.height, 12);
 
     // toon border
-    this.bg.lineStyle(borderWidth, borderColor, 1);
+    this.bg.lineStyle(borderWidth, borderColor, this.config.alpha);
     this.bg.strokeRoundedRect(-halfW, -halfH, this.config.width, this.config.height, 12);
   }
 
