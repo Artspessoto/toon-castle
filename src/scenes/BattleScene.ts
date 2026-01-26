@@ -22,6 +22,7 @@ export class BattleScene extends Phaser.Scene {
 
   public phaseButton!: ToonButton;
   private translationText!: BattleTranslations;
+  private selectedCard: Card | null = null;
 
   constructor() {
     super("BattleScene");
@@ -55,6 +56,8 @@ export class BattleScene extends Phaser.Scene {
     );
     this.load.image("card_template_spell", "assets/frameCards/spell_card.png");
     this.load.image("card_template_trap", "assets/frameCards/trap_card.png");
+    this.load.image("sword_icon", "assets/frameCards/crossed-swords.svg");
+    this.load.image("shield_icon", "assets/frameCards/round-shield.svg");
   }
 
   create() {
@@ -92,10 +95,33 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private setupGlobalInputs() {
+    this.input.on(
+      "pointerdown",
+      (
+        _pointer: Phaser.Input.Pointer,
+        currentlyOver: Phaser.GameObjects.GameObject[],
+      ) => {
+        if (currentlyOver.length === 0) {
+          this.uiManager.clearSelectionMenu();
+          this.handManager.showHand();
+        }
+      },
+    );
+
     this.input.keyboard?.on("keydown-SPACE", () => {
       if (this.currentPhase == "DRAW") {
         this.setPhase("MAIN");
         this.handManager.drawCard(this.deckManager.position);
+      }
+    });
+
+    this.input.keyboard?.on("keydown-ESC", () => {
+      this.cancelPlacement();
+    });
+
+    this.input.on("pointerdown", () => {
+      if (this.selectedCard) {
+        this.time.delayedCall(50, () => this.cancelPlacement());
       }
     });
 
@@ -115,12 +141,6 @@ export class BattleScene extends Phaser.Scene {
       delay += 200;
     }
     this.time.delayedCall(delay, () => this.setPhase("DRAW"));
-  }
-
-  public playCardOnFieldZone(card: Card, x: number, y: number) {
-    this.handManager.reorganizeHand();
-    //set true to defense mode
-    this.fieldManager.playCardToZone(card, x, y);
   }
 
   private setPhase(newPhase: GamePhase) {
@@ -150,24 +170,60 @@ export class BattleScene extends Phaser.Scene {
     const canPlay =
       (monsterValid || suportValid) && this.currentPhase == "MAIN";
 
-    if (canPlay) {
-      const availableSlot = this.fieldManager.getFirstAvailableSlot(zoneType);
+    if (!canPlay) {
+      this.handManager.reorganizeHand();
+      return;
+    }
 
-      if (availableSlot) {
-        this.gameState.setDragging(false);
-        this.handManager.removeCard(card);
+    const availableSlot = this.fieldManager.getFirstAvailableSlot(zoneType);
 
-        this.fieldManager.occupySlot(zoneType, availableSlot.index, card);
-        this.playCardOnFieldZone(card, availableSlot.x, availableSlot.y);
-      } else {
-        this.uiManager.showNotice(
-          this.translationText.zone_occupied,
-          "WARNING",
-        );
-        this.handManager.reorganizeHand();
-      }
+    if (availableSlot) {
+      this.gameState.setDragging(false);
+      this.handManager.removeCard(card);
+      this.selectedCard = card;
+      this.handManager.hideHand();
+
+      this.fieldManager.previewPlacement(
+        card,
+        availableSlot.x,
+        availableSlot.y,
+      );
+      this.uiManager.showSelectionMenu(
+        availableSlot.x,
+        availableSlot.y,
+        cardType, // MONSTER, SPELL, etc.
+        (mode) => {
+          this.selectedCard = null; //apply null to drop card
+          this.handManager.showHand();
+          this.fieldManager.occupySlot(zoneType, availableSlot.index, card);
+          this.fieldManager.playCardToZone(
+            card,
+            availableSlot.x,
+            availableSlot.y,
+            mode,
+          );
+        },
+      );
+
+      this.handManager.reorganizeHand();
     } else {
+      this.uiManager.showNotice(this.translationText.zone_occupied, "WARNING");
       this.handManager.reorganizeHand();
     }
+  }
+
+  private cancelPlacement() {
+    this.uiManager.clearSelectionMenu();
+    this.handManager.showHand();
+
+    if (!this.selectedCard) return;
+
+    //return card to hand
+    this.handManager.addCardBack(this.selectedCard);
+
+    this.selectedCard.setInteractive();
+    this.selectedCard.setDepth(100);
+
+    this.selectedCard = null;
   }
 }
