@@ -59,7 +59,7 @@ export class InputManager {
 
       this.scene.tweens.add({
         targets: card,
-        scale: 0.25,
+        scale: 0.35,
         duration: 150,
         ease: "Power2",
       });
