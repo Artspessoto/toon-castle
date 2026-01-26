@@ -1,4 +1,4 @@
-type Lang = "pt-br" | "en";
+import type { Lang } from "../types/GameTypes";
 
 export class LanguageManager {
   private static instance: LanguageManager;
