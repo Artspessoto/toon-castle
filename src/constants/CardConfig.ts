@@ -3,9 +3,7 @@ export const CARD_CONFIG = {
   HEIGHT: 250,
   POSITIONS: {
     MANA: { x: 122, y: -174 },
-
     NAME: { x: 0, y: 70 },
-
     DESC: { x: 0, y: 108 },
     ATK: { x: -122, y: 160 },
     DEF: { x: 122, y: 160 },
