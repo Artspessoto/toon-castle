@@ -1,9 +1,12 @@
+import { ToonButton } from "../objects/ToonButton";
 import { BattleScene } from "../scenes/BattleScene";
+import type { CardData, PlacementMode } from "../types/GameTypes";
 
 export class UIManager {
   private scene: BattleScene;
   private bannerText!: Phaser.GameObjects.Text;
   private bannerBg!: Phaser.GameObjects.Rectangle;
+  private selectionButtons: ToonButton[] = [];
 
   constructor(scene: BattleScene) {
     this.scene = scene;
@@ -90,6 +93,91 @@ export class UIManager {
           this.bannerBg.setX(640);
         },
       });
+    });
+  }
+
+  public showSelectionMenu(
+    x: number,
+    y: number,
+    cardType: string,
+    cb: (mode: PlacementMode) => void,
+  ) {
+    const isMonster = cardType.includes("MONSTER");
+
+    const leftConfig = isMonster
+      ? { text: "", icon: "sword_icon", width: 70 }
+      : { text: "ACTIVE", width: 90 };
+
+    const rightConfig = isMonster
+      ? { text: "", icon: "shield_icon", width: 70 }
+      : { text: "FACE DOWN", width: 110 };
+
+    const leftBtn = new ToonButton(this.scene, {
+      x: x - 75,
+      y: y - 100,
+      height: 42,
+      fontSize: "18px",
+      color: 0x302b1f,
+      textColor: "#FFD966",
+      hoverColor: 0x302b1f,
+      borderColor: 0xeee5ae,
+      ...leftConfig,
+    }).setDepth(10002);
+
+    const rightBtn = new ToonButton(this.scene, {
+      x: x + 75,
+      y: y - 100,
+      height: 42,
+      fontSize: "16px",
+      color: 0x302b1f,
+      textColor: "#FFD966",
+      hoverColor: 0x302b1f,
+      borderColor: 0xeee5ae,
+      ...rightConfig,
+    }).setDepth(10002);
+
+    this.selectionButtons = [leftBtn, rightBtn];
+
+    rightBtn.on("pointerdown", () => {
+      this.clearSelectionMenu();
+      cb(isMonster ? "DEF" : "SET");
+    });
+
+    leftBtn.on("pointerdown", () => {
+      this.clearSelectionMenu();
+      cb(isMonster ? "ATK" : "FACE_UP");
+    });
+  }
+
+  public clearSelectionMenu() {
+    this.selectionButtons.forEach((btn) => btn.destroy());
+    this.selectionButtons = [];
+  }
+
+  public cardDetailsOption(x: number, y: number, cardInfo: CardData) {
+    this.clearSelectionMenu();
+
+    const detailsBtn = new ToonButton(this.scene, {
+      text: "Detalhes",
+      x: x - 70,
+      y: y - 50,
+      height: 42,
+      width: 120,
+      fontSize: "16px",
+      color: 0x302b1f,
+      textColor: "#FFD966",
+      hoverColor: 0x302b1f,
+      borderColor: 0xeee5ae,
+    }).setDepth(10002);
+
+    this.selectionButtons = [detailsBtn];
+
+    detailsBtn.on("pointerdown", () => {
+      this.clearSelectionMenu();
+      this.scene.handManager.showHand();
+
+      //TODO: Modal card info scene
+      console.log(cardInfo);
     });
   }
 }
