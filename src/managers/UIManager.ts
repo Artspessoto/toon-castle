@@ -175,9 +175,7 @@ export class UIManager {
     detailsBtn.on("pointerdown", () => {
       this.clearSelectionMenu();
       this.scene.handManager.showHand();
-
-      //TODO: Modal card info scene
-      console.log(cardInfo);
+      this.scene.scene.launch("CardDetailScene", { cardData: cardInfo });
     });
   }
 }
