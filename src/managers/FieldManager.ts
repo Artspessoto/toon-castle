@@ -1,5 +1,6 @@
 import type { Card } from "../objects/Card";
 import { BattleScene } from "../scenes/BattleScene";
+import type { PlacementMode } from "../types/GameTypes";
 
 export class FieldManager {
   private scene: BattleScene;
@@ -64,20 +65,14 @@ export class FieldManager {
   public occupySlot(type: "MONSTER" | "SPELL", index: number, card: Card) {
     if (type == "MONSTER") this.monsterSlots[index] = card;
     else this.spellSlots[index] = card;
-    console.log(
-      `monster slots: ${this.monsterSlots}, spell slots: ${this.spellSlots}`,
-    );
   }
 
   public playCardToZone(
     card: Card,
     targetX: number,
     targetY: number,
-    isDefense: boolean = false,
+    mode: PlacementMode,
   ) {
-    const isTrapOrSpellCard =
-      card.getType() === "TRAP" || card.getType() === "SPELL";
-
     card.disableInteractive();
     this.scene.tweens.killTweensOf(card.visualElements);
 
@@ -85,10 +80,13 @@ export class FieldManager {
     card.visualElements.setScale(1);
     card.setFieldVisuals();
 
+    const isDefense = mode === "DEF";
+    const isSet = mode === "SET";
+
     const finalAngle = isDefense ? 270 : 0;
     const finalScale = isDefense ? 0.3 : 0.32;
 
-    if (isTrapOrSpellCard) {
+    if (isSet) {
       card.setFaceDown();
     }
 
@@ -105,7 +103,45 @@ export class FieldManager {
         // card impact animation effect
         this.scene.cameras.main.shake(100, 0.002);
         card.setDepth(10);
+
+        this.setupFieldInteractions(card);
       },
+    });
+  }
+
+  public previewPlacement(card: Card, targetX: number, targetY: number) {
+    card.disableInteractive();
+    this.scene.tweens.killTweensOf(card);
+
+    card.visualElements.setY(0);
+    card.visualElements.setScale(1);
+
+    this.scene.tweens.add({
+      targets: card,
+      x: targetX,
+      y: targetY,
+      scale: 0.55,
+      angle: 0,
+      duration: 200,
+      ease: "Power2",
+    });
+
+    card.setDepth(5000);
+  }
+
+  private setupFieldInteractions(card: Card) {
+    card.setInteractive({ cursor: "pointer" });
+    card.removeAllListeners();
+
+    card.on("pointerdown", () => {
+      const data = card.getCardData();
+      const currentX = card.x;
+      const currentY = card.y;
+
+      console.log(data.nameKey);
+      console.log(currentX, currentY);
+      this.scene.handManager.hideHand();
+      this.scene.uiManager.cardDetailsOption(currentX, currentY, data);
     });
   }
 }
