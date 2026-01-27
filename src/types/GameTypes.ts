@@ -6,6 +6,7 @@ export type PlacementMode = "ATK" | "DEF" | "FACE_UP" | "SET";
 
 type Languages = keyof typeof TRANSLATIONS;
 type TranslationStructure = (typeof TRANSLATIONS)[Languages];
+export type GameSide = "PLAYER" | "OPPONENT";
 export type Lang = "pt-br" | "en";
 export type BattleTranslations = TranslationStructure["battle_scene"];
 
