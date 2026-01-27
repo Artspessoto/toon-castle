@@ -6,13 +6,41 @@ export class UIManager {
   private scene: BattleScene;
   private bannerText!: Phaser.GameObjects.Text;
   private bannerBg!: Phaser.GameObjects.Rectangle;
+  private manaText!: Phaser.GameObjects.Text;
+  private manaIcon!: Phaser.GameObjects.Image;
+  private manaAura!: Phaser.GameObjects.Image;
   private selectionButtons: ToonButton[] = [];
+  private currentManaValue: number = 0;
 
   constructor(scene: BattleScene) {
     this.scene = scene;
   }
 
   public setupUI() {
+    this.manaAura = this.scene.add
+      .image(1232, 650, "mana_icon")
+      .setScale(0.5)
+      .setAlpha(0)
+      .setTint(0xffffff)
+      .setDepth(99);
+
+    this.manaIcon = this.scene.add
+      .image(1232, 650, "mana_icon")
+      .setScale(0.4)
+      .setDepth(100);
+
+    this.manaText = this.scene.add
+      .text(this.manaIcon.x, this.manaIcon.y, "0", {
+        fontSize: "32px",
+        fontFamily: "Arial Black",
+        color: "#FFD966",
+        stroke: "#4D2600",
+        strokeThickness: 5,
+        align: "center",
+      })
+      .setOrigin(0.5)
+      .setDepth(101);
+
     this.bannerBg = this.scene.add
       .rectangle(640, 360, 1280, 80, 0x000000, 0.85)
       .setVisible(false)
@@ -30,6 +58,22 @@ export class UIManager {
       .setOrigin(0.5)
       .setVisible(false)
       .setDepth(10001);
+  }
+
+  public updateMana(amount: number) {
+    this.currentManaValue += amount;
+    this.manaText.setText(`${this.currentManaValue}`);
+
+    this.scene.tweens.add({
+      targets: this.manaAura,
+      alpha: { from: 0.8, to: 0 },
+      scale: { from: 0.5, to: 0.8 }, //shock wave effect
+      duration: 300,
+      ease: "Quad.easeOut",
+      onComplete: () => {
+        this.manaAura.setScale(0.5).setAlpha(0);
+      },
+    });
   }
 
   public showNotice(message: string, type: "PHASE" | "WARNING") {
@@ -174,7 +218,7 @@ export class UIManager {
 
     detailsBtn.on("pointerdown", () => {
       this.clearSelectionMenu();
-      this.scene.handManager.showHand();
+      this.scene.playerHand.showHand();
       this.scene.scene.launch("CardDetailScene", { cardData: cardInfo });
     });
   }

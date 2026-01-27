@@ -138,9 +138,7 @@ export class FieldManager {
       const currentX = card.x;
       const currentY = card.y;
 
-      console.log(data.nameKey);
-      console.log(currentX, currentY);
-      this.scene.handManager.hideHand();
+      this.scene.playerHand.hideHand();
       this.scene.uiManager.cardDetailsOption(currentX, currentY, data);
     });
   }

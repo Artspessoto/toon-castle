@@ -43,7 +43,7 @@ export class InputManager {
       ease: "Power2",
     });
 
-    this.scene.handManager.reorganizeHand();
+    this.scene.currentHand.reorganizeHand();
   }
 
   public setupDragEvents(card: Card) {
@@ -75,7 +75,7 @@ export class InputManager {
 
     card.on("dragend", (_pointer: any, dropped: boolean) => {
       this.scene.gameState.setDragging(false);
-      if (!dropped) this.scene.handManager.reorganizeHand();
+      if (!dropped) this.scene.currentHand.reorganizeHand();
       this.scene.tweens.add({
         targets: card,
         scale: 0.35,
