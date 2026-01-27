@@ -14,10 +14,12 @@ import { UIManager } from "../managers/UIManager";
 export class BattleScene extends Phaser.Scene {
   public gameState: GameState;
   public phaseManager: PhaseManager;
-  public handManager: HandManager;
+  public playerHand: HandManager;
+  public oponentHand: HandManager;
   public fieldManager: FieldManager;
   public inputManager: InputManager;
-  public deckManager: DeckManager;
+  public playerDeck: DeckManager;
+  public oponentDeck: DeckManager;
   public uiManager: UIManager;
 
   public phaseButton!: ToonButton;
@@ -29,11 +31,15 @@ export class BattleScene extends Phaser.Scene {
 
     this.gameState = new GameState();
     this.phaseManager = new PhaseManager(this);
-    this.handManager = new HandManager(this);
     this.fieldManager = new FieldManager(this);
     this.inputManager = new InputManager(this);
-    this.deckManager = new DeckManager(this);
     this.uiManager = new UIManager(this);
+
+    this.playerHand = new HandManager(this, "PLAYER");
+    this.oponentHand = new HandManager(this, "OPPONENT");
+
+    this.playerDeck = new DeckManager(this, "PLAYER");
+    this.oponentDeck = new DeckManager(this, "OPPONENT");
   }
 
   public get currentPhase(): GamePhase {
@@ -58,6 +64,7 @@ export class BattleScene extends Phaser.Scene {
     this.load.image("card_template_trap", "assets/frameCards/trap_card.png");
     this.load.image("sword_icon", "assets/frameCards/crossed-swords.svg");
     this.load.image("shield_icon", "assets/frameCards/round-shield.svg");
+    this.load.image("mana_icon", "assets/frameCards/mana_icon.png");
   }
 
   create() {
@@ -68,7 +75,8 @@ export class BattleScene extends Phaser.Scene {
     bg.setDisplaySize(1280, 720).setDepth(-100);
 
     this.uiManager.setupUI();
-    this.deckManager.createDeckVisual();
+    this.playerDeck.createDeckVisual();
+    this.oponentDeck.createDeckVisual();
     this.fieldManager.setupFieldZones();
 
     // this.phaseTextBg = this.add.rectangle(640, 360, 500, 40, 0x000000, 0.8);
@@ -94,6 +102,20 @@ export class BattleScene extends Phaser.Scene {
     this.startInitialDraw();
   }
 
+  private getActiveManager<T>(playerManager: T, oponentMananger: T): T {
+    return this.gameState.activePlayer === "PLAYER"
+      ? playerManager
+      : oponentMananger;
+  }
+
+  public get currentDeck(): DeckManager {
+    return this.getActiveManager(this.playerDeck, this.oponentDeck);
+  }
+
+  public get currentHand(): HandManager {
+    return this.getActiveManager(this.playerHand, this.oponentHand);
+  }
+
   private setupGlobalInputs() {
     this.input.on(
       "pointerdown",
@@ -103,7 +125,7 @@ export class BattleScene extends Phaser.Scene {
       ) => {
         if (currentlyOver.length === 0) {
           this.uiManager.clearSelectionMenu();
-          this.handManager.showHand();
+          this.playerHand.showHand();
         }
       },
     );
@@ -111,12 +133,18 @@ export class BattleScene extends Phaser.Scene {
     this.input.keyboard?.on("keydown-SPACE", () => {
       if (this.currentPhase == "DRAW") {
         this.setPhase("MAIN");
-        this.handManager.drawCard(this.deckManager.position);
+        this.currentHand.drawCard(this.currentDeck.position);
+        this.uiManager.updateMana(2);
       }
     });
 
     this.input.keyboard?.on("keydown-ESC", () => {
       this.cancelPlacement();
+    });
+
+    this.input.keyboard?.on("keydown-T", () => {
+      this.gameState.nextTurn();
+      this.setPhase("DRAW");
     });
 
     this.input.on("pointerdown", () => {
@@ -134,22 +162,34 @@ export class BattleScene extends Phaser.Scene {
 
   private startInitialDraw() {
     let delay = 0;
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 5; i++) {
       this.time.delayedCall(delay, () => {
-        this.handManager.drawCard(this.deckManager.position);
+        this.playerHand.drawCard(this.playerDeck.position);
+        this.oponentHand.drawCard(this.oponentDeck.position);
       });
       delay += 200;
     }
-    this.time.delayedCall(delay, () => this.setPhase("DRAW"));
+    this.time.delayedCall(delay, () => this.setPhase("MAIN"));
   }
 
   private setPhase(newPhase: GamePhase) {
     this.gameState.setPhase(newPhase);
     this.phaseManager.updateUI(newPhase, this.translationText);
 
+    //hidden btn in enemy turn
+    this.phaseButton.setVisible(this.gameState.activePlayer == "PLAYER");
+
     if (newPhase === "DRAW") {
-      this.handManager.drawCard(this.deckManager.position);
+      if (this.gameState.activePlayer === "OPPONENT") {
+        this.currentHand.drawCard(this.currentDeck.position);
+        this.handleOpponentTurn();
+      }
     }
+  }
+
+  public finalizeTurnTransition() {
+    this.gameState.nextTurn(); // change to oponent and reset to draw phase
+    this.setPhase("DRAW");
   }
 
   private handleNextPhase() {
@@ -171,7 +211,7 @@ export class BattleScene extends Phaser.Scene {
       (monsterValid || suportValid) && this.currentPhase == "MAIN";
 
     if (!canPlay) {
-      this.handManager.reorganizeHand();
+      this.currentHand.reorganizeHand();
       return;
     }
 
@@ -179,9 +219,14 @@ export class BattleScene extends Phaser.Scene {
 
     if (availableSlot) {
       this.gameState.setDragging(false);
-      this.handManager.removeCard(card);
+      const hand: HandManager =
+        this.gameState.activePlayer == "PLAYER"
+          ? this.playerHand
+          : this.oponentHand;
+      hand.removeCard(card);
+
       this.selectedCard = card;
-      this.handManager.hideHand();
+      hand.hideHand();
 
       this.fieldManager.previewPlacement(
         card,
@@ -194,7 +239,7 @@ export class BattleScene extends Phaser.Scene {
         cardType, // MONSTER, SPELL, etc.
         (mode) => {
           this.selectedCard = null; //apply null to drop card
-          this.handManager.showHand();
+          hand.showHand();
           this.fieldManager.occupySlot(zoneType, availableSlot.index, card);
           this.fieldManager.playCardToZone(
             card,
@@ -205,25 +250,43 @@ export class BattleScene extends Phaser.Scene {
         },
       );
 
-      this.handManager.reorganizeHand();
+      this.currentHand.reorganizeHand();
     } else {
       this.uiManager.showNotice(this.translationText.zone_occupied, "WARNING");
-      this.handManager.reorganizeHand();
+      this.currentHand.reorganizeHand();
     }
   }
 
   private cancelPlacement() {
     this.uiManager.clearSelectionMenu();
-    this.handManager.showHand();
+    this.currentHand.showHand();
 
     if (!this.selectedCard) return;
 
     //return card to hand
-    this.handManager.addCardBack(this.selectedCard);
+    this.currentHand.addCardBack(this.selectedCard);
 
     this.selectedCard.setInteractive();
     this.selectedCard.setDepth(100);
 
     this.selectedCard = null;
+  }
+
+  //simulate changing turn
+  private handleOpponentTurn() {
+    // 2s to change each phase
+    this.time.delayedCall(2000, () => {
+      this.setPhase("MAIN");
+
+      this.time.delayedCall(2000, () => {
+        this.setPhase("BATTLE");
+
+        this.time.delayedCall(2000, () => {
+          // end turn and back to player
+          this.gameState.nextTurn();
+          this.setPhase("DRAW");
+        });
+      });
+    });
   }
 }
