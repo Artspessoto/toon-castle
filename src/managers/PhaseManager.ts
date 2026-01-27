@@ -27,6 +27,8 @@ export class PhaseManager {
 
         if (isPlayerTurn) {
           this.handleButtonTransition(translations.battle_buttons.to_battle);
+        } else {
+          phaseButton.setVisible(false);
         }
         break;
       case "BATTLE":
@@ -34,10 +36,12 @@ export class PhaseManager {
         phaseButton
           .setVisible(isPlayerTurn)
           .setText(translations.battle_buttons.end_turn);
-        phaseButton.setVisible(true);
         break;
       case "ENEMY_TURN":
-        phaseButton.setVisible(false);
+        this.scene.tweens.killTweensOf(phaseButton);
+        phaseButton.setVisible(false).setAlpha(1);
+        phaseButton.setText(translations.battle_buttons.to_battle);
+
         uiManager.showNotice(translations.turn_change, "PHASE");
 
         this.scene.time.delayedCall(1200, () => {

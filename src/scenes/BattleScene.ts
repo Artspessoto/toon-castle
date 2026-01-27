@@ -176,9 +176,6 @@ export class BattleScene extends Phaser.Scene {
     this.gameState.setPhase(newPhase);
     this.phaseManager.updateUI(newPhase, this.translationText);
 
-    //hidden btn in enemy turn
-    this.phaseButton.setVisible(this.gameState.activePlayer == "PLAYER");
-
     if (newPhase === "DRAW") {
       if (this.gameState.activePlayer === "OPPONENT") {
         this.currentHand.drawCard(this.currentDeck.position);
