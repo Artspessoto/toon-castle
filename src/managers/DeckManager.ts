@@ -1,12 +1,17 @@
 import { BattleScene } from "../scenes/BattleScene";
+import type { GameSide } from "../types/GameTypes";
 
 export class DeckManager {
   private scene: BattleScene;
+  private side: GameSide;
+  private deckPosition: { x: number; y: number };
 
-  private readonly deckPosition = { x: 1122, y: 542 };
-
-  constructor(scene: BattleScene) {
+  constructor(scene: BattleScene, side: GameSide) {
     this.scene = scene;
+    this.side = side;
+
+    this.deckPosition =
+      this.side == "PLAYER" ? { x: 1122, y: 542 } : { x: 1122, y: 110 };
   }
 
   public get position() {
@@ -15,7 +20,6 @@ export class DeckManager {
 
   public createDeckVisual() {
     for (let i = 8; i >= 0; i--) {
-      // const heightOffset = i * 3;
       const xOffset = i * 2;
       const yOffset = 0;
       const deckCard = this.scene.add.plane(

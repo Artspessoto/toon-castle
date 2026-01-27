@@ -1,18 +1,31 @@
 import { BattleScene } from "../scenes/BattleScene";
 import { Card } from "../objects/Card";
 import { CARD_DATABASE } from "../constants/CardDatabase";
+import type { GameSide } from "../types/GameTypes";
 
 export class HandManager {
   private scene: BattleScene;
   private hand: Card[] = [];
-  private currentHandY: number = 710; //hand position
+  private side: GameSide;
 
+  private currentHandY: number; //hand position
+  private readonly hiddenY: number; //hidden hand cards
+  private readonly normalY: number;
   private readonly maxHandSize: number = 7;
-  private readonly hiddenY: number = 850; //hidden hand cards
-  private readonly normalY: number = 710;
 
-  constructor(scene: BattleScene) {
+  constructor(scene: BattleScene, side: GameSide) {
     this.scene = scene;
+    this.side = side;
+
+    if (this.side === "PLAYER") {
+      this.normalY = 710;
+      this.hiddenY = 850;
+    } else {
+      this.normalY = 10;
+      this.hiddenY = -150;
+    }
+
+    this.currentHandY = this.normalY;
   }
 
   public get cards(): Card[] {
@@ -43,8 +56,14 @@ export class HandManager {
       cardData,
     );
 
-    this.scene.inputManager.setupCardInteractions(newCard);
+    if (this.side == "OPPONENT") {
+      newCard.setFaceDown(); //show back card in oponent hand
+      newCard.disableInteractive();
+    } else {
+      this.scene.inputManager.setupCardInteractions(newCard);
+    }
 
+    newCard.setDepth(200);
     this.hand.push(newCard);
     this.animateCardEntry(newCard);
     this.reorganizeHand();
@@ -80,7 +99,7 @@ export class HandManager {
         x: targetX,
         y: this.currentHandY,
         angle: 0,
-        scale: 0.45,
+        scale: this.side == "PLAYER" ? 0.45 : 0.35,
         duration: 500, // 0.5s
         // ease: "Power2",
         ease: "Back.easeOut",
@@ -93,7 +112,7 @@ export class HandManager {
     this.reorganizeHand();
   }
 
-  public addCardBack(card: Card){
+  public addCardBack(card: Card) {
     this.hand.push(card);
     this.showHand();
     this.reorganizeHand();

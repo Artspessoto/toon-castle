@@ -10,20 +10,29 @@ export class PhaseManager {
 
   public updateUI(phase: GamePhase, translations: BattleTranslations) {
     const { phaseButton, uiManager } = this.scene;
+    const isPlayerTurn = this.scene.gameState.activePlayer == "PLAYER";
 
     switch (phase) {
       case "DRAW":
         phaseButton.setVisible(false);
-        uiManager.showNotice(translations.draw_phase, "PHASE");
+
+        if (isPlayerTurn) {
+          uiManager.showNotice(translations.draw_phase, "PHASE");
+        } else {
+          uiManager.showNotice(translations.opponent_draw, "PHASE");
+        }
         break;
       case "MAIN":
         uiManager.showNotice(translations.main_phase, "PHASE");
-        this.handleButtonTransition(translations.battle_buttons.to_battle);
+
+        if (isPlayerTurn) {
+          this.handleButtonTransition(translations.battle_buttons.to_battle);
+        }
         break;
       case "BATTLE":
         uiManager.showNotice(translations.battle_phase, "PHASE");
         phaseButton
-          .setVisible(true)
+          .setVisible(isPlayerTurn)
           .setText(translations.battle_buttons.end_turn);
         phaseButton.setVisible(true);
         break;
@@ -32,9 +41,10 @@ export class PhaseManager {
         uiManager.showNotice(translations.turn_change, "PHASE");
 
         this.scene.time.delayedCall(1200, () => {
-          if (this.scene.currentPhase !== "ENEMY_TURN") return;
-
           uiManager.showNotice(translations.opponent_turn, "PHASE");
+          this.scene.time.delayedCall(1000, () => {
+            this.scene.finalizeTurnTransition();
+          });
         });
 
         return;
