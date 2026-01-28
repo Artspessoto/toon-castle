@@ -1,7 +1,7 @@
 import type { Card } from "../objects/Card";
 import { ToonButton } from "../objects/ToonButton";
 import { BattleScene } from "../scenes/BattleScene";
-import type { CardData, GameSide, PlacementMode } from "../types/GameTypes";
+import type { GameSide, PlacementMode } from "../types/GameTypes";
 
 export class UIManager {
   private scene: BattleScene;
@@ -312,6 +312,7 @@ export class UIManager {
 
     detailsBtn.on("pointerdown", () => {
       this.clearSelectionMenu();
+      this.scene.playerHand.showHand();
       this.scene.scene.launch("CardDetailScene", { cardData: cardData });
     });
 
