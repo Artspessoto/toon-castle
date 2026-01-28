@@ -10,6 +10,7 @@ export class Card extends Phaser.GameObjects.Container {
   private descText: Phaser.GameObjects.Text;
   private atkText?: Phaser.GameObjects.Text;
   private defText?: Phaser.GameObjects.Text;
+  private _isFaceDown: boolean = false;
   private originalData: CardData;
   public cardType: CardType;
 
@@ -108,7 +109,12 @@ export class Card extends Phaser.GameObjects.Container {
     this.setSize(FIELD_W, FIELD_H);
   }
 
+  public get isFaceDown(): boolean {
+    return this._isFaceDown;
+  }
+
   public setFaceDown() {
+    this._isFaceDown = true;
     this.frame.setTexture("card_back");
 
     this.nameText.setVisible(false);
@@ -119,6 +125,15 @@ export class Card extends Phaser.GameObjects.Container {
     if (this.defText) this.defText.setVisible(false);
 
     this.setFieldVisuals();
+  }
+
+  public setFaceUp() {
+    this._isFaceDown = false;
+    this.frame.setTexture(this.getFrameKey(this.originalData.type));
+    
+    this.nameText.setVisible(true);
+    this.manaText.setVisible(true);
+    this.descText.setVisible(true);
   }
 
   public getCardData(): CardData {

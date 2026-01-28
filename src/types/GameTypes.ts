@@ -1,6 +1,6 @@
 import { TRANSLATIONS } from "../constants/Translations";
 
-export type GamePhase = "DRAW" | "MAIN" | "BATTLE" | "ENEMY_TURN";
+export type GamePhase = "DRAW" | "MAIN" | "BATTLE" | "CHANGE_TURN";
 export type CardType = "MONSTER" | "EFFECT_MONSTER" | "SPELL" | "TRAP";
 export type PlacementMode = "ATK" | "DEF" | "FACE_UP" | "SET";
 
