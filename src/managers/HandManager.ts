@@ -11,7 +11,7 @@ export class HandManager {
   private currentHandY: number; //hand position
   private readonly hiddenY: number; //hidden hand cards
   private readonly normalY: number;
-  private readonly maxHandSize: number = 7;
+  private readonly maxHandSize: number = 6;
 
   constructor(scene: BattleScene, side: GameSide) {
     this.scene = scene;
