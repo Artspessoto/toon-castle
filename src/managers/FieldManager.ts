@@ -134,12 +134,12 @@ export class FieldManager {
     card.removeAllListeners();
 
     card.on("pointerdown", () => {
-      const data = card.getCardData();
       const currentX = card.x;
       const currentY = card.y;
 
       this.scene.playerHand.hideHand();
-      this.scene.uiManager.cardDetailsOption(currentX, currentY, data);
+
+      this.scene.playerUI.showFieldCardMenu(currentX, currentY, card);
     });
   }
 }

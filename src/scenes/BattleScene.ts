@@ -4,7 +4,11 @@ import { HandManager } from "../managers/HandManager";
 import { PhaseManager } from "../managers/PhaseManager";
 import { Card } from "../objects/Card";
 import { ToonButton } from "../objects/ToonButton";
-import type { BattleTranslations, GamePhase } from "../types/GameTypes";
+import type {
+  BattleTranslations,
+  GamePhase,
+  PlacementMode,
+} from "../types/GameTypes";
 import { LanguageManager } from "../managers/LanguageManager";
 import { FieldManager } from "../managers/FieldManager";
 import { InputManager } from "../managers/InputManager";
@@ -15,12 +19,13 @@ export class BattleScene extends Phaser.Scene {
   public gameState: GameState;
   public phaseManager: PhaseManager;
   public playerHand: HandManager;
-  public oponentHand: HandManager;
+  public opponentHand: HandManager;
   public fieldManager: FieldManager;
   public inputManager: InputManager;
   public playerDeck: DeckManager;
   public oponentDeck: DeckManager;
-  public uiManager: UIManager;
+  public playerUI: UIManager;
+  public opponentUI: UIManager;
 
   public phaseButton!: ToonButton;
   private translationText!: BattleTranslations;
@@ -33,10 +38,12 @@ export class BattleScene extends Phaser.Scene {
     this.phaseManager = new PhaseManager(this);
     this.fieldManager = new FieldManager(this);
     this.inputManager = new InputManager(this);
-    this.uiManager = new UIManager(this);
+
+    this.playerUI = new UIManager(this, "PLAYER");
+    this.opponentUI = new UIManager(this, "OPPONENT");
 
     this.playerHand = new HandManager(this, "PLAYER");
-    this.oponentHand = new HandManager(this, "OPPONENT");
+    this.opponentHand = new HandManager(this, "OPPONENT");
 
     this.playerDeck = new DeckManager(this, "PLAYER");
     this.oponentDeck = new DeckManager(this, "OPPONENT");
@@ -49,7 +56,7 @@ export class BattleScene extends Phaser.Scene {
   preload() {
     this.load.image(
       "battle-scene-background",
-      "assets/frameCards/battle_scene_2d.png",
+      "assets/frameCards/battle_scene_1.jpeg",
     );
     this.load.image("card_back", "assets/frameCards/card_back2.png");
     this.load.image(
@@ -74,9 +81,14 @@ export class BattleScene extends Phaser.Scene {
     const bg = this.add.image(640, 360, "battle-scene-background");
     bg.setDisplaySize(1280, 720).setDepth(-100);
 
-    this.uiManager.setupUI();
+    this.playerUI.setupUI();
+    this.playerUI.setupLifePoints();
+    this.opponentUI.setupUI();
+    this.opponentUI.setupLifePoints();
+
     this.playerDeck.createDeckVisual();
     this.oponentDeck.createDeckVisual();
+
     this.fieldManager.setupFieldZones();
 
     // this.phaseTextBg = this.add.rectangle(640, 360, 500, 40, 0x000000, 0.8);
@@ -113,7 +125,11 @@ export class BattleScene extends Phaser.Scene {
   }
 
   public get currentHand(): HandManager {
-    return this.getActiveManager(this.playerHand, this.oponentHand);
+    return this.getActiveManager(this.playerHand, this.opponentHand);
+  }
+
+  public get currentUI(): UIManager {
+    return this.getActiveManager(this.playerUI, this.opponentUI);
   }
 
   private setupGlobalInputs() {
@@ -124,7 +140,7 @@ export class BattleScene extends Phaser.Scene {
         currentlyOver: Phaser.GameObjects.GameObject[],
       ) => {
         if (currentlyOver.length === 0) {
-          this.uiManager.clearSelectionMenu();
+          this.currentUI.clearSelectionMenu();
           this.playerHand.showHand();
         }
       },
@@ -134,7 +150,7 @@ export class BattleScene extends Phaser.Scene {
       if (this.currentPhase == "DRAW") {
         this.setPhase("MAIN");
         this.currentHand.drawCard(this.currentDeck.position);
-        this.uiManager.updateMana(2);
+        this.currentUI.updateMana(2);
       }
     });
 
@@ -165,7 +181,7 @@ export class BattleScene extends Phaser.Scene {
     for (let i = 0; i < 5; i++) {
       this.time.delayedCall(delay, () => {
         this.playerHand.drawCard(this.playerDeck.position);
-        this.oponentHand.drawCard(this.oponentDeck.position);
+        this.opponentHand.drawCard(this.oponentDeck.position);
       });
       delay += 200;
     }
@@ -179,6 +195,7 @@ export class BattleScene extends Phaser.Scene {
     if (newPhase === "DRAW") {
       if (this.gameState.activePlayer === "OPPONENT") {
         this.currentHand.drawCard(this.currentDeck.position);
+        this.currentUI.updateMana(2);
         this.handleOpponentTurn();
       }
     }
@@ -193,7 +210,7 @@ export class BattleScene extends Phaser.Scene {
     if (this.currentPhase === "MAIN") {
       this.setPhase("BATTLE");
     } else if (this.currentPhase === "BATTLE") {
-      this.setPhase("ENEMY_TURN");
+      this.setPhase("CHANGE_TURN");
     }
   }
 
@@ -219,7 +236,7 @@ export class BattleScene extends Phaser.Scene {
       const hand: HandManager =
         this.gameState.activePlayer == "PLAYER"
           ? this.playerHand
-          : this.oponentHand;
+          : this.opponentHand;
       hand.removeCard(card);
 
       this.selectedCard = card;
@@ -230,11 +247,11 @@ export class BattleScene extends Phaser.Scene {
         availableSlot.x,
         availableSlot.y,
       );
-      this.uiManager.showSelectionMenu(
+      this.currentUI.showSelectionMenu(
         availableSlot.x,
         availableSlot.y,
         cardType, // MONSTER, SPELL, etc.
-        (mode) => {
+        (mode: PlacementMode) => {
           this.selectedCard = null; //apply null to drop card
           hand.showHand();
           this.fieldManager.occupySlot(zoneType, availableSlot.index, card);
@@ -249,13 +266,13 @@ export class BattleScene extends Phaser.Scene {
 
       this.currentHand.reorganizeHand();
     } else {
-      this.uiManager.showNotice(this.translationText.zone_occupied, "WARNING");
+      this.currentUI.showNotice(this.translationText.zone_occupied, "WARNING");
       this.currentHand.reorganizeHand();
     }
   }
 
   private cancelPlacement() {
-    this.uiManager.clearSelectionMenu();
+    this.currentUI.clearSelectionMenu();
     this.currentHand.showHand();
 
     if (!this.selectedCard) return;
@@ -271,7 +288,6 @@ export class BattleScene extends Phaser.Scene {
 
   //simulate changing turn
   private handleOpponentTurn() {
-    // 2s to change each phase
     this.time.delayedCall(2000, () => {
       this.setPhase("MAIN");
 
@@ -279,9 +295,7 @@ export class BattleScene extends Phaser.Scene {
         this.setPhase("BATTLE");
 
         this.time.delayedCall(2000, () => {
-          // end turn and back to player
-          this.gameState.nextTurn();
-          this.setPhase("DRAW");
+          this.setPhase("CHANGE_TURN");
         });
       });
     });

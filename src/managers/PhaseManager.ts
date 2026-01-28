@@ -9,7 +9,7 @@ export class PhaseManager {
   }
 
   public updateUI(phase: GamePhase, translations: BattleTranslations) {
-    const { phaseButton, uiManager } = this.scene;
+    const { phaseButton, currentUI } = this.scene;
     const isPlayerTurn = this.scene.gameState.activePlayer == "PLAYER";
 
     switch (phase) {
@@ -17,13 +17,13 @@ export class PhaseManager {
         phaseButton.setVisible(false);
 
         if (isPlayerTurn) {
-          uiManager.showNotice(translations.draw_phase, "PHASE");
+          currentUI.showNotice(translations.draw_phase, "PHASE");
         } else {
-          uiManager.showNotice(translations.opponent_draw, "PHASE");
+          currentUI.showNotice(translations.opponent_draw, "PHASE");
         }
         break;
       case "MAIN":
-        uiManager.showNotice(translations.main_phase, "PHASE");
+        currentUI.showNotice(translations.main_phase, "PHASE");
 
         if (isPlayerTurn) {
           this.handleButtonTransition(translations.battle_buttons.to_battle);
@@ -32,20 +32,25 @@ export class PhaseManager {
         }
         break;
       case "BATTLE":
-        uiManager.showNotice(translations.battle_phase, "PHASE");
+        currentUI.showNotice(translations.battle_phase, "PHASE");
         phaseButton
           .setVisible(isPlayerTurn)
           .setText(translations.battle_buttons.end_turn);
         break;
-      case "ENEMY_TURN":
+      case "CHANGE_TURN":
         this.scene.tweens.killTweensOf(phaseButton);
         phaseButton.setVisible(false).setAlpha(1);
         phaseButton.setText(translations.battle_buttons.to_battle);
 
-        uiManager.showNotice(translations.turn_change, "PHASE");
+        currentUI.showNotice(translations.turn_change, "PHASE");
 
         this.scene.time.delayedCall(1200, () => {
-          uiManager.showNotice(translations.opponent_turn, "PHASE");
+          if (!isPlayerTurn) {
+            currentUI.showNotice(translations.your_turn, "PHASE");
+          } else {
+            currentUI.showNotice(translations.opponent_turn, "PHASE");
+          }
+
           this.scene.time.delayedCall(1000, () => {
             this.scene.finalizeTurnTransition();
           });
