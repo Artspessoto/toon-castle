@@ -11,7 +11,7 @@ export class DeckManager {
     this.side = side;
 
     this.deckPosition =
-      this.side == "PLAYER" ? { x: 1122, y: 542 } : { x: 1122, y: 110 };
+      this.side == "PLAYER" ? { x: 1122, y: 542 } : { x: 1122, y: 170 };
   }
 
   public get position() {
