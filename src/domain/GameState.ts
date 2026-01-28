@@ -5,13 +5,33 @@ export class GameState {
   private _isDragging: boolean = false;
   private _activePlayer: GameSide = "PLAYER";
 
-  public playerHP: number = 6000;
-  public enemyHP: number = 6000;
+  public playerHP: number = 600;
+  public opponentHP: number = 600;
+  public playerMana: number = 5;
+  public opponentMana: number = 5;
 
   constructor() {}
 
   get activePlayer(): GameSide {
     return this._activePlayer;
+  }
+
+  public getHP(side: GameSide): number {
+    return side === "PLAYER" ? this.playerHP : this.opponentHP;
+  }
+
+  public getMana(side: GameSide): number {
+    return side === "PLAYER" ? this.playerMana : this.opponentMana;
+  }
+
+  public modifyHP(side: GameSide, amount: number) {
+    if (side === "PLAYER") this.playerHP += amount;
+    else this.opponentHP += amount;
+  }
+
+  public modifyMana(side: GameSide, amount: number) {
+    if (side === "PLAYER") this.playerMana += amount;
+    else this.opponentMana += amount;
   }
 
   get currentPhase(): GamePhase {
