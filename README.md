@@ -1,195 +1,181 @@
-# TOON CASTLE - Documentação
+# TOON CASTLE - Documentation
 
-## 1. Visão Geral
-
-Consiste em um jogo de cartas single-player estilo roguelike. O foco é a subida tática de um torre de 5 andares, onde com sabedoria, paciência juntamente a deck enxuto de 15 cartas, é a chave para a conquista do castelo.
+## 1. Overview
+**Toon Castle** is a single-player roguelike card game. The focus is on the tactical ascent of a 5-story tower, where wisdom, patience, and a lean deck of 20 cards are key to conquering the castle.
 
 ---
-## 2. Requisitos funcionais (RF)
+## 2. Functional Requirements (FR)
 
-Os requisitos funcionais desse projeto tem a finalidade de descrever as ações que o sistema deve permitir que o usuário realize ou que ocorra automaticamente durante o jogo.
+The functional requirements of this project aim to describe the actions that the system should allow the user to perform or that should occur automatically during the game.
 
-| ID       | Requisito                       | Descrição                                                                                                                                |
+| ID       | Requirement                       | Description                                                                                                                                |
 | -------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| **RF01** | **Gestão de Deck**              | O jogador deve possuir um deck fixo de exatamente 20 cartas 🃏.                                                                          |
-| **RF02** | **Substituição de Cartas**      | Após vencer um NPC, o jogador escolhe 1 de 3 cartas oferecidas. Para adicioná-la, deve obrigatoriamente remover uma carta atual do deck. |
-| **RF03** | **Fluxo de Andares**            | O jogo deve processar 5 níveis do castelo. Cada nível possui 4 NPCs comuns e 1 Chefe final 🏰.                                           |
-| **RF04** | **Sistema de Vidas (Corações)** | Gerenciar o sistema de tentativas: Fácil (5), Médio (3) e Difícil (1). Perder um duelo consome um coração 💖.                            |
-| **RF05** | **Mecânica de Combate**         | Duelos por turnos baseados em consumo de Energia ⚡. O objetivo é reduzir o HP do oponente a zero.                                        |
-| **RF06** | **Gatilho de Armadilha**        | Cartas de armadilha devem ser ativadas automaticamente no momento em que o oponente declara um ataque 🪤.                                |
-| **RF07** | **IA de Prioridade**            | O NPC deve avaliar o campo e a própria mão, atribuindo pesos às jogadas para decidir a melhor ação baseada na dificuldade.               |
+| **FR01** | **Deck Management**              | The player must have a fixed deck of exactly 20 cards.                                                                          |
+| **FR02** | **Card Replacement**      | After defeating an NPC, the player chooses 1 of 3 offered cards. To add it, they must remove a current card from their deck. |
+| **FR03** | **Floor flow**            | The game processes 5 castle levels. Each level features 4 common NPCs and 1 Final Boss..                                           |
+| **FR04** | **Life System (Hearts)** | Manage the attempt system: Easy (5), Medium (3), and Hard (1). Losing a duel consumes one life.                            |
+| **FR05** | **Duel Mechanics**         | Turn-based duels based on Mana consumption. The objective is to reduce the opponent's HP to zero.                                        |
+| **FR06** | **Trap Trigger**        | Trap cards can only be activated at the moment the opponent declares an attack.                                |
+| **FR07** | **Priority AI**            | The NPC evaluates the field and its own hand, assigning weights to moves to decide the best action based on difficulty.               |
 
 ---
-## 3. Requisitos não funcionais (RNF)
+## 3. Non-Functional Requirements (NFR)
 
-Os requisitos não funcionais desse projeto definem os critérios de qualidade do software
+Non-functional requirements define the software's quality criteria.
 
-| **ID**    | **Requisito**            | **Descrição**                                                                                                  |
+| **ID**    | **Requirement**            | **Description**                                                                                                  |
 | --------- | ------------------------ | -------------------------------------------------------------------------------------------------------------- |
-| **RNF01** | **Tecnologia de Engine** | O jogo deve ser desenvolvido utilizando o framework **Phaser 3** 🎮.                                           |
-| **RNF02** | **Lógica e Tipagem**     | Todo o código deve ser escrito em **TypeScript** para garantir segurança de tipos e facilitar a manutenção 💻. |
-| **RNF03** | **Estética Visual**      | O estilo artístico deve ser "Toon" (exagerado, cômico).                                                        |
-| **RNF04** | **Arquitetura de UI**    | O jogo deve possuir um menu inicial com opções de: Iniciar, Tutorial e Seleção de Dificuldade.                 |
+| **NFR01** | **Engine Technology** | The game must be developed using the Phaser 3 framework..                                           |
+| **NFR02** | **Logic and Typing**     | All code must be written in TypeScript for security and maintainability. |
+| **NFR03** | **UI Architecture**    | The game must have a main menu with options for: Start, Guide, and Difficulty Selection.                 |
 
 ---
-## 4. Detalhamento das Regras de Jogo 📝
+## 4. Game Rules
 
-Nesta seção, especificamos os números que regem o equilíbrio do combate. 
-### 4.1. Sistema de Atributos e Dano ⚔️
+This section specifies the numbers governing combat balance.
+### 4.1. Attribute and Damage System
 
-O combate utiliza o sistema de **Diferença de Pontos** baseado na posição da carta:
+Combat uses a Point Difference system based on the card's position:
 
-- **Modo de Ataque:** O monstro usa seu **ATK**. Se vencer um monstro em ataque, a diferença reduz o HP do oponente.
-- **Modo de Defesa:** O monstro usa sua **DEF**. Se for atacado e sua DEF for maior que o ATK inimigo, o atacante recebe o dano da diferença. Se for menor, o monstro é destruído, mas o dono não perde HP.
-- **HP Total:** Cada duelista inicia com **6000 pontos de vida** 💔.
+- **Attack Mode:** The monster uses its ATK. If it defeats a monster in attack mode, the difference reduces the opponent's HP.
+- **Defense Mode:** The monster uses its DEF. If it is attacked and its DEF is higher than the enemy's ATK, the attacker takes damage equal to the difference. If it is lower, the monster is destroyed, but the owner loses no HP.
+- **Total HP:** Each duelist starts with 600 life points.
 
-### 4.2. Gestão de Energia e Turnos ⚡
+### 4.2. Mana and Turn Management
 
-- **Mão Inicial:** 5 cartas 🎴.
-- **Compra por Turno:** 1 carta.
-- **Energia:** O jogador começa com **3 pontos** de energia no turno 1. A energia aumenta em +1 a cada turno (até o máximo de 10).
+- **Starting Hand:** 5 cards (maximum of 6 cards in hand).
+- **Draw per Turn:** 1 card.
+- **Mana:** Each player starts with 5 mana points on the first turn. Energy increases by +2 every turn (no maximum limit defined yet).
 ---
-## 5. Tipos de Cartas e Efeitos 🎭
+## 5. Card Types and Effects
 
-Para ajudar na programação em **TypeScript**, vamos definir o comportamento base de cada tipo:
+To enhance combat strategy, the base behavior for each card type is defined as:
 
-1. **Monstros:** Unidades principais com valores de ATK/DEF. Podem ter efeitos como: _“Ao ser invocado, compre 1 carta”_.
-2. **Mágicas:** Cartas de uso imediato no turno do jogador. Exemplo: _“Aumenta o ataque de um monstro em 500”_.
-3. **Armadilhas:** Cartas baixadas com a face para baixo. Ativam sozinhas quando o oponente ataca 🪤. Exemplo: _“Reduz o ataque do monstro atacante pela metade”_.
+1. **Monsters:** Primary units with ATK/DEF values.
+2. **Effect Monsters:** Units with ATK/DEF values that possess a special effect when revealed. E.g., "When summoned, draw 1 card".
+3. **Spells:** Immediate-use cards during the player's turn. Example: "Increases a monster's attack by 5 points".
+4. **Traps:** Cards Set face-down. They can be activated when the opponent attacks. Example: "Reduces the attacking monster's attack by half".
 
 ---
-## 6. Inteligência Artificial (IA) de Prioridade
+## Priority Artificial Intelligence (AI)
 
-Nesta seção, detalhamos como a inteligência artificial processa as decisões do NPC com base no nível de dificuldade escolhida pelo jogador no menu inicial.
+This section details how the AI processes NPC decisions based on the difficulty level chosen by the player.
 
-|**Nível**|**Perfil de Comportamento**|**Estratégia de Decisão**|
+|**Level**|**Behavior Profile**|**Decision Strategy**|
 |---|---|---|
-|**Fácil**|**Agressivo Impulsivo**|Prioriza o gasto total de energia no turno. Ataca sempre que possuir um monstro com ATK superior à DEF/ATK do alvo, sem considerar possíveis armadilhas. 🟢|
-|**Médio**|**Reativo Estratégico**|Utiliza a **Prioridade Reativa**. Se possuir uma armadilha na mão, pode invocar monstros fracos em modo de ataque para servir de isca. Tenta manter reserva de energia para turnos críticos. 🟡|
-|**Difícil**|**Estrategista Profissional**|Analisa o estado do cemitério e do campo. Calcula o custo-benefício de cada troca e só ataca quando possui "rede de segurança" (outros monstros ou armadilhas de proteção). 🔴|
+|**Easy**|**Impulsive Aggressive**|Prioritizes spending all mana in the turn. Attacks whenever it has a monster with ATK higher than the target's DEF/ATK, without considering potential traps. 🟢|
+|**Medium**|**Strategic Reactive**|Uses **Reactive Priority**. If it has a trap in hand, it may summon weak monsters in attack mode as bait. Attempts to keep mana reserves for critical turns. 🟡
+|**Hard**|**Professional Strategist**|Analyzes the graveyard and the field. Calculates the cost-benefit of every trade and only attacks when it has a "safety net" (other monsters or protective traps). 🔴|
 
 ---
-## 7. Interface e Tabuleiro (Layout Phaser 3) 🏟️
+## 7. Interface and Board (Phaser 3 Layout)
 
-O layout da cena de batalha é fixo e dividido em zonas de interação para otimizar a experiência em dispositivos desktop e mobile.
+The battle scene layout is fixed and divided into interaction zones.
 
-**Zonas de Campo (Slots):**
-- **Monstros:** 3 slots centrais para cada lado.
-- **Suporte (Magias/Armadilhas):** 3 slots logo abaixo (ou acima, para o NPC) dos monstros.
+**Field Zones (Slots):**
+- **Monsters:** 3 central slots for each side.
+- **Support (Spells/Traps):** 3 slots directly below (or above, for the NPC) the monsters.
 
-**Gestão de Recursos:**
-- **Barra Superior:** Exibe o HP (6000) e o nome do NPC/Jogador.
-- **Lado Direito Inferior:** Pilha de Deck (20 cartas) com contador numérico.
-- **Lado Esquerdo Inferior:** Indicador de Energia ⚡ (exemplo: `Energia Atual: 3/3`).
-- **Centro Inferior:** Mão do jogador (inicial de 5 cartas).
+**Resource Management:**
+- **Bottom Left:** Displays HP (600) and the NPC/Player name.
+- **Bottom Right:** Deck pile (20 cards) with a numerical counter.
+- **Bottom Right (near deck):** Mana indicator.
+- **Bottom Center:** Player's hand (starting at 5 cards).
 
----
-### 8. Fluxo de Navegação e Estados 🏰
-
-O jogo segue um fluxo linear e contínuo, inspirado em sistemas de _battle-rush_.
-
-1. **Cena de Preparação:** Exibe o deck atual e o botão "Preparado para o Castelo".
-2. **Cena de Batalha:** Ciclo de 4 fases (Compra ➡️ Principal ➡️ Batalha ➡️ Final).
-3. **Cena de Resultado:**
-	- **Vitória:** Transição direta para a **Tela de Recompensa** (Escolha 1 de 3 cartas ocultas + substituição obrigatória).
-    - **Derrota:** Consome 1 Coração 💖. Se restarem corações, permite revanche; caso contrário, executa o Reset total do progresso (Game Over).
+ _Both players' resource areas are mirrored._
 
 ---
-## 9. Máquina de Estados: Fases da Batalha
+### 8. Navigation Flow and States
 
-Cada turno é dividido em 4 estados obrigatórios. O sistema bloqueia ações que não pertencem à fase atual para evitar erros de lógica.
+The game follows a linear and continuous flow inspired by _battle-rush_ systems.
 
-| **Fase**                | **Ações Permitidas**                                 | **Regras Automáticas**                                                                                               |
+1. **Preparation Scene:** Displays the current deck and the "Ready for the Castle" button.
+2. **Battle Scene:** A cycle of 4 phases (Draw ➡️ Main ➡️ Battle ➡️ End Turn).
+3. **Result Scene:**
+	- **Victory:** Direct transition to the Reward Screen (Choose 1 of 3 hidden cards + mandatory substitution).
+    - **Defeat:** Consumes 1 life (heart). If lives remain, a rematch is allowed; otherwise, a total progress Reset (Game Over) is executed.
+
+---
+## 9. Battle Phases
+
+Each turn is divided into 4 mandatory states. The system blocks actions that do not belong to the current phase to prevent logic errors.
+
+| **Phase**                | **Allowed Actions**                                 | **Automatic Rules**                                                                                               |
 | ----------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| **1. Compra (Draw)**    | Nenhuma (Ação do Sistema).                           | O sistema retira 1 carta do Deck 🎴 e adiciona à Mão. Se o Deck estiver vazio, o Cemitério é embaralhado.            |
-| **2. Principal (Main)** | Invocar Monstros; Ativar Mágicas; Baixar Armadilhas. | O jogador gasta Energia ⚡. Só podes invocar se houver slots de monstro (máx. 3) disponíveis.                         |
-| **3. Batalha (Battle)** | Declarar Ataques ⚔️.                                 | Ao atacar, o sistema verifica se o oponente tem Armadilhas 🪤. Se sim, o gatilho é ativado antes do cálculo de dano. |
-| **4. Final (End)**      | Nenhuma.                                             | Efeitos temporários (ex: "ganha +500 ATK até ao fim do turno") expiram. A vez passa para o oponente.                 |
+| **1. Draw**    | None (System Action).                          | The system draws 1 card from the Deck to the Hand. If the Deck is empty, the Graveyard is reshuffled.            |
+| **2. Main** | Summon Monsters; Activate Spells; Set Traps. | Player spends Mana. Summoning requires available slots (max 3). Spells can be activated directly from the hand.                         |
+| **3. Battle** | Declare Attacks.                                | The system checks for opponent Traps. If found, the trigger activates before damage calculation. |
+| **4. End Turn**      | None.                                            | Temporary effects expire. Control passes to the opponent.                 |
 
 ---
-## 10. Lógica de Reciclagem e Cemitério ⚰️
+## 10. "Recycling" and Graveyard Logic
 
-Como o jogo utiliza um deck enxuto de 20 cartas, a gestão do descarte é vital para evitar que o duelo trave.
-- **Fluxo de Descarte:** Cartas de Mágica usadas, Armadilhas ativadas e Monstros destruídos são movidos para o **Cemitério**.
-- **Condição de Reembaralhamento:** Caso o jogador precise comprar uma carta e o deck esteja com 0 unidades, o sistema move todas as cartas do Cemitério de volta para o Deck e executa a função `shuffle()`.
-- **Interatividade:** O jogador pode clicar na pilha do Cemitério para visualizar as cartas descartadas (ajuda na tomada de decisão estratégica).
+With a lean 20-card deck, managing the discard pile is vital to prevent duels from stalling.
 
----
-## 11. Escalonamento de Dificuldade da Torre 🗼
-
-Como é um roguelike, os inimigos precisam ficar mais fortes conforme o jogador sobe os andares.
-- **Andares 1-2:** NPCs utilizam decks básicos com monstros de ATK entre 800 e 1500.
-- **Andares 3-4:** NPCs começam a usar Cartas de Efeito e Armadilhas mais complexas.
-- **Andar 5 (Topo):** O Chefe Final possui cartas exclusivas com custos de energia reduzidos ou ATK superior a 2500.
+- **Discard Flow:** Used Spells, activated Traps, and destroyed Monsters are moved to the **Graveyard**.
+- **Reshuffling Condition:** If a draw is required and the deck has 0 cards, the system moves all cards from the Graveyard back to the Deck and reshuffles.
+- **Interactivity:** Players can click the Graveyard pile to view discarded cards for strategic planning.
 
 ---
-## 12. Sistema de Recompensas e Raridades 🎁
+## 11. Tower Difficulty Scaling
 
-Após cada vitória contra um NPC, o jogador acessa a **Tela de Recompensa**, onde o sistema gera 3 opções de cartas baseadas na "Tabela de Probabilidade" do andar atual.
+As a roguelike, enemies grow stronger as the player ascends the floors.
 
-### 12.1. Categorias de Raridade
-
-- **Comum (C):** Cartas básicas de suporte e monstros de nível baixo. ⚪
-- **Rara (R):** Monstros de efeito inicial e mágicas de utilidade. 🔵
-- **Épica (E):** Monstros de custo 3+ e armadilhas devastadoras. 🟣
-- **Lendária (L):** Cartas exclusivas de recompensa, com efeitos que podem mudar o rumo do duelo. 🟡
-### 12.2. Tabela de Probabilidades por Andar 📈
-
-|**Andar**|**Comum**|**Rara**|**Épica**|**Lendária**|
-|---|---|---|---|---|
-|**1**|70%|25%|5%|0%|
-|**2**|50%|35%|15%|0%|
-|**3**|20%|50%|25%|5%|
-|**4**|5%|40%|40%|15%|
-|**5**|0%|20%|50%|30%|
-### 12.3. Cartas Exclusivas de Recompensa (Drop-Only) 🔒
-
-Estas cartas **não podem** fazer parte do deck inicial do jogador. Elas servem como incentivo para a subida da torre.
-- **Exemplo:** _“Mestre Toon do Castelo”_ (Lendária) – Só aparece como recompensa nos andares 4 ou 5.
+- **Floors 1-2:** NPCs use basic decks with low ATK monsters and simple Spells/Traps.
+- **Floors 3-4:** NPCs begin utilizing Effect Monsters and complex Trap cards.
+- **Floor 5 (Top):** The Final Boss features exclusive cards with reduced mana costs or ATK exceeding 25.
 
 ---
-## 13. Interface de Troca de Cartas (UX/UI) ⚖️
+## 12. Reward System and Rarities
 
-Quando o jogador seleciona uma das 3 cartas de recompensa, o jogo entra no **Modo de Substituição**. O objetivo é garantir que o deck permaneça com exatamente **20 cartas**.
+After defeating an NPC, the player accesses the **Reward Screen**, where 3 card options are generated based on the floor's probability table.
 
-### 13.1. Funcionalidade de Comparação Direta
+### 12.1. Rarity Categories
 
-A tela será dividida para facilitar a análise:
+- **Common (C):** Basic support cards and low-level monsters. ⚪
+- **Rare (R):** Initial effect monsters and utility spells. 🔵
+- **Epic (E):** Cost 3+ monsters and devastating traps. 🟣
+- **Legendary (L):** Exclusive reward cards with game-changing effects 🟡
 
-- **Lado Esquerdo (Nova Carta):** Exibe a recompensa escolhida com destaque (animações de brilho conforme a raridade: Comum ⚪, Rara 🔵, Épica 🟣, Lendária 🟡).
-- **Lado Direito (Deck Atual):** Uma lista rolável ou grade com as 20 cartas atuais do jogador.
-- **Painel Central (Comparativo):** Ao clicar em uma carta do deck atual, ela é posicionada ao lado da nova carta. O sistema destaca as diferenças de atributos (ex: se o ATK da nova for maior, o número aparece em verde 🟢).
+### 12.2. Exclusive Reward Cards (Drops)
 
-### 13.2. Fluxo Lógico no TypeScript
-
-1. O sistema armazena a `NovaCarta` em uma variável temporária.
-2. O jogador seleciona a `CartaParaRemover` do array `playerDeck`.
-3. Ao confirmar, o código executa:
-    - `playerDeck.splice(indexRemocao, 1);`
-    - `playerDeck.push(NovaCarta);`
-4. O sistema salva o novo estado do deck e prossegue para o próximo andar da torre.
+These cards **cannot** be part of the player's initial deck. They serve as incentives for the climb.
+- **Example:** "Toon Castle Master" (Legendary) – Only appears as a reward on floors 4 or 5.
 
 ---
-## 14. Regras de Exceção e Condições de Vitória ⚖️
+## 13. Card Swap Interface
 
-Para garantir a consistência do jogo e o desafio do estilo _roguelike_, as seguintes regras de sistema foram estabelecidas:
+When selecting a reward card, the game enters **Substitution Mode** to ensure the deck remains at exactly **20 cards**.
 
-### 14.1. Resolução de Empates (Tie-break) ⚔️
+### 13.1. Direct Comparison Functionality
 
-- Quando dois monstros em **Modo de Ataque** possuem o mesmo valor de **ATK**, ambos são destruídos e enviados para o cemitério.
-- Nenhum dano é subtraído do HP de ambos os jogadores nesta situação.
+The screen is divided for easier analysis:
 
-### 14.2. Condições de Game Over e Reset 💀
+- **Left Side (New Card):** Displays the chosen reward with rarity-based glow animations.
+- **Right Side (Current Deck):** A scrollable list or grid of the player's current 20 cards.
+- **Center Panel (Comparison):** Clicking a current card positions it next to the new one, highlighting attribute differences (e.g., higher ATK appears in green 🟢).
 
-- O jogo termina quando os **Corações (Vidas)** do jogador chegam a 0.
-- **Fluxo de Reset:** O jogador é direcionado para a tela de _Game Over_, onde a opção "Recomeçar" limpa o progresso atual, reseta o deck para a configuração inicial e retorna o jogador ao Menu Principal.
+### 13.2. TypeScript Logical Flow
 
-### 14.3. Gerenciamento de Deck Out 🎴
-
-- O jogo foi balanceado para que o duelo termine antes do esgotamento total de recursos. No entanto, se o Deck e o Cemitério estiverem vazios simultaneamente e o jogador precisar comprar uma carta, ele não poderá realizar a ação (o que pode levar a uma derrota estratégica).
+1. The system stores the new card.
+2. The player selects the card from their deck to be removed.
+3. The system saves the new deck state and proceeds to the next phase.
 
 ---
-## 15. Padronização Visual (Assets) 🎨
+## 14. Exception Rules and Victory Conditions
 
-- **Verso das Cartas:** Todas as cartas (Jogador e NPC) utilizam o mesmo design de verso. Isso garante o mistério sobre as cartas "Setadas" (armadilhas ou monstros ocultos) do oponente.
-- **Feedback Visual:** As cartas devem possuir estados visuais claros para: _Modo de Ataque (Vertical)_, _Modo de Defesa (Horizontal)_ e _Carta Oculta (Verso para cima)_.
+### 14.1. Tie Resolution
+
+- When two monsters in **Attack Mode** have the same **ATK**, both are destroyed and sent to the graveyard.
+- No damage is subtracted from either player's HP in this situation.
+
+### 14.2. Game Over and Reset
+
+- The game ends when the player's **Hearts (Lives)** reach 0.
+- **Reset Flow:** The player is sent to the Game Over screen; "Restart" clears progress, resets the deck to initial settings, and returns the player to the Main Menu.
+  
+---
+## 15. Visual Standardization
+
+- **Card Back:** All cards (Player and NPC) share the same back design to maintain mystery over Set cards.
+- **Visual Feedback:** Cards must have clear visual states for: _Attack Mode (Vertical)_, _Defense Mode (Horizontal)_ e _Hidden Card (Face-down)_.
