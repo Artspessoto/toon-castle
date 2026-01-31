@@ -221,69 +221,48 @@ export class BattleScene extends Phaser.Scene {
     const cardType = card.getType();
     const activeSide = this.gameState.activePlayer;
 
-    //block to drop card into opponent slot
-    if (zoneSide !== activeSide) {
-      this.currentHand.reorganizeHand();
-      return;
-    }
-
     const monsterValid = cardType.includes("MONSTER") && zoneType === "MONSTER";
     const suportValid =
       (cardType === "SPELL" || cardType === "TRAP") && zoneType === "SPELL";
     const canPlay =
       (monsterValid || suportValid) && this.currentPhase == "MAIN";
 
-    if (!canPlay) {
+    //block to drop card into opponent slot
+    if (zoneSide !== activeSide || !canPlay) {
       this.currentHand.reorganizeHand();
       return;
     }
 
-    const availableSlot = this.fieldManager.getFirstAvailableSlot(
-      activeSide,
-      zoneType,
-    );
+    const slot = this.requestPlayCard(card, activeSide, zoneType);
 
-    if (availableSlot) {
+    if (slot) {
       this.gameState.setDragging(false);
-      const hand: HandManager =
-        this.gameState.activePlayer == "PLAYER"
-          ? this.playerHand
-          : this.opponentHand;
-      hand.removeCard(card);
-
       this.selectedCard = card;
+
+      const hand = this.currentHand;
+      hand.removeCard(card);
       hand.hideHand();
 
-      this.fieldManager.previewPlacement(
-        card,
-        availableSlot.x,
-        availableSlot.y,
-      );
+      this.fieldManager.previewPlacement(card, slot.x, slot.y);
       this.currentUI.showSelectionMenu(
-        availableSlot.x,
-        availableSlot.y,
+        slot.x,
+        slot.y,
         cardType, // MONSTER, SPELL, etc.
         (mode: PlacementMode) => {
           this.selectedCard = null; //apply null to drop card
-          hand.showHand();
-          this.fieldManager.occupySlot(
-            activeSide,
-            zoneType,
-            availableSlot.index,
-            card,
-          );
-          this.fieldManager.playCardToZone(
-            card,
-            availableSlot.x,
-            availableSlot.y,
-            mode,
-          );
+          this.executePlay(card, activeSide, zoneType, slot, mode);
         },
       );
-
-      this.currentHand.reorganizeHand();
     } else {
-      this.currentUI.showNotice(this.translationText.zone_occupied, "WARNING");
+      const canDrop = this.gameState.playerMana >= card.getCardData().manaCost
+      if (!canDrop) {
+        this.currentUI.showNotice("Mana insuficiente", "WARNING");
+      } else {
+        this.currentUI.showNotice(
+          this.translationText.zone_occupied,
+          "WARNING",
+        );
+      }
       this.currentHand.reorganizeHand();
     }
   }
@@ -303,10 +282,64 @@ export class BattleScene extends Phaser.Scene {
     this.selectedCard = null;
   }
 
+  private requestPlayCard(
+    card: Card,
+    side: GameSide,
+    type: "MONSTER" | "SPELL",
+  ) {
+    const cardData = card.getCardData();
+    const currentMana =
+      side == "PLAYER"
+        ? this.gameState.playerMana
+        : this.gameState.opponentMana;
+
+    if (cardData.manaCost > currentMana) {
+      return null;
+    }
+
+    if (this.gameState.currentPhase !== "MAIN") {
+      return null;
+    }
+
+    return this.fieldManager.getFirstAvailableSlot(side, type);
+  }
+
+  private executePlay(
+    card: Card,
+    side: GameSide,
+    type: "MONSTER" | "SPELL",
+    slot: { x: number; y: number; index: number },
+    mode: PlacementMode,
+  ) {
+    const hand = side == "PLAYER" ? this.playerHand : this.opponentHand;
+
+    hand.removeCard(card);
+    this.fieldManager.occupySlot(side, type, slot.index, card);
+    this.fieldManager.playCardToZone(card, slot.x, slot.y, mode);
+
+    if (side == "PLAYER") hand.showHand();
+  }
+
   //simulate changing turn
   private handleOpponentTurn() {
     this.time.delayedCall(2000, () => {
       this.setPhase("MAIN");
+
+      this.time.delayedCall(1000, () => {
+        const npcHand = this.opponentHand;
+        const firstCard = npcHand.hand[0];
+
+        if (firstCard) {
+          const cardType = firstCard.getType();
+          const slotType = cardType == "MONSTER" ? "MONSTER" : "SPELL";
+          const slot = this.requestPlayCard(firstCard, "OPPONENT", slotType);
+
+          if (slot) {
+            const cardMode = slotType == "MONSTER" ? "ATK" : "SET";
+            this.executePlay(firstCard, "OPPONENT", slotType, slot, cardMode);
+          }
+        }
+      });
 
       this.time.delayedCall(2000, () => {
         this.setPhase("BATTLE");
