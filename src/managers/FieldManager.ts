@@ -1,25 +1,47 @@
 import type { Card } from "../objects/Card";
 import { BattleScene } from "../scenes/BattleScene";
-import type { PlacementMode } from "../types/GameTypes";
+import type { GameSide, PlacementMode } from "../types/GameTypes";
 
 export class FieldManager {
   private scene: BattleScene;
 
   //null = empty slot, Card = slot full
-  private monsterSlots: (Card | null)[] = [null, null, null];
-  private spellSlots: (Card | null)[] = [null, null, null];
+  private monsterSlots = {
+    PLAYER: [null, null, null] as (Card | null)[],
+    OPPONENT: [null, null, null] as (Card | null)[],
+  };
 
-  private readonly monsterCoords = [
-    { x: 505, y: 450 },
-    { x: 645, y: 450 },
-    { x: 787, y: 450 },
-  ];
+  private spellSlots = {
+    PLAYER: [null, null, null] as (Card | null)[],
+    OPPONENT: [null, null, null] as (Card | null)[],
+  };
 
-  private readonly spellCoords = [
-    { x: 505, y: 600 },
-    { x: 645, y: 600 },
-    { x: 787, y: 600 },
-  ];
+  private readonly fieldCoords = {
+    PLAYER: {
+      MONSTER: [
+        { x: 505, y: 450 },
+        { x: 645, y: 450 },
+        { x: 787, y: 450 },
+      ],
+      SPELL: [
+        { x: 505, y: 600 },
+        { x: 645, y: 600 },
+        { x: 787, y: 600 },
+      ],
+    },
+    OPPONENT: {
+      MONSTER: [
+        { x: 505, y: 270 },
+        { x: 645, y: 270 },
+        { x: 787, y: 270 },
+      ],
+      SPELL: [
+        { x: 505, y: 120 },
+        { x: 645, y: 120 },
+        { x: 787, y: 120 },
+      ],
+    },
+  };
 
   // spell/trap zone enemy: x 505, y: 120, x: 645, y: 120, x: 787, y: 120
   // monster zone enemy: x: 505, y: 270, x: 645, y: 270, x: 787, y: 270
@@ -29,28 +51,38 @@ export class FieldManager {
   }
 
   public setupFieldZones() {
-    //Monster Zones
-    this.monsterCoords.forEach((pos, i) => {
-      this.scene.add
-        .zone(pos.x, pos.y, 110, 150)
-        .setRectangleDropZone(110, 150)
-        .setData("type", "MONSTER")
-        .setData("index", i);
-    });
+    const sides: GameSide[] = ["PLAYER", "OPPONENT"];
 
-    //Spell/Trap Zones
-    this.spellCoords.forEach((pos, i) => {
-      this.scene.add
-        .zone(pos.x, pos.y, 110, 150)
-        .setRectangleDropZone(110, 150)
-        .setData("type", "SPELL")
-        .setData("index", i);
+    sides.forEach((side) => {
+      //Monster Zones
+      this.fieldCoords[side].MONSTER.forEach((pos, i) => {
+        this.scene.add
+          .zone(pos.x, pos.y, 110, 150)
+          .setRectangleDropZone(110, 150)
+          .setData("type", "MONSTER")
+          .setData("side", side)
+          .setData("index", i);
+      });
+
+      //Spell/Trap Zones
+      this.fieldCoords[side].SPELL.forEach((pos, i) => {
+        this.scene.add
+          .zone(pos.x, pos.y, 110, 150)
+          .setRectangleDropZone(110, 150)
+          .setData("type", "SPELL")
+          .setData("side", side)
+          .setData("index", i);
+      });
     });
   }
 
-  public getFirstAvailableSlot(type: "MONSTER" | "SPELL") {
-    const slots = type == "MONSTER" ? this.monsterSlots : this.spellSlots;
-    const coords = type === "MONSTER" ? this.monsterCoords : this.spellCoords;
+  public getFirstAvailableSlot(side: GameSide, type: "MONSTER" | "SPELL") {
+    const slots =
+      type == "MONSTER" ? this.monsterSlots[side] : this.spellSlots[side];
+    const coords =
+      type === "MONSTER"
+        ? this.fieldCoords[side].MONSTER
+        : this.fieldCoords[side].SPELL;
 
     for (let i = 0; i < slots.length; i++) {
       if (slots[i] == null) {
@@ -62,9 +94,14 @@ export class FieldManager {
     return null;
   }
 
-  public occupySlot(type: "MONSTER" | "SPELL", index: number, card: Card) {
-    if (type == "MONSTER") this.monsterSlots[index] = card;
-    else this.spellSlots[index] = card;
+  public occupySlot(
+    side: GameSide,
+    type: "MONSTER" | "SPELL",
+    index: number,
+    card: Card,
+  ) {
+    if (type == "MONSTER") this.monsterSlots[side][index] = card;
+    else this.spellSlots[side][index] = card;
   }
 
   public playCardToZone(
