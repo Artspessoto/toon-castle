@@ -43,7 +43,8 @@ export const TRANSLATIONS = {
         to_battle: "INICIAR BATALHA",
         end_turn: "ENCERRAR TURNO",
         details: "DETALHES",
-        active: "ATIVAR"
+        active: "ATIVAR",
+        set: "BAIXAR"
       },
     },
   },
@@ -91,7 +92,8 @@ export const TRANSLATIONS = {
         to_battle: "START BATTLE",
         end_turn: "END TURN",
         details: "DETAILS",
-        active: "ACTIVE"
+        active: "ACTIVE",
+        set: "SET"
       },
     },
   },
