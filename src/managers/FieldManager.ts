@@ -16,6 +16,11 @@ export class FieldManager {
     OPPONENT: [null, null, null] as (Card | null)[],
   };
 
+  private graveyardSlot = {
+    PLAYER: null as Card | null,
+    OPPONENT: null as Card | null,
+  };
+
   private readonly fieldCoords = {
     PLAYER: {
       MONSTER: [
@@ -28,6 +33,7 @@ export class FieldManager {
         { x: 645, y: 600 },
         { x: 787, y: 600 },
       ],
+      GRAVEYARD: { x: 108, y: 450 },
     },
     OPPONENT: {
       MONSTER: [
@@ -40,6 +46,7 @@ export class FieldManager {
         { x: 645, y: 120 },
         { x: 787, y: 120 },
       ],
+      GRAVEYARD: { x: 120, y: 270 },
     },
   };
 
@@ -100,6 +107,20 @@ export class FieldManager {
   ) {
     if (type == "MONSTER") this.monsterSlots[side][index] = card;
     else this.spellSlots[side][index] = card;
+  }
+
+  public releaseSlot(card: Card, side: GameSide) {
+    const isMonster = card.getType().includes("MONSTER");
+    const slots = isMonster ? this.monsterSlots[side] : this.spellSlots[side];
+
+    //find card position into array
+    const index = slots.indexOf(card);
+
+    //card found and remove from slots
+    if (index !== -1) {
+      slots[index] = null;
+      console.log(`i: ${index}`);
+    }
   }
 
   public playCardToZone(
@@ -169,6 +190,31 @@ export class FieldManager {
     });
 
     card.setDepth(5000);
+  }
+
+  public moveToGraveyard(card: Card, side: GameSide) {
+    const coords = this.fieldCoords[side].GRAVEYARD;
+
+    this.graveyardSlot[side] = card;
+
+    this.scene.tweens.add({
+      targets: card.visualElements,
+      x: coords.x,
+      y: coords.y,
+      scale: 0.32,
+      angle: 0,
+      duration: 500,
+      ease: "Power2",
+      onStart: () => {
+        card.visualElements.setDepth(100);
+      },
+      onComplete: () => {
+        card.setDepth(2);
+        card.disableInteractive();
+
+        //TODO: graveyard field interaction
+      },
+    });
   }
 
   private setupFieldInteractions(card: Card) {
