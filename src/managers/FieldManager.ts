@@ -43,9 +43,6 @@ export class FieldManager {
     },
   };
 
-  // spell/trap zone enemy: x 505, y: 120, x: 645, y: 120, x: 787, y: 120
-  // monster zone enemy: x: 505, y: 270, x: 645, y: 270, x: 787, y: 270
-
   constructor(scene: BattleScene) {
     this.scene = scene;
   }
@@ -85,6 +82,7 @@ export class FieldManager {
         : this.fieldCoords[side].SPELL;
 
     for (let i = 0; i < slots.length; i++) {
+      //return first slot to use
       if (slots[i] == null) {
         //response format: { x: 505, y: 450, index: i }
         return { ...coords[i], index: i };
@@ -110,6 +108,7 @@ export class FieldManager {
     targetY: number,
     mode: PlacementMode,
   ) {
+    const { manaCost } = card.getCardData();
     card.disableInteractive();
     this.scene.tweens.killTweensOf(card.visualElements);
 
@@ -125,7 +124,13 @@ export class FieldManager {
 
     if (isSet) {
       card.setFaceDown();
+    } else {
+      // mode == ATK or FACE_UP, card face up
+      //opponent need this to face up card into field slot (default -> card face down into opponent hand)
+      card.setFaceUp();
     }
+
+    this.scene.currentUI.updateMana(-manaCost);
 
     // Slot animation movement
     this.scene.tweens.add({
