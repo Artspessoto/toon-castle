@@ -7,6 +7,7 @@ import { ToonButton } from "../objects/ToonButton";
 import type {
   BattleTranslations,
   GamePhase,
+  GameSide,
   PlacementMode,
 } from "../types/GameTypes";
 import { LanguageManager } from "../managers/LanguageManager";
@@ -216,7 +217,15 @@ export class BattleScene extends Phaser.Scene {
 
   public handleCardDrop(targetZone: Phaser.GameObjects.Zone, card: Card) {
     const zoneType: "MONSTER" | "SPELL" = targetZone.getData("type");
+    const zoneSide: GameSide = targetZone.getData("side");
     const cardType = card.getType();
+    const activeSide = this.gameState.activePlayer;
+
+    //block to drop card into opponent slot
+    if (zoneSide !== activeSide) {
+      this.currentHand.reorganizeHand();
+      return;
+    }
 
     const monsterValid = cardType.includes("MONSTER") && zoneType === "MONSTER";
     const suportValid =
@@ -229,7 +238,10 @@ export class BattleScene extends Phaser.Scene {
       return;
     }
 
-    const availableSlot = this.fieldManager.getFirstAvailableSlot(zoneType);
+    const availableSlot = this.fieldManager.getFirstAvailableSlot(
+      activeSide,
+      zoneType,
+    );
 
     if (availableSlot) {
       this.gameState.setDragging(false);
@@ -254,7 +266,12 @@ export class BattleScene extends Phaser.Scene {
         (mode: PlacementMode) => {
           this.selectedCard = null; //apply null to drop card
           hand.showHand();
-          this.fieldManager.occupySlot(zoneType, availableSlot.index, card);
+          this.fieldManager.occupySlot(
+            activeSide,
+            zoneType,
+            availableSlot.index,
+            card,
+          );
           this.fieldManager.playCardToZone(
             card,
             availableSlot.x,
