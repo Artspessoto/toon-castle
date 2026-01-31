@@ -1,11 +1,17 @@
 import type { Card } from "../objects/Card";
 import { ToonButton } from "../objects/ToonButton";
 import { BattleScene } from "../scenes/BattleScene";
-import type { GameSide, PlacementMode } from "../types/GameTypes";
+import type {
+  GameSide,
+  Notice,
+  PlacementMode,
+  TranslationStructure,
+} from "../types/GameTypes";
 
 export class UIManager {
   private scene: BattleScene;
   private side: GameSide;
+  private translations!: TranslationStructure;
   private bannerText!: Phaser.GameObjects.Text;
   private bannerBg!: Phaser.GameObjects.Rectangle;
   private manaText!: Phaser.GameObjects.Text;
@@ -22,6 +28,10 @@ export class UIManager {
 
     this.manaPosition =
       this.side == "PLAYER" ? { x: 1232, y: 650 } : { x: 1232, y: 73 };
+  }
+
+  public setTranslations(translations: TranslationStructure) {
+    this.translations = translations;
   }
 
   public setupUI() {
@@ -94,7 +104,7 @@ export class UIManager {
     });
   }
 
-  public showNotice(message: string, type: "PHASE" | "WARNING") {
+  public showNotice(message: string, type: Notice) {
     if (!this.bannerBg || !this.bannerText) return;
 
     const color = type === "PHASE" ? 0xffcc00 : 0xcc0000;
@@ -103,7 +113,7 @@ export class UIManager {
     this.animateBanner(message, type);
   }
 
-  private animateBanner(message: string, type: "PHASE" | "WARNING") {
+  private animateBanner(message: string, type: Notice) {
     this.bannerText
       .setText(message.toUpperCase())
       .setAlpha(1)
@@ -271,8 +281,10 @@ export class UIManager {
 
   public showFieldCardMenu(x: number, y: number, card: Card) {
     this.clearSelectionMenu();
-
     if (this.side !== "PLAYER") return;
+
+    const battleTexts = this.translations["battle_scene"];
+    const buttonTexts = battleTexts.battle_buttons;
 
     //npc monster slot limit -> y: 270 | npc spell slot limit -> y: 120,
     const isPlayerCard = card.y > 270;
@@ -283,7 +295,7 @@ export class UIManager {
 
     if (card.isFaceDown && isPlayerCard && myTurn) {
       const activeBtn = new ToonButton(this.scene, {
-        text: "Ativar",
+        text: buttonTexts.active,
         x: x - 70,
         y: y - 80,
         height: 42,
@@ -305,7 +317,7 @@ export class UIManager {
 
     if (!card.isFaceDown || isPlayerCard) {
       const detailsBtn = new ToonButton(this.scene, {
-        text: "Detalhes",
+        text: buttonTexts.details,
         x: x - 70,
         y: y - 35,
         height: 42,

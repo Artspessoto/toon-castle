@@ -5,9 +5,10 @@ export type CardType = "MONSTER" | "EFFECT_MONSTER" | "SPELL" | "TRAP";
 export type PlacementMode = "ATK" | "DEF" | "FACE_UP" | "SET";
 
 type Languages = keyof typeof TRANSLATIONS;
-type TranslationStructure = (typeof TRANSLATIONS)[Languages];
+export type TranslationStructure = (typeof TRANSLATIONS)[Languages];
 export type GameSide = "PLAYER" | "OPPONENT";
 export type Lang = "pt-br" | "en";
+export type Notice = "PHASE" | "WARNING"
 export type BattleTranslations = TranslationStructure["battle_scene"];
 
 export interface CardData {

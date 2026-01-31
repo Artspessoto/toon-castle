@@ -38,9 +38,12 @@ export const TRANSLATIONS = {
       main_phase: "FASE PRINCIPAL",
       battle_phase: "FASE DE BATALHA",
       zone_occupied: "ZONA JÁ OCUPADA",
+      insufficient_mana: "MANA INSUFICIENTE",
       battle_buttons: {
         to_battle: "INICIAR BATALHA",
         end_turn: "ENCERRAR TURNO",
+        details: "DETALHES",
+        active: "ATIVAR"
       },
     },
   },
@@ -83,9 +86,12 @@ export const TRANSLATIONS = {
       main_phase: "MAIN PHASE",
       battle_phase: "BATTLE PHASE",
       zone_occupied: "ZONE ALREADY OCCUPIED",
+      insufficient_mana: "INSUFFICIENT MANA",
       battle_buttons: {
         to_battle: "START BATTLE",
         end_turn: "END TURN",
+        details: "DETAILS",
+        active: "ACTIVE"
       },
     },
   },

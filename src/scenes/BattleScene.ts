@@ -77,10 +77,14 @@ export class BattleScene extends Phaser.Scene {
 
   create() {
     const lang = LanguageManager.getInstance().currentLanguage;
+    const currentTranslations = TRANSLATIONS[lang];
     this.translationText = TRANSLATIONS[lang].battle_scene;
 
     const bg = this.add.image(640, 360, "battle-scene-background");
     bg.setDisplaySize(1280, 720).setDepth(-100);
+
+    this.playerUI.setTranslations(currentTranslations);
+    this.opponentUI.setTranslations(currentTranslations);
 
     this.playerUI.setupUI();
     this.playerUI.setupLifePoints();
@@ -254,9 +258,12 @@ export class BattleScene extends Phaser.Scene {
         },
       );
     } else {
-      const canDrop = this.gameState.playerMana >= card.getCardData().manaCost
+      const canDrop = this.gameState.playerMana >= card.getCardData().manaCost;
       if (!canDrop) {
-        this.currentUI.showNotice("Mana insuficiente", "WARNING");
+        this.currentUI.showNotice(
+          this.translationText.insufficient_mana,
+          "WARNING",
+        );
       } else {
         this.currentUI.showNotice(
           this.translationText.zone_occupied,
