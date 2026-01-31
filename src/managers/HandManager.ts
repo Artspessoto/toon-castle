@@ -5,7 +5,7 @@ import type { GameSide } from "../types/GameTypes";
 
 export class HandManager {
   private scene: BattleScene;
-  private hand: Card[] = [];
+  public hand: Card[] = [];
   private side: GameSide;
 
   private currentHandY: number; //hand position
