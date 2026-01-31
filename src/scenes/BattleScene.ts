@@ -255,6 +255,10 @@ export class BattleScene extends Phaser.Scene {
         (mode: PlacementMode) => {
           this.selectedCard = null; //apply null to drop card
           this.executePlay(card, activeSide, zoneType, slot, mode);
+
+          if (mode == "FACE_UP") {
+            this.cardActivation(card, activeSide);
+          }
         },
       );
     } else {
@@ -355,6 +359,68 @@ export class BattleScene extends Phaser.Scene {
           this.setPhase("CHANGE_TURN");
         });
       });
+    });
+  }
+
+  public cardActivation(card: Card, side: GameSide) {
+    card.activate();
+
+    //creating a temporary point to store the result
+    const tempPoint = new Phaser.Math.Vector2();
+
+    //retrieves the element's origin point on the screen and save into tempPoint
+    card.visualElements.getWorldPoint(tempPoint);
+
+    //global coords relative to a container
+    const startX = tempPoint.x;
+    const startY = tempPoint.y;
+
+    //overlay
+    const background = this.add
+      .rectangle(640, 360, 1280, 720, 0x000000, 1)
+      .setDepth(15000)
+      .setAlpha(0)
+      .setScrollFactor(0);
+
+    this.tweens.add({
+      targets: background,
+      alpha: 0.7,
+      duration: 300,
+    });
+
+    //check card is in a container and turn card into a global component
+    if (card.visualElements.parentContainer) {
+      card.visualElements.parentContainer.remove(card.visualElements); //remove of container
+      this.add.existing(card.visualElements); //add to scene
+
+      card.visualElements.setPosition(startX, startY);
+    }
+
+    card.visualElements.setDepth(20000);
+    this.tweens.add({
+      targets: card.visualElements,
+      x: 640, // x center (1280 / 2)
+      y: 360, // y center (720 / 2)
+      scale: 1,
+      duration: 400,
+      ease: "Back.easeOut"
+    });
+
+    this.time.delayedCall(2000, () => {
+      this.tweens.add({
+        targets: background,
+        alpha: 0,
+        duration: 300,
+        onComplete: () => {
+          background.destroy();
+          this.currentHand.showHand();
+        },
+      });
+      // remove card from slot
+      this.fieldManager.releaseSlot(card, side);
+
+      // move card to graveyard
+      this.fieldManager.moveToGraveyard(card, side);
     });
   }
 }
