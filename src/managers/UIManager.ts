@@ -228,14 +228,15 @@ export class UIManager {
     cb: (mode: PlacementMode) => void,
   ) {
     const isMonster = cardType.includes("MONSTER");
+    const buttonTexts = this.translations.battle_scene.battle_buttons;
 
     const leftConfig = isMonster
       ? { text: "", icon: "sword_icon", width: 70 }
-      : { text: "ACTIVE", width: 90 };
+      : { text: buttonTexts.active, width: 90 };
 
     const rightConfig = isMonster
       ? { text: "", icon: "shield_icon", width: 70 }
-      : { text: "FACE DOWN", width: 110 };
+      : { text: buttonTexts.set, width: 110 };
 
     const leftBtn = new ToonButton(this.scene, {
       x: x - 75,
@@ -270,7 +271,7 @@ export class UIManager {
 
     leftBtn.on("pointerdown", () => {
       this.clearSelectionMenu();
-      cb(isMonster ? "ATK" : "FACE_UP");
+      cb(isMonster ? "ATK" : "FACE_UP"); //FACE_UP trigger cardActivation method
     });
   }
 
@@ -309,7 +310,7 @@ export class UIManager {
 
       activeBtn.on("pointerdown", () => {
         this.clearSelectionMenu();
-        card.activate();
+        this.scene.cardActivation(card, this.side);
       });
 
       buttons.push(activeBtn);
