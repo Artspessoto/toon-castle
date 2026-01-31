@@ -272,10 +272,16 @@ export class UIManager {
   public showFieldCardMenu(x: number, y: number, card: Card) {
     this.clearSelectionMenu();
 
+    if (this.side !== "PLAYER") return;
+
+    //npc monster slot limit -> y: 270 | npc spell slot limit -> y: 120,
+    const isPlayerCard = card.y > 270;
+
     const buttons: ToonButton[] = [];
     const cardData = card.getCardData();
+    const myTurn = this.scene.gameState.activePlayer == "PLAYER";
 
-    if (card.isFaceDown) {
+    if (card.isFaceDown && isPlayerCard && myTurn) {
       const activeBtn = new ToonButton(this.scene, {
         text: "Ativar",
         x: x - 70,
@@ -291,32 +297,33 @@ export class UIManager {
 
       activeBtn.on("pointerdown", () => {
         this.clearSelectionMenu();
-        card.setFaceUp();
+        card.activate();
       });
 
       buttons.push(activeBtn);
     }
 
-    const detailsBtn = new ToonButton(this.scene, {
-      text: "Detalhes",
-      x: x - 70,
-      y: y - 35,
-      height: 42,
-      width: 120,
-      fontSize: "16px",
-      color: 0x302b1f,
-      textColor: "#FFD966",
-      hoverColor: 0x4d4533,
-      borderColor: 0xeee5ae,
-    }).setDepth(10002);
+    if (!card.isFaceDown || isPlayerCard) {
+      const detailsBtn = new ToonButton(this.scene, {
+        text: "Detalhes",
+        x: x - 70,
+        y: y - 35,
+        height: 42,
+        width: 120,
+        fontSize: "16px",
+        color: 0x302b1f,
+        textColor: "#FFD966",
+        hoverColor: 0x4d4533,
+        borderColor: 0xeee5ae,
+      }).setDepth(10002);
+      detailsBtn.on("pointerdown", () => {
+        this.clearSelectionMenu();
+        this.scene.playerHand.showHand();
+        this.scene.scene.launch("CardDetailScene", { cardData: cardData });
+      });
 
-    detailsBtn.on("pointerdown", () => {
-      this.clearSelectionMenu();
-      this.scene.playerHand.showHand();
-      this.scene.scene.launch("CardDetailScene", { cardData: cardData });
-    });
-
-    buttons.push(detailsBtn);
+      buttons.push(detailsBtn);
+    }
 
     this.selectionButtons = buttons;
   }
