@@ -96,7 +96,7 @@ export class Card extends Phaser.GameObjects.Container {
     }
   }
 
-  public getType(): string {
+  public getType(): CardType {
     return this.cardType;
   }
 
@@ -138,5 +138,11 @@ export class Card extends Phaser.GameObjects.Container {
 
   public getCardData(): CardData {
     return this.originalData;
+  }
+
+  public activate(){
+    if(!this._isFaceDown) return;
+    
+    this.setFaceUp();
   }
 }
