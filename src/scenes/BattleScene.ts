@@ -406,7 +406,7 @@ export class BattleScene extends Phaser.Scene {
       ease: "Back.easeOut"
     });
 
-    this.time.delayedCall(2000, () => {
+    this.time.delayedCall(800, () => {
       this.tweens.add({
         targets: background,
         alpha: 0,
