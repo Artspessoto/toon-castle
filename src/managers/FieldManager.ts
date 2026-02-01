@@ -200,14 +200,8 @@ export class FieldManager {
     this.graveyardSlot[side].unshift(card);
     card.setLocation("GRAVEYARD");
 
-    card.setScale(1);
-
-    card.visualElements.setY(0);
-    card.visualElements.setScale(1);
-    card.setFieldVisuals();
-
     this.scene.tweens.add({
-      targets: card.visualElements,
+      targets: card,
       x: coords.x,
       y: coords.y,
       scale: 0.32,
@@ -221,11 +215,7 @@ export class FieldManager {
         const arraySize = this.graveyardSlot[side].length;
         card.setDepth(10 + arraySize);
 
-        card.add(card.visualElements); //back visual to parent container
-        card.visualElements.setPosition(0, 0);
-        card.setPosition(coords.x, coords.y);
-
-        //TODO: graveyard field interaction
+        this.setupFieldInteractions(card);
       },
     });
   }
@@ -244,7 +234,13 @@ export class FieldManager {
           this.scene.playerHand.hideHand();
           break;
         case "GRAVEYARD":
-          console.log(this.graveyardSlot["PLAYER"])
+          const cardOwner = card.owner;
+          console.log(this.graveyardSlot["PLAYER"]);
+          this.scene.playerUI.showGraveyardMenu(
+            this.graveyardSlot[cardOwner],
+            currentX,
+            currentY,
+          );
           break;
         default:
           console.warn("card without local");

@@ -1,16 +1,20 @@
 import { Card } from "../objects/Card";
 import { ToonButton } from "../objects/ToonButton";
-import type { CardData } from "../types/GameTypes";
+import type { CardData, CardLocation, GameSide } from "../types/GameTypes";
 
 export class CardDetailScene extends Phaser.Scene {
   private cardData!: CardData;
+  private owner!: GameSide;
+  private location!: CardLocation;
 
   constructor() {
     super({ key: "CardDetailScene" });
   }
 
-  init(data: { cardData: CardData }) {
+  init(data: { cardData: CardData; owner: GameSide; location: CardLocation }) {
     this.cardData = data.cardData;
+    this.owner = this.owner;
+    this.location = this.location;
   }
 
   create() {
@@ -40,7 +44,7 @@ export class CardDetailScene extends Phaser.Scene {
     panel.fillRoundedRect(startX, startY, width, height, 20);
     panel.strokeRoundedRect(startX, startY, width, height, 20);
 
-    const displayCard = new Card(this, startX + 200, centerY, this.cardData);
+    const displayCard = new Card(this, startX + 200, centerY, this.cardData, this.owner);
 
     displayCard.disableInteractive();
     displayCard.input!.enabled = false;
