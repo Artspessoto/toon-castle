@@ -1,8 +1,9 @@
 import Phaser, { Scene } from "phaser";
-import type { CardData, CardType } from "../types/GameTypes";
+import type { CardData, CardLocation, CardType } from "../types/GameTypes";
 import { CARD_CONFIG } from "../constants/CardConfig";
 
 export class Card extends Phaser.GameObjects.Container {
+  public location: CardLocation = "DECK"; //card cinitial location
   private frame: Phaser.GameObjects.Image;
   // private cardImage: Phaser.GameObjects.Image;
   private nameText: Phaser.GameObjects.Text;
@@ -134,6 +135,10 @@ export class Card extends Phaser.GameObjects.Container {
     this.nameText.setVisible(true);
     this.manaText.setVisible(true);
     this.descText.setVisible(true);
+  }
+  
+  public setLocation(newLocation: CardLocation) {
+    this.location = newLocation;
   }
 
   public getCardData(): CardData {
