@@ -9,6 +9,7 @@ export class GameState {
   public opponentHP: number = 600;
   public playerMana: number = 5;
   public opponentMana: number = 5;
+  public currentTurn: number = 1;
 
   constructor() {}
 
@@ -46,6 +47,10 @@ export class GameState {
     this._activePlayer =
       this._activePlayer === "PLAYER" ? "OPPONENT" : "PLAYER";
     this._currentPhase = "DRAW"; //reset to initial phase in next turn
+  }
+
+  public advanceTurnCount(){
+    this.currentTurn++;
   }
 
   get isDragging(): boolean {
