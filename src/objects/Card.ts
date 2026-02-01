@@ -1,9 +1,15 @@
 import Phaser, { Scene } from "phaser";
-import type { CardData, CardLocation, CardType } from "../types/GameTypes";
+import type {
+  CardData,
+  CardLocation,
+  CardType,
+  GameSide,
+} from "../types/GameTypes";
 import { CARD_CONFIG } from "../constants/CardConfig";
 
 export class Card extends Phaser.GameObjects.Container {
   public location: CardLocation = "DECK"; //card cinitial location
+  public owner: GameSide;
   private frame: Phaser.GameObjects.Image;
   // private cardImage: Phaser.GameObjects.Image;
   private nameText: Phaser.GameObjects.Text;
@@ -17,8 +23,15 @@ export class Card extends Phaser.GameObjects.Container {
 
   public visualElements: Phaser.GameObjects.Container;
 
-  constructor(scene: Scene, x: number, y: number, data: CardData) {
+  constructor(
+    scene: Scene,
+    x: number,
+    y: number,
+    data: CardData,
+    owner: GameSide,
+  ) {
     super(scene, x, y);
+    this.owner = owner;
     this.originalData = data;
 
     this.visualElements = scene.add.container(0, 0);
@@ -131,23 +144,27 @@ export class Card extends Phaser.GameObjects.Container {
   public setFaceUp() {
     this._isFaceDown = false;
     this.frame.setTexture(this.getFrameKey(this.originalData.type));
-    
+
     this.nameText.setVisible(true);
     this.manaText.setVisible(true);
     this.descText.setVisible(true);
   }
-  
+
   public setLocation(newLocation: CardLocation) {
     this.location = newLocation;
+  }
+
+  public setOwner(cardOwner: GameSide) {
+    this.owner = cardOwner;
   }
 
   public getCardData(): CardData {
     return this.originalData;
   }
 
-  public activate(){
-    if(!this._isFaceDown) return;
-    
+  public activate() {
+    if (!this._isFaceDown) return;
+
     this.setFaceUp();
   }
 }
