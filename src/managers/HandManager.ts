@@ -63,6 +63,8 @@ export class HandManager {
       this.scene.inputManager.setupCardInteractions(newCard);
     }
 
+    newCard.setLocation("HAND")
+
     newCard.setDepth(200);
     this.hand.push(newCard);
     this.animateCardEntry(newCard);

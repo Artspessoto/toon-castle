@@ -17,8 +17,8 @@ export class FieldManager {
   };
 
   private graveyardSlot = {
-    PLAYER: null as Card | null,
-    OPPONENT: null as Card | null,
+    PLAYER: [] as Card[],
+    OPPONENT: [] as Card[],
   };
 
   private readonly fieldCoords = {
@@ -46,7 +46,7 @@ export class FieldManager {
         { x: 645, y: 120 },
         { x: 787, y: 120 },
       ],
-      GRAVEYARD: { x: 120, y: 270 },
+      GRAVEYARD: { x: 108, y: 270 },
     },
   };
 
@@ -136,6 +136,7 @@ export class FieldManager {
     card.visualElements.setY(0);
     card.visualElements.setScale(1);
     card.setFieldVisuals();
+    card.setLocation("FIELD");
 
     const isDefense = mode === "DEF";
     const isSet = mode === "SET";
@@ -193,9 +194,17 @@ export class FieldManager {
   }
 
   public moveToGraveyard(card: Card, side: GameSide) {
+    this.scene.tweens.killTweensOf(card.visualElements);
     const coords = this.fieldCoords[side].GRAVEYARD;
 
-    this.graveyardSlot[side] = card;
+    this.graveyardSlot[side].unshift(card);
+    card.setLocation("GRAVEYARD");
+
+    card.setScale(1);
+
+    card.visualElements.setY(0);
+    card.visualElements.setScale(1);
+    card.setFieldVisuals();
 
     this.scene.tweens.add({
       targets: card.visualElements,
@@ -206,11 +215,15 @@ export class FieldManager {
       duration: 500,
       ease: "Power2",
       onStart: () => {
-        card.visualElements.setDepth(100);
+        card.visualElements.setDepth(1000);
       },
       onComplete: () => {
-        card.setDepth(2);
-        card.disableInteractive();
+        const arraySize = this.graveyardSlot[side].length;
+        card.setDepth(10 + arraySize);
+
+        card.add(card.visualElements); //back visual to parent container
+        card.visualElements.setPosition(0, 0);
+        card.setPosition(coords.x, coords.y);
 
         //TODO: graveyard field interaction
       },
@@ -225,9 +238,18 @@ export class FieldManager {
       const currentX = card.x;
       const currentY = card.y;
 
-      this.scene.playerHand.hideHand();
-
-      this.scene.playerUI.showFieldCardMenu(currentX, currentY, card);
+      switch (card.location) {
+        case "FIELD":
+          this.scene.playerUI.showFieldCardMenu(currentX, currentY, card);
+          this.scene.playerHand.hideHand();
+          break;
+        case "GRAVEYARD":
+          console.log(this.graveyardSlot["PLAYER"])
+          break;
+        default:
+          console.warn("card without local");
+          break;
+      }
     });
   }
 }
