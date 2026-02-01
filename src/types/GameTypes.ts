@@ -8,7 +8,7 @@ type Languages = keyof typeof TRANSLATIONS;
 export type TranslationStructure = (typeof TRANSLATIONS)[Languages];
 export type GameSide = "PLAYER" | "OPPONENT";
 export type Lang = "pt-br" | "en";
-export type Notice = "PHASE" | "WARNING" | "TURN"
+export type Notice = "PHASE" | "WARNING" | "TURN" | "NEUTRAL"
 export type BattleTranslations = TranslationStructure["battle_scene"];
 export type CardLocation = "HAND" | "FIELD" | "GRAVEYARD" | "DECK";
 

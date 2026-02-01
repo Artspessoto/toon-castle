@@ -119,6 +119,9 @@ export class UIManager {
       case "TURN":
         color = 0x0077ff;
         break;
+      case "NEUTRAL":
+        color = 0xbdc3c7
+        break;
       default:
         color = 0xffcc00;
         break;

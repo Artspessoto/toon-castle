@@ -199,6 +199,11 @@ export class BattleScene extends Phaser.Scene {
 
   private setPhase(newPhase: GamePhase) {
     this.gameState.setPhase(newPhase);
+
+    if (newPhase === "CHANGE_TURN") {
+      this.gameState.advanceTurnCount();
+    }
+    
     this.phaseManager.updateUI(newPhase, this.translationText);
 
     if (newPhase === "DRAW") {
@@ -378,7 +383,8 @@ export class BattleScene extends Phaser.Scene {
     //add black background into overlay container
     const background = this.add
       .rectangle(640, 360, 1280, 720, 0x000000, 0.7)
-      .setAlpha(0).setDepth(0);
+      .setAlpha(0)
+      .setDepth(0);
 
     this.tweens.add({
       targets: background,
@@ -388,9 +394,9 @@ export class BattleScene extends Phaser.Scene {
 
     if (card.parentContainer) {
       //remove from parent container to add into temp overlay
-      card.parentContainer.remove(card); 
+      card.parentContainer.remove(card);
     }
-    
+
     // add background and card into temp container
     this.overlayLayer.add([background, card]);
     card.setPosition(tempPoint.x, tempPoint.y);
@@ -402,7 +408,7 @@ export class BattleScene extends Phaser.Scene {
       y: 360, // y center (720 / 2)
       scale: 1,
       duration: 400,
-      ease: "Back.easeOut"
+      ease: "Back.easeOut",
     });
 
     this.time.delayedCall(1000, () => {
