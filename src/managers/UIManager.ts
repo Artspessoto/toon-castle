@@ -107,7 +107,23 @@ export class UIManager {
   public showNotice(message: string, type: Notice) {
     if (!this.bannerBg || !this.bannerText) return;
 
-    const color = type === "PHASE" ? 0xffcc00 : 0xcc0000;
+    let color: number;
+
+    switch (type) {
+      case "PHASE":
+        color = 0xffcc00;
+        break;
+      case "WARNING":
+        color = 0xcc0000;
+        break;
+      case "TURN":
+        color = 0x0077ff;
+        break;
+      default:
+        color = 0xffcc00;
+        break;
+    }
+
     this.bannerBg.setStrokeStyle(4, color);
 
     this.animateBanner(message, type);
