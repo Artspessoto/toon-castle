@@ -31,6 +31,7 @@ export class BattleScene extends Phaser.Scene {
   public phaseButton!: ToonButton;
   private translationText!: BattleTranslations;
   private selectedCard: Card | null = null;
+  private overlayLayer!: Phaser.GameObjects.Container;
 
   constructor() {
     super("BattleScene");
@@ -82,6 +83,9 @@ export class BattleScene extends Phaser.Scene {
 
     const bg = this.add.image(640, 360, "battle-scene-background");
     bg.setDisplaySize(1280, 720).setDepth(-100);
+
+    //global stage: temp container ensures activated cards always render on top
+    this.overlayLayer = this.add.container(0, 0).setDepth(20000);
 
     this.playerUI.setTranslations(currentTranslations);
     this.opponentUI.setTranslations(currentTranslations);
@@ -365,22 +369,16 @@ export class BattleScene extends Phaser.Scene {
   public cardActivation(card: Card, side: GameSide) {
     card.activate();
 
-    //creating a temporary point to store the result
+    //creating a temporary point to store position data
     const tempPoint = new Phaser.Math.Vector2();
 
-    //retrieves the element's origin point on the screen and save into tempPoint
+    //capture the card's absolute world position for coord mapping
     card.visualElements.getWorldPoint(tempPoint);
 
-    //global coords relative to a container
-    const startX = tempPoint.x;
-    const startY = tempPoint.y;
-
-    //overlay
+    //add black background into overlay container
     const background = this.add
-      .rectangle(640, 360, 1280, 720, 0x000000, 1)
-      .setDepth(15000)
-      .setAlpha(0)
-      .setScrollFactor(0);
+      .rectangle(640, 360, 1280, 720, 0x000000, 0.7)
+      .setAlpha(0).setDepth(0);
 
     this.tweens.add({
       targets: background,
@@ -388,17 +386,18 @@ export class BattleScene extends Phaser.Scene {
       duration: 300,
     });
 
-    //check card is in a container and turn card into a global component
-    if (card.visualElements.parentContainer) {
-      card.visualElements.parentContainer.remove(card.visualElements); //remove of container
-      this.add.existing(card.visualElements); //add to scene
-
-      card.visualElements.setPosition(startX, startY);
+    if (card.parentContainer) {
+      //remove from parent container to add into temp overlay
+      card.parentContainer.remove(card); 
     }
+    
+    // add background and card into temp container
+    this.overlayLayer.add([background, card]);
+    card.setPosition(tempPoint.x, tempPoint.y);
+    card.setDepth(1); // background depth 0, card 1
 
-    card.visualElements.setDepth(20000);
     this.tweens.add({
-      targets: card.visualElements,
+      targets: card,
       x: 640, // x center (1280 / 2)
       y: 360, // y center (720 / 2)
       scale: 1,
@@ -406,21 +405,24 @@ export class BattleScene extends Phaser.Scene {
       ease: "Back.easeOut"
     });
 
-    this.time.delayedCall(800, () => {
+    this.time.delayedCall(1000, () => {
       this.tweens.add({
         targets: background,
         alpha: 0,
         duration: 300,
         onComplete: () => {
           background.destroy();
+          this.overlayLayer.remove(card);
+          this.add.existing(card);
           this.currentHand.showHand();
+
+          // remove card from slot
+          this.fieldManager.releaseSlot(card, side);
+
+          // move card to graveyard
+          this.fieldManager.moveToGraveyard(card, side);
         },
       });
-      // remove card from slot
-      this.fieldManager.releaseSlot(card, side);
-
-      // move card to graveyard
-      this.fieldManager.moveToGraveyard(card, side);
     });
   }
 }
