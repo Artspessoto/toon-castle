@@ -332,12 +332,43 @@ export class UIManager {
       detailsBtn.on("pointerdown", () => {
         this.clearSelectionMenu();
         this.scene.playerHand.showHand();
-        this.scene.scene.launch("CardDetailScene", { cardData: cardData });
+        this.scene.scene.launch("CardDetailScene", {
+          cardData: cardData,
+          owner: card.owner,
+          location: card.location,
+        });
       });
 
       buttons.push(detailsBtn);
     }
 
     this.selectionButtons = buttons;
+  }
+
+  public showGraveyardMenu(graveyardCards: Card[], x: number, y: number) {
+    this.clearSelectionMenu();
+
+    const battleTexts = this.translations["battle_scene"];
+    const buttonTexts = battleTexts.battle_buttons;
+    const buttons: ToonButton[] = [];
+
+    const detailsBtn = new ToonButton(this.scene, {
+      text: buttonTexts.details,
+      x: x + 70,
+      y: y - 35,
+      height: 42,
+      width: 120,
+      fontSize: "16px",
+      color: 0x302b1f,
+      textColor: "#FFD966",
+      hoverColor: 0x4d4533,
+      borderColor: 0xeee5ae,
+    }).setDepth(10002);
+    detailsBtn.on("pointerdown", () => {
+      this.clearSelectionMenu();
+      console.log(graveyardCards);
+    });
+
+    buttons.push(detailsBtn);
   }
 }
