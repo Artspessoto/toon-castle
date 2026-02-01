@@ -54,6 +54,7 @@ export class HandManager {
       deckPosition.x,
       deckPosition.y,
       cardData,
+      this.side
     );
 
     if (this.side == "OPPONENT") {
