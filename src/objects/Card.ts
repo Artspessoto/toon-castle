@@ -93,7 +93,7 @@ export class Card extends Phaser.GameObjects.Container {
     }
 
     this.setSize(width, height);
-    this.setInteractive();
+    this.setInteractive({ useHandCursor: true, draggable: false });
     scene.add.existing(this);
   }
 
@@ -160,6 +160,35 @@ export class Card extends Phaser.GameObjects.Container {
 
   public getCardData(): CardData {
     return this.originalData;
+  }
+
+  public updateData(data: CardData): this {
+    //update card data without create new instance
+    this.originalData = data;
+    this.cardType = data.type;
+
+    this.frame.setTexture(this.getFrameKey(data.type));
+
+    this.nameText.setText(data.nameKey.toUpperCase());
+    this.descText.setText(data.descriptionKey || "");
+    this.manaText.setText(data.manaCost.toString());
+
+    const isMonster = data.type == "MONSTER" || data.type == "EFFECT_MONSTER";
+
+    if (isMonster) {
+      const atkValue = data.atk?.toString() || "0";
+      const defValue = data.def?.toString() || "0";
+
+      if (this.atkText && this.defText) {
+        this.atkText?.setText(atkValue).setVisible(true);
+        this.defText?.setText(defValue).setVisible(true);
+      }
+    } else {
+      this.atkText?.setVisible(false);
+      this.defText?.setVisible(false);
+    }
+
+    return this;
   }
 
   public activate() {
