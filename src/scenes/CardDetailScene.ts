@@ -35,7 +35,7 @@ export class CardDetailScene extends Phaser.Scene {
       borderColor = 0xbc55ff;
     }
 
-    this.add.rectangle(640, 360, 1280, 720, 0x000000, 0.8).setInteractive();
+    this.add.rectangle(640, 360, 1280, 720, 0x000000, 0.3).setInteractive();
 
     panel.fillStyle(0x1a1a20, 0.95);
     panel.lineStyle(4, borderColor, 1);

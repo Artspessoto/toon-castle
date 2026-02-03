@@ -119,7 +119,6 @@ export class FieldManager {
     //card found and remove from slots
     if (index !== -1) {
       slots[index] = null;
-      console.log(`i: ${index}`);
     }
   }
 
@@ -235,7 +234,6 @@ export class FieldManager {
           break;
         case "GRAVEYARD":
           const cardOwner = card.owner;
-          console.log(this.graveyardSlot["PLAYER"]);
           this.scene.playerUI.showGraveyardMenu(
             this.graveyardSlot[cardOwner],
             currentX,
