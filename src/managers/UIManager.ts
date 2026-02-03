@@ -120,7 +120,7 @@ export class UIManager {
         color = 0x0077ff;
         break;
       case "NEUTRAL":
-        color = 0xbdc3c7
+        color = 0xbdc3c7;
         break;
       default:
         color = 0xffcc00;
@@ -369,7 +369,6 @@ export class UIManager {
 
     const battleTexts = this.translations["battle_scene"];
     const buttonTexts = battleTexts.battle_buttons;
-    const buttons: ToonButton[] = [];
 
     const detailsBtn = new ToonButton(this.scene, {
       text: buttonTexts.details,
@@ -383,11 +382,12 @@ export class UIManager {
       hoverColor: 0x4d4533,
       borderColor: 0xeee5ae,
     }).setDepth(10002);
+
     detailsBtn.on("pointerdown", () => {
       this.clearSelectionMenu();
-      console.log(graveyardCards);
+      this.scene.scene.launch("CardListScene", graveyardCards);
     });
 
-    buttons.push(detailsBtn);
+    this.selectionButtons = [detailsBtn];
   }
 }
