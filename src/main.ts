@@ -5,6 +5,7 @@ import "./styles/ui.css";
 import { GuideScene } from "./scenes/GuideScene";
 import { BattleScene } from "./scenes/BattleScene";
 import { CardDetailScene } from "./scenes/CardDetailScene";
+import { CardListScene } from "./scenes/CardListScene";
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -19,7 +20,7 @@ const config: Phaser.Types.Core.GameConfig = {
   dom: {
     createContainer: true,
   },
-  scene: [MenuScene, NameScene, GuideScene, BattleScene, CardDetailScene],
+  scene: [MenuScene, NameScene, GuideScene, BattleScene, CardDetailScene, CardListScene],
 };
 
 new Phaser.Game(config);
