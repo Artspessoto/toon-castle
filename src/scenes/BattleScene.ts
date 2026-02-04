@@ -156,11 +156,7 @@ export class BattleScene extends Phaser.Scene {
     );
 
     this.input.keyboard?.on("keydown-SPACE", () => {
-      if (this.currentPhase == "DRAW") {
-        this.setPhase("MAIN");
-        this.currentHand.drawCard(this.currentDeck.position);
-        this.currentUI.updateMana(2);
-      }
+      this.handlePlayerCard();
     });
 
     this.input.keyboard?.on("keydown-ESC", () => {
@@ -197,13 +193,21 @@ export class BattleScene extends Phaser.Scene {
     this.time.delayedCall(delay, () => this.setPhase("MAIN"));
   }
 
+  public handlePlayerCard() {
+    if (this.currentPhase == "DRAW" && this.gameState.currentTurn !== 1) {
+      this.setPhase("MAIN");
+      this.currentHand.drawCard(this.currentDeck.position);
+      this.currentUI.updateMana(2);
+    }
+  }
+
   private setPhase(newPhase: GamePhase) {
     this.gameState.setPhase(newPhase);
 
     if (newPhase === "CHANGE_TURN") {
       this.gameState.advanceTurnCount();
     }
-    
+
     this.phaseManager.updateUI(newPhase, this.translationText);
 
     if (newPhase === "DRAW") {

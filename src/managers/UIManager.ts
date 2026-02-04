@@ -81,7 +81,7 @@ export class UIManager {
 
   public setupLifePoints() {
     const currentHP = this.scene.gameState.getHP(this.side);
-    const yPos = this.side == "PLAYER" ? 650 : 20;
+    const yPos = this.side == "PLAYER" ? 630 : 40;
 
     this.createLPBar(30, yPos, currentHP);
   }

@@ -36,6 +36,13 @@ export class DeckManager {
       deckCard.scaleY = 0.4;
       deckCard.setDepth(10 - i);
 
+      if (i == 0 && this.side == "PLAYER") {
+        deckCard.setInteractive({ useHandCursor: true });
+        deckCard.on("pointerdown", () => {
+          this.scene.handlePlayerCard();
+        });
+      }
+
       if (i > 0) {
         deckCard.setTint(0x999999);
       }
