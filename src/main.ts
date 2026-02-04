@@ -16,11 +16,30 @@ const config: Phaser.Types.Core.GameConfig = {
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
+    min: {
+      width: 1280,
+      height: 720,
+    },
+    max: {
+      width: 2560,
+      height: 1440,
+    },
+  },
+  render: {
+    antialias: true,
+    roundPixels: true,
   },
   dom: {
     createContainer: true,
   },
-  scene: [MenuScene, NameScene, GuideScene, BattleScene, CardDetailScene, CardListScene],
+  scene: [
+    MenuScene,
+    NameScene,
+    GuideScene,
+    BattleScene,
+    CardDetailScene,
+    CardListScene,
+  ],
 };
 
 new Phaser.Game(config);
