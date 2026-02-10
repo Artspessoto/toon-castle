@@ -243,55 +243,69 @@ export class UIManager {
   public showSelectionMenu(
     x: number,
     y: number,
-    cardType: string,
+    card: Card,
     cb: (mode: PlacementMode) => void,
   ) {
+    this.clearSelectionMenu();
+
+    const cardType = card.getType();
     const isMonster = cardType.includes("MONSTER");
     const buttonTexts = this.translations.battle_scene.battle_buttons;
 
-    const leftConfig = isMonster
-      ? { text: "", icon: "sword_icon", width: 70 }
-      : { text: buttonTexts.active, width: 90 };
+    let leftConfig = null;
+    let rightConfig = null;
 
-    const rightConfig = isMonster
-      ? { text: "", icon: "shield_icon", width: 70 }
-      : { text: buttonTexts.set, width: 110 };
+    if (isMonster) {
+      leftConfig = { text: "", icon: "sword_icon", width: 70 };
+      rightConfig = { text: "", icon: "shield_icon", width: 70 };
+    } else if (cardType === "SPELL") {
+      leftConfig = { text: buttonTexts.active, width: 90 };
+      rightConfig = { text: buttonTexts.set, width: 110 };
+    } else if (cardType === "TRAP") {
+      rightConfig = { text: buttonTexts.set, width: 110 };
+    }
 
-    const leftBtn = new ToonButton(this.scene, {
-      x: x - 75,
-      y: y - 100,
-      height: 42,
-      fontSize: "18px",
-      color: 0x302b1f,
-      textColor: "#FFD966",
-      hoverColor: 0x302b1f,
-      borderColor: 0xeee5ae,
-      ...leftConfig,
-    }).setDepth(10002);
+    if (leftConfig) {
+      const leftBtn = new ToonButton(this.scene, {
+        x: x - (rightConfig ? 75 : 0),
+        y: y - 100,
+        height: 42,
+        fontSize: "18px",
+        color: 0x302b1f,
+        textColor: "#FFD966",
+        hoverColor: 0x302b1f,
+        borderColor: 0xeee5ae,
+        ...leftConfig,
+      }).setDepth(10002);
 
-    const rightBtn = new ToonButton(this.scene, {
-      x: x + 75,
-      y: y - 100,
-      height: 42,
-      fontSize: "16px",
-      color: 0x302b1f,
-      textColor: "#FFD966",
-      hoverColor: 0x302b1f,
-      borderColor: 0xeee5ae,
-      ...rightConfig,
-    }).setDepth(10002);
+      this.selectionButtons.push(leftBtn);
 
-    this.selectionButtons = [leftBtn, rightBtn];
+      leftBtn.on("pointerdown", () => {
+        this.clearSelectionMenu();
+        cb(isMonster ? "ATK" : "FACE_UP"); //FACE_UP trigger cardActivation method
+      });
+    }
 
-    rightBtn.on("pointerdown", () => {
-      this.clearSelectionMenu();
-      cb(isMonster ? "DEF" : "SET");
-    });
+    if (rightConfig) {
+      const rightBtn = new ToonButton(this.scene, {
+        x: x + 75,
+        y: y - 100,
+        height: 42,
+        fontSize: "16px",
+        color: 0x302b1f,
+        textColor: "#FFD966",
+        hoverColor: 0x302b1f,
+        borderColor: 0xeee5ae,
+        ...rightConfig,
+      }).setDepth(10002);
 
-    leftBtn.on("pointerdown", () => {
-      this.clearSelectionMenu();
-      cb(isMonster ? "ATK" : "FACE_UP"); //FACE_UP trigger cardActivation method
-    });
+      this.selectionButtons.push(rightBtn);
+
+      rightBtn.on("pointerdown", () => {
+        this.clearSelectionMenu();
+        cb(isMonster ? "DEF" : "SET");
+      });
+    }
   }
 
   public clearSelectionMenu() {
@@ -311,30 +325,40 @@ export class UIManager {
 
     const buttons: ToonButton[] = [];
     const cardData = card.getCardData();
+    const currentTurn = this.scene.gameState.currentTurn;
     const myTurn = this.scene.gameState.activePlayer == "PLAYER";
 
+    const isEffectCard = card.getType() === "TRAP" || card.getType() == "EFFECT_MONSTER";
+    const hasWaitedOneTurn = currentTurn > card.setTurn;
+
     if (card.isFaceDown && isPlayerCard && myTurn) {
-      const activeBtn = new ToonButton(this.scene, {
-        text: buttonTexts.active,
-        x: x - 70,
-        y: y - 80,
-        height: 42,
-        width: 120,
-        fontSize: "16px",
-        color: 0x302b1f,
-        textColor: "#FFD966",
-        hoverColor: 0x4d4533,
-        borderColor: 0xeee5ae,
-      }).setDepth(10002);
+      const canActive = isEffectCard ? hasWaitedOneTurn : true;
 
-      activeBtn.on("pointerdown", () => {
-        this.clearSelectionMenu();
-        this.scene.cardActivation(card, this.side);
-      });
+      //trap or effect monster need wait 1 turn to active
+      if (canActive) {
+        const activeBtn = new ToonButton(this.scene, {
+          text: buttonTexts.active,
+          x: x - 70,
+          y: y - 80,
+          height: 42,
+          width: 120,
+          fontSize: "16px",
+          color: 0x302b1f,
+          textColor: "#FFD966",
+          hoverColor: 0x4d4533,
+          borderColor: 0xeee5ae,
+        }).setDepth(10002);
 
-      buttons.push(activeBtn);
+        activeBtn.on("pointerdown", () => {
+          this.clearSelectionMenu();
+          this.scene.cardActivation(card, this.side);
+        });
+
+        buttons.push(activeBtn);
+      }
     }
 
+    //always visible
     if (!card.isFaceDown || isPlayerCard) {
       const detailsBtn = new ToonButton(this.scene, {
         text: buttonTexts.details,

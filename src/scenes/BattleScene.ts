@@ -264,7 +264,7 @@ export class BattleScene extends Phaser.Scene {
       this.currentUI.showSelectionMenu(
         slot.x,
         slot.y,
-        cardType, // MONSTER, SPELL, etc.
+        card,
         (mode: PlacementMode) => {
           this.selectedCard = null; //apply null to drop card
           this.executePlay(card, activeSide, zoneType, slot, mode);

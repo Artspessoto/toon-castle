@@ -128,6 +128,7 @@ export class FieldManager {
     targetY: number,
     mode: PlacementMode,
   ) {
+    const currentTurn = this.scene.gameState.currentTurn;
     const { manaCost } = card.getCardData();
     card.disableInteractive();
     this.scene.tweens.killTweensOf(card.visualElements);
@@ -135,7 +136,7 @@ export class FieldManager {
     card.visualElements.setY(0);
     card.visualElements.setScale(1);
     card.setFieldVisuals();
-    card.setLocation("FIELD");
+    card.setLocation("FIELD", currentTurn); //save actual turn and location into card obj
 
     const isDefense = mode === "DEF";
     const isSet = mode === "SET";
