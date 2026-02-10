@@ -20,6 +20,7 @@ export class Card extends Phaser.GameObjects.Container {
   private _isFaceDown: boolean = false;
   private originalData: CardData;
   public cardType: CardType;
+  public setTurn: number = -1;
 
   public visualElements: Phaser.GameObjects.Container;
 
@@ -150,8 +151,12 @@ export class Card extends Phaser.GameObjects.Container {
     this.descText.setVisible(true);
   }
 
-  public setLocation(newLocation: CardLocation) {
+  public setLocation(newLocation: CardLocation, currentTurn?: number) {
     this.location = newLocation;
+
+    if (this.location == "FIELD" && currentTurn) {
+      this.setTurn = currentTurn;
+    }
   }
 
   public setOwner(cardOwner: GameSide) {
