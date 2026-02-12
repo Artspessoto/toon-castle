@@ -225,8 +225,13 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private handleNextPhase() {
+    const currentTurn = this.gameState.currentTurn;
     if (this.currentPhase === "MAIN") {
-      this.setPhase("BATTLE");
+      if (currentTurn == 1) {
+        this.setPhase("CHANGE_TURN");
+      } else {
+        this.setPhase("BATTLE");
+      }
     } else if (this.currentPhase === "BATTLE") {
       this.setPhase("CHANGE_TURN");
     }
