@@ -19,6 +19,7 @@ export class InputManager {
     this.setupDragEvents(card);
   }
 
+  //card on focus (hand)
   private handleCardHover(card: Card) {
     if (this.scene.gameState.isDragging) return;
 
@@ -32,6 +33,7 @@ export class InputManager {
     card.setDepth(200);
   }
 
+  //card stop focus (hand)
   private handleCardOut(card: Card) {
     if (this.scene.gameState.isDragging) return;
 

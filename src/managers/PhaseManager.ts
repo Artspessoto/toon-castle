@@ -42,7 +42,11 @@ export class PhaseManager {
         }
 
         if (isPlayerTurn) {
-          this.handleButtonTransition(translations.battle_buttons.to_battle);
+          const buttonText =
+            currentTurn == 1
+              ? translations.battle_buttons.end_turn
+              : translations.battle_buttons.to_battle;
+          this.handleButtonTransition(buttonText);
         } else {
           phaseButton.setVisible(false);
         }
