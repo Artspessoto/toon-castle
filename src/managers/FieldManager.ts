@@ -234,7 +234,7 @@ export class FieldManager {
           this.scene.playerUI.showFieldCardMenu(currentX, currentY, card);
           this.scene.playerHand.hideHand();
           break;
-        case "GRAVEYARD":
+        case "GRAVEYARD": {
           const cardOwner = card.owner;
           this.scene.playerUI.showGraveyardMenu(
             this.graveyardSlot[cardOwner],
@@ -242,6 +242,7 @@ export class FieldManager {
             currentY,
           );
           break;
+        }
         default:
           console.warn("card without local");
           break;

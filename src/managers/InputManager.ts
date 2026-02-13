@@ -68,14 +68,14 @@ export class InputManager {
       card.setDepth(2000);
     });
 
-    card.on("drag", (_pointer: any, dragX: number, dragY: number) => {
+    card.on("drag", (_pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
       //TODO option to drop card into zone (defense, attack, back card)
       card.visualElements.setY(0);
       card.visualElements.setScale(1);
       card.setPosition(dragX, dragY);
     });
 
-    card.on("dragend", (_pointer: any, dropped: boolean) => {
+    card.on("dragend", (_pointer: Phaser.Input.Pointer, dropped: boolean) => {
       this.scene.gameState.setDragging(false);
       if (!dropped) this.scene.currentHand.reorganizeHand();
       this.scene.tweens.add({
@@ -86,7 +86,7 @@ export class InputManager {
       });
     });
 
-    card.on("drop", (_pointer: any, targetZone: Phaser.GameObjects.Zone) => {
+    card.on("drop", (_pointer: Phaser.Input.Pointer, targetZone: Phaser.GameObjects.Zone) => {
       this.scene.handleCardDrop(targetZone, card);
     });
   }
