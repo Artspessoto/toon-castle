@@ -13,6 +13,18 @@ export const CARD_DATABASE: Record<string, CardData> = {
     width: 300,
     height: 400,
   },
+  SENTINEL_02: {
+    id: "SENTINEL_02",
+    type: "EFFECT_MONSTER",
+    nameKey: "Sentinela de Ferro",
+    descriptionKey: "Um guardião ancestral que nunca dorme.",
+    manaCost: 3,
+    atk: 15,
+    def: 20,
+    imageKey: "monster_sentinel",
+    width: 300,
+    height: 400,
+  },
   FIRE_BALL: {
     id: "FIRE_BALL",
     type: "SPELL",
