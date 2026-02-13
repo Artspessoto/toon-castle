@@ -7,6 +7,9 @@
     "dev": "vite",
     "build": "rimraf dist && tsc && vite build",
     "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "test": "vitest",
     "clean": "rimraf dist",
     "preview": "vite preview",
     "type-check": "tsc --noEmit"
@@ -18,11 +21,13 @@
     "eslint": "^9.39.2",
     "globals": "^17.0.0",
     "jiti": "^2.6.1",
+    "prettier": "^3.8.1",
     "rimraf": "^6.1.2",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.53.0",
     "vite": "^7.2.4",
-    "vite-plugin-phaser": "^0.0.1"
+    "vite-plugin-phaser": "^0.0.1",
+    "vitest": "^4.0.18"
   },
   "dependencies": {
     "phaser": "^3.90.0"
