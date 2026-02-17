@@ -15,6 +15,7 @@ import { FieldManager } from "../managers/FieldManager";
 import { InputManager } from "../managers/InputManager";
 import { DeckManager } from "../managers/DeckManager";
 import { UIManager } from "../managers/UIManager";
+import { CombatManager } from "../managers/CombatManager";
 
 export class BattleScene extends Phaser.Scene {
   public gameState: GameState;
@@ -27,6 +28,7 @@ export class BattleScene extends Phaser.Scene {
   public oponentDeck: DeckManager;
   public playerUI: UIManager;
   public opponentUI: UIManager;
+  public combatManager: CombatManager;
 
   public phaseButton!: ToonButton;
   private translationText!: BattleTranslations;
@@ -40,6 +42,7 @@ export class BattleScene extends Phaser.Scene {
     this.phaseManager = new PhaseManager(this);
     this.fieldManager = new FieldManager(this);
     this.inputManager = new InputManager(this);
+    this.combatManager = new CombatManager(this);
 
     this.playerUI = new UIManager(this, "PLAYER");
     this.opponentUI = new UIManager(this, "OPPONENT");
@@ -202,6 +205,9 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private setPhase(newPhase: GamePhase) {
+    this.playerUI.clearSelectionMenu();
+    this.playerHand.showHand();
+    
     this.gameState.setPhase(newPhase);
 
     if (newPhase === "CHANGE_TURN") {
@@ -222,6 +228,7 @@ export class BattleScene extends Phaser.Scene {
   public finalizeTurnTransition() {
     this.gameState.nextTurn(); // change to oponent and reset to draw phase
     this.setPhase("DRAW");
+    this.fieldManager.resetAttackFlags(this.gameState.activePlayer);
   }
 
   private handleNextPhase() {
@@ -383,6 +390,14 @@ export class BattleScene extends Phaser.Scene {
   public cardActivation(card: Card, side: GameSide) {
     const isEffectMonster = card.getType() === "EFFECT_MONSTER";
 
+    //save original position
+    const originalPos = {
+      x: card.x,
+      y: card.y,
+      angle: card.angle,
+      scale: card.scale,
+    };
+
     card.activate();
 
     //creating a temporary point to store position data
@@ -444,10 +459,10 @@ export class BattleScene extends Phaser.Scene {
             //effect monster returns into original position after active effect
             this.tweens.add({
               targets: card,
-              x: card.x,
-              y: card.y,
-              angle: card.angle,
-              scale: card.scale,
+              x: originalPos.x,
+              y: originalPos.y,
+              angle: originalPos.angle,
+              scale: originalPos.scale,
               duration: 400,
               ease: "Power2.easeOut",
               onComplete: () => {
@@ -458,5 +473,9 @@ export class BattleScene extends Phaser.Scene {
         },
       });
     });
+  }
+
+  public onAttackDeclared(attacker: Card) {
+    this.combatManager.prepareTargeting(attacker);
   }
 }
