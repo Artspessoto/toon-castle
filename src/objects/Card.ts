@@ -10,6 +10,7 @@ import { CARD_CONFIG } from "../constants/CardConfig";
 export class Card extends Phaser.GameObjects.Container {
   public location: CardLocation = "DECK"; //card cinitial location
   public owner: GameSide;
+  public hasAttacked: boolean = false;
   private frame: Phaser.GameObjects.Image;
   // private cardImage: Phaser.GameObjects.Image;
   private nameText: Phaser.GameObjects.Text;
