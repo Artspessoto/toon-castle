@@ -332,7 +332,10 @@ export class UIManager {
     const currentPhase = this.scene.currentPhase;
     const isAttackPosition = card.angle == 0;
     const canAttack =
-      cardData.atk !== undefined && isAttackPosition && !card.isFaceDown;
+      cardData.atk !== undefined &&
+      isAttackPosition &&
+      !card.isFaceDown &&
+      !card.hasAttacked;
 
     const isEffectCard =
       card.getType() === "TRAP" || card.getType() == "EFFECT_MONSTER";
@@ -342,7 +345,7 @@ export class UIManager {
       const canActive = isEffectCard ? hasWaitedOneTurn : true;
 
       //trap or effect monster need wait 1 turn to active
-      if (canActive) {
+      if (canActive && card.getType() !== "MONSTER") {
         const activeBtn = new ToonButton(this.scene, {
           text: buttonTexts.active,
           x: x - 70,
@@ -383,7 +386,7 @@ export class UIManager {
 
         attackBtn.on("pointerdown", () => {
           this.clearSelectionMenu();
-          console.log("atk", card);
+          this.scene.onAttackDeclared(card);
         });
 
         buttons.push(attackBtn);
