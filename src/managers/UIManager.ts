@@ -86,6 +86,27 @@ export class UIManager {
     this.createLPBar(30, yPos, currentHP);
   }
 
+  public updateLP(side: GameSide, amount: number) {
+    const startLP = this.scene.gameState.getHP(side);
+
+    this.scene.gameState.modifyHP(side, amount);
+
+    this.animateLPImpact(amount);
+
+    const targetLP = this.scene.gameState.getHP(side);
+    const lpCounter = { value: startLP };
+
+    this.scene.tweens.add({
+      targets: lpCounter,
+      value: targetLP,
+      duration: 1200,
+      ease: "Power2",
+      onUpdate: () => {
+        this.hpText.setText(Math.floor(lpCounter.value).toString());
+      },
+    });
+  }
+
   public updateMana(amount: number) {
     this.scene.gameState.modifyMana(this.side, amount);
 
@@ -334,6 +355,7 @@ export class UIManager {
     const canAttack =
       cardData.atk !== undefined &&
       isAttackPosition &&
+      card.owner == "PLAYER" &&
       !card.isFaceDown &&
       !card.hasAttacked;
 
@@ -368,29 +390,30 @@ export class UIManager {
       }
     }
 
+    if (currentPhase == "BATTLE" && canAttack && myTurn) {
+      const attackBtn = new ToonButton(this.scene, {
+        text: "ATACAR",
+        x: x + 70,
+        y: y - 35,
+        height: 42,
+        width: 120,
+        fontSize: "16px",
+        color: 0x302b1f,
+        textColor: "#FFD966",
+        hoverColor: 0x4d4533,
+        borderColor: 0xeee5ae,
+      }).setDepth(10002);
+
+      attackBtn.on("pointerdown", () => {
+        this.clearSelectionMenu();
+        this.scene.onAttackDeclared(card);
+      });
+
+      buttons.push(attackBtn);
+    }
+
     //always visible
     if (!card.isFaceDown || isPlayerCard) {
-      if (currentPhase == "BATTLE" && canAttack && myTurn) {
-        const attackBtn = new ToonButton(this.scene, {
-          text: "ATACAR",
-          x: x + 70,
-          y: y - 35,
-          height: 42,
-          width: 120,
-          fontSize: "16px",
-          color: 0x302b1f,
-          textColor: "#FFD966",
-          hoverColor: 0x4d4533,
-          borderColor: 0xeee5ae,
-        }).setDepth(10002);
-
-        attackBtn.on("pointerdown", () => {
-          this.clearSelectionMenu();
-          this.scene.onAttackDeclared(card);
-        });
-
-        buttons.push(attackBtn);
-      }
       const detailsBtn = new ToonButton(this.scene, {
         text: buttonTexts.details,
         x: x - 70,
@@ -444,5 +467,29 @@ export class UIManager {
     });
 
     this.selectionButtons = [detailsBtn];
+  }
+
+  private animateLPImpact(amount: number) {
+    const isDamage = amount < 0; //take dmg is negative value
+    const originalColor = "#FFD966"; // magicGlow
+    const impactColor = isDamage ? "#ff4d4d" : "#4dff4d";
+
+    this.hpText.setColor(impactColor);
+
+    this.scene.tweens.add({
+      targets: this.hpText,
+      scale: 1.4,
+      duration: 150,
+      yoyo: true,
+      ease: "Back.easeOut",
+      onComplete: () => {
+        this.hpText.setColor(originalColor);
+        this.hpText.setScale(1);
+      },
+    });
+
+    if (isDamage) {
+      this.scene.cameras.main.shake(200, 0.005);
+    }
   }
 }
