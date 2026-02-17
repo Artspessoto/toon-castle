@@ -207,7 +207,7 @@ export class BattleScene extends Phaser.Scene {
   private setPhase(newPhase: GamePhase) {
     this.playerUI.clearSelectionMenu();
     this.playerHand.showHand();
-    
+
     this.gameState.setPhase(newPhase);
 
     if (newPhase === "CHANGE_TURN") {
@@ -228,7 +228,6 @@ export class BattleScene extends Phaser.Scene {
   public finalizeTurnTransition() {
     this.gameState.nextTurn(); // change to oponent and reset to draw phase
     this.setPhase("DRAW");
-    this.fieldManager.resetAttackFlags(this.gameState.activePlayer);
   }
 
   private handleNextPhase() {
@@ -363,11 +362,14 @@ export class BattleScene extends Phaser.Scene {
 
       this.time.delayedCall(1000, () => {
         const npcHand = this.opponentHand;
-        const firstCard = npcHand.hand[0];
+        const monsterCard = npcHand.hand.find((card) =>
+          card.getType().includes("MONSTER"),
+        );
+        const firstCard = monsterCard ? monsterCard : npcHand.hand[0];
 
         if (firstCard) {
           const cardType = firstCard.getType();
-          const slotType = cardType == "MONSTER" ? "MONSTER" : "SPELL";
+          const slotType = cardType.includes("MONSTER") ? "MONSTER" : "SPELL";
           const slot = this.requestPlayCard(firstCard, "OPPONENT", slotType);
 
           if (slot) {
