@@ -230,9 +230,9 @@ export class FieldManager {
       const currentY = card.y;
 
       //card in battle mode
-      if(this.scene.combatManager.isSelectingTarget){
-        this.scene.combatManager.handleCardSelection(card); 
-        return; 
+      if (this.scene.combatManager.isSelectingTarget) {
+        this.scene.combatManager.handleCardSelection(card);
+        return;
       }
 
       switch (card.location) {
@@ -256,11 +256,16 @@ export class FieldManager {
     });
   }
 
-  public resetAttackFlags(side: GameSide) {
-    const monsters = this.monsterSlots[side];
+  public resetAttackFlags() {
+    const sides: GameSide[] = ["PLAYER", "OPPONENT"];
 
-    monsters.forEach((card) => {
-      if (card) card.hasAttacked = false;
+    sides.forEach((side) => {
+      this.monsterSlots[side].forEach((card) => {
+        if (card) {
+          card.hasAttacked = false;
+          card.setAlpha(1);
+        }
+      });
     });
   }
 }
