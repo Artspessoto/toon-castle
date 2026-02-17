@@ -19,7 +19,7 @@ export const CARD_DATABASE: Record<string, CardData> = {
     nameKey: "Sentinela de Ferro",
     descriptionKey: "Um guardião ancestral que nunca dorme.",
     manaCost: 3,
-    atk: 15,
+    atk: 12,
     def: 20,
     imageKey: "monster_sentinel",
     width: 300,
