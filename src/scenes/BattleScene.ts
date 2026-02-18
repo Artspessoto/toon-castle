@@ -19,6 +19,7 @@ import { CombatManager } from "../managers/CombatManager";
 
 export class BattleScene extends Phaser.Scene {
   public gameState: GameState;
+  public translationText!: BattleTranslations;
   public phaseManager: PhaseManager;
   public playerHand: HandManager;
   public opponentHand: HandManager;
@@ -31,7 +32,6 @@ export class BattleScene extends Phaser.Scene {
   public combatManager: CombatManager;
 
   public phaseButton!: ToonButton;
-  private translationText!: BattleTranslations;
   private selectedCard: Card | null = null;
   private overlayLayer!: Phaser.GameObjects.Container;
 
@@ -206,6 +206,7 @@ export class BattleScene extends Phaser.Scene {
 
   private setPhase(newPhase: GamePhase) {
     this.playerUI.clearSelectionMenu();
+    this.combatManager.cancelTarget();
     this.playerHand.showHand();
 
     this.gameState.setPhase(newPhase);
