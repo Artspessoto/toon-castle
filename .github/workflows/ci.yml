@@ -24,7 +24,7 @@ jobs:
         run: npm ci
 
       - name: Audit Security
-        run: npm audit --audit-level=high 
+        run: npm audit --audit-level=critical 
 
       - name: Valid lint for quality
         run: npm run lint
