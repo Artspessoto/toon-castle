@@ -1,9 +1,11 @@
+import type { ToonButton } from "../objects/ToonButton";
 import { BattleScene } from "../scenes/BattleScene";
 import type { BattleTranslations, GamePhase } from "../types/GameTypes";
 
 export class PhaseManager {
   private scene: BattleScene;
   private phaseTimer?: Phaser.Time.TimerEvent;
+  private turn!: string;
 
   constructor(scene: BattleScene) {
     this.scene = scene;
@@ -19,82 +21,68 @@ export class PhaseManager {
     const isPlayerTurn = this.scene.gameState.activePlayer == "PLAYER";
     const currentTurn = this.scene.gameState.currentTurn;
 
+    this.turn = `${this.scene.translationText.turn_label} ${currentTurn}`;
+
+    phaseButton.setVisible(true);
+
     switch (phase) {
       case "DRAW":
-        phaseButton.setVisible(false);
-
         if (isPlayerTurn) {
           currentUI.showNotice(translations.draw_phase, "PHASE");
+          phaseButton.updatePhase(this.turn, "DRAW");
+          phaseButton.disableInteractive();
         } else {
           currentUI.showNotice(translations.opponent_draw, "PHASE");
+          this.setOpponentState(phaseButton);
         }
         break;
       case "MAIN":
-        if (currentTurn == 1) {
-          const turnMessage = `${translations.turn_label} ${currentTurn}`;
-          currentUI.showNotice(turnMessage, "TURN");
-
-          this.phaseTimer = this.scene.time.delayedCall(1500, () => {
-            currentUI.showNotice(translations.main_phase, "PHASE");
-          });
-        } else {
-          currentUI.showNotice(translations.main_phase, "PHASE");
-        }
+        currentUI.showNotice(translations.main_phase, "PHASE");
 
         if (isPlayerTurn) {
           const buttonText =
             currentTurn == 1
               ? translations.battle_buttons.end_turn
               : translations.battle_buttons.to_battle;
-          this.handleButtonTransition(buttonText);
+
+          phaseButton.setInteractive();
+          phaseButton.updatePhase(this.turn, buttonText);
+          // this.handleButtonTransition(buttonText);
         } else {
-          phaseButton.setVisible(false);
+          this.setOpponentState(phaseButton);
         }
         break;
       case "BATTLE":
         currentUI.showNotice(translations.battle_phase, "PHASE");
-        phaseButton
-          .setVisible(isPlayerTurn)
-          .setText(translations.battle_buttons.end_turn);
+
+        if (isPlayerTurn) {
+          phaseButton
+            .setInteractive()
+            .updatePhase(this.turn, translations.battle_buttons.end_turn);
+        } else {
+          this.setOpponentState(phaseButton);
+        }
         break;
       case "CHANGE_TURN":
         this.scene.tweens.killTweensOf(phaseButton);
-        phaseButton.setVisible(false).setAlpha(1);
-        phaseButton.setText(translations.battle_buttons.to_battle);
+        phaseButton.setAlpha(1).disableInteractive();
 
         currentUI.showNotice(translations.turn_ended, "NEUTRAL");
 
         this.scene.fieldManager.resetAttackFlags();
 
-        this.scene.time.delayedCall(1200, () => {
-          currentUI.showNotice(`TURNO ${currentTurn}`, "PHASE");
-
-          this.scene.time.delayedCall(1200, () => {
-            const activePlayer = !isPlayerTurn
-              ? translations.your_turn
-              : translations.opponent_turn;
-            currentUI.showNotice(activePlayer, "PHASE");
-
-            this.scene.time.delayedCall(1000, () => {
-              this.scene.finalizeTurnTransition();
-            });
-          });
+        this.scene.time.delayedCall(1500, () => {
+          this.scene.finalizeTurnTransition();
         });
 
         return;
     }
   }
 
-  private handleButtonTransition(text: string) {
-    this.scene.phaseButton.setVisible(false);
-    this.scene.time.delayedCall(500, () => {
-      this.scene.phaseButton.setVisible(true).setText(text);
-      this.scene.phaseButton.setAlpha(0);
-      this.scene.tweens.add({
-        targets: this.scene.phaseButton,
-        alpha: 1,
-        duration: 300,
-      });
-    });
+  private setOpponentState(button: ToonButton) {
+    button
+      .disableInteractive()
+      .setAlpha(0.7)
+      .updatePhase(this.turn, this.scene.translationText.opponent, 0x333333);
   }
 }
