@@ -11,15 +11,18 @@ export interface ButtonConfig {
   fontSize?: string;
   hoverColor?: number;
   textColor?: string;
-  fontFamily?: string
+  fontFamily?: string;
   borderWidth?: number;
   borderColor?: number;
-  alpha?: number // 0 = invisible, 1 = solid, 0.5 = 50% transparent
+  headerText?: string;
+  headerFontSize?: string;
+  alpha?: number; // 0 = invisible, 1 = solid, 0.5 = 50% transparent
 }
 
 export class ToonButton extends Phaser.GameObjects.Container {
   private bg: Phaser.GameObjects.Graphics;
   private label: Phaser.GameObjects.Text;
+  private headerLabel!: Phaser.GameObjects.Text;
   private iconImage?: Phaser.GameObjects.Image;
   private config: Required<ButtonConfig>;
 
@@ -39,6 +42,8 @@ export class ToonButton extends Phaser.GameObjects.Container {
       borderWidth: 3,
       borderColor: 0x000000,
       alpha: 1,
+      headerFontSize: "",
+      headerText: "",
       ...config,
     };
 
@@ -46,24 +51,38 @@ export class ToonButton extends Phaser.GameObjects.Container {
     this.bg = scene.add.graphics();
     this.drawBackground(this.config.color);
 
+    //header text
+    const labelY = config.headerText ? 10 : 0;
+
     //text
     this.label = scene.add
-      .text(0, 0, this.config.text, {
+      .text(0, labelY, this.config.text, {
         fontSize: this.config.fontSize,
         color: this.config.textColor,
         fontStyle: "bold",
       })
       .setOrigin(0.5);
 
+    if (config.headerText) {
+      this.headerLabel = scene.add
+        .text(0, -15, config.headerText.toUpperCase(), {
+          fontSize: config.headerFontSize || "12px",
+          color: this.config.textColor,
+          fontFamily: this.config.fontFamily,
+        })
+        .setOrigin(0.5);
+      this.add(this.headerLabel);
+    }
+
     //add into container
     this.add([this.bg, this.label]);
 
-    if(this.config.icon){
+    if (this.config.icon) {
       this.iconImage = this.scene.add.image(0, 0, this.config.icon);
 
       const iconScale = (this.config.height * 0.8) / this.iconImage.height;
       this.iconImage.setScale(iconScale);
-      
+
       this.add(this.iconImage);
       this.label.setVisible(false);
     }
@@ -72,13 +91,15 @@ export class ToonButton extends Phaser.GameObjects.Container {
       -this.config.width / 2,
       -this.config.height / 2,
       this.config.width,
-      this.config.height
+      this.config.height,
     );
     this.setInteractive(hitArea, Phaser.Geom.Rectangle.Contains);
 
     this.input!.cursor = "pointer";
 
-    this.on("pointerover", () => this.drawBackground(this.config.hoverColor ?? 0xffe066));
+    this.on("pointerover", () =>
+      this.drawBackground(this.config.hoverColor ?? 0xffe066),
+    );
     this.on("pointerout", () => this.drawBackground(this.config.color));
 
     scene.add.existing(this);
@@ -90,23 +111,64 @@ export class ToonButton extends Phaser.GameObjects.Container {
     const halfW = this.config.width / 2;
     const halfH = this.config.height / 2;
     const borderWidth = this.config.borderWidth ?? 3;
-    const borderColor = this.config.borderColor ?? 0x000000
+    const borderColor = this.config.borderColor ?? 0x000000;
 
     // background
     this.bg.fillStyle(color, this.config.alpha);
-    this.bg.fillRoundedRect(-halfW, -halfH, this.config.width, this.config.height, 12);
+    this.bg.fillRoundedRect(
+      -halfW,
+      -halfH,
+      this.config.width,
+      this.config.height,
+      12,
+    );
 
     // toon border
     this.bg.lineStyle(borderWidth, borderColor, this.config.alpha);
-    this.bg.strokeRoundedRect(-halfW, -halfH, this.config.width, this.config.height, 12);
+    this.bg.strokeRoundedRect(
+      -halfW,
+      -halfH,
+      this.config.width,
+      this.config.height,
+      12,
+    );
   }
 
   public setText(newText: string) {
     this.label.setText(newText);
   }
 
+  public setHeaderText(text: string) {
+    if (!this.headerLabel) {
+      this.headerLabel = this.scene.add
+        .text(0, -15, text.toUpperCase(), {
+          fontSize: "12px",
+          color: this.config.textColor,
+          fontFamily: this.config.fontFamily,
+          fontStyle: "bold",
+        })
+        .setOrigin(0.5)
+        .setAlpha(0.8);
+
+      this.add(this.headerLabel);
+
+      this.label.setY(10);
+    } else {
+      this.headerLabel.setText(text.toUpperCase());
+    }
+  }
+
   public setButtonColor(color: number) {
     this.config.color = color;
     this.drawBackground(color);
+  }
+
+  public updatePhase(turn: string, phaseText: string, color?: number) {
+    this.setHeaderText(turn);
+    this.setText(phaseText.toUpperCase());
+
+    if (color) {
+      this.setButtonColor(color);
+    }
   }
 }
