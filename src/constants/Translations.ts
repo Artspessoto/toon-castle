@@ -51,7 +51,6 @@ export const TRANSLATIONS = {
       combat_notices: {
         select_target: "SELECIONE O ALVO DO ATAQUE",
         invalid_own_card: "VOCÊ NÃO PODE ATACAR SUAS PRÓPRIAS CARTAS!",
-        invalid_target_type: "APENAS MONSTROS PODEM SER ALVOS DE ATAQUE",
       },
     },
   },
@@ -107,7 +106,6 @@ export const TRANSLATIONS = {
       combat_notices: {
         select_target: "SELECT THE ATTACK TARGET",
         invalid_own_card: "YOU CANNOT ATTACK YOUR OWN CARDS!",
-        invalid_target_type: "ONLY MONSTERS CAN BE TARGETS OF ATTACK",
       },
     },
   },
