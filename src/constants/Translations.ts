@@ -30,8 +30,7 @@ export const TRANSLATIONS = {
       back: "Voltar ao Menu",
     },
     battle_scene: {
-      your_turn: "SEU TURNO",
-      opponent_turn: "TURNO DO OPONENTE",
+      opponent: "OPONENTE",
       draw_phase: "ESPAÇO: COMPRAR CARTA | ARRASTE PARA JOGAR",
       opponent_draw: "FASE DE COMPRA DO OPONENTE",
       main_phase: "FASE PRINCIPAL",
@@ -85,8 +84,7 @@ export const TRANSLATIONS = {
       back: "Back to Menu",
     },
     battle_scene: {
-      your_turn: "YOUR TURN",
-      opponent_turn: "OPPONENT'S TURN",
+      opponent: "OPPONENT",
       draw_phase: "SPACE: DRAW CARD | DRAG TO PLAY",
       opponent_draw: "OPPONENT'S DRAW PHASE",
       main_phase: "MAIN PHASE",
