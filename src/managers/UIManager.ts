@@ -154,6 +154,8 @@ export class UIManager {
   }
 
   private animateBanner(message: string, type: Notice) {
+    this.scene.tweens.killTweensOf([this.bannerText, this.bannerBg]);
+
     this.bannerText
       .setText(message.toUpperCase())
       .setAlpha(1)
@@ -161,13 +163,12 @@ export class UIManager {
       .setScale(0.5);
     this.bannerBg.setAlpha(1).setVisible(true).setScale(1, 0);
 
-    this.scene.tweens.killTweensOf([this.bannerText, this.bannerBg]);
-
     // start animation
     this.scene.tweens.add({
       targets: this.bannerBg,
       scaleY: 1,
-      duration: 150,
+      alpha: 1,
+      duration: 100,
       ease: "Quad.easeOut",
     });
 
@@ -175,7 +176,7 @@ export class UIManager {
     this.scene.tweens.add({
       targets: this.bannerText,
       scale: 1,
-      duration: 200,
+      duration: 150,
       ease: "Back.easeOut",
       onComplete: () => {
         //shake effect
@@ -191,12 +192,13 @@ export class UIManager {
       },
     });
 
-    this.scene.time.delayedCall(1500, () => {
+    this.scene.time.delayedCall(600, () => {
       this.scene.tweens.add({
         targets: [this.bannerText, this.bannerBg],
         alpha: 0,
-        y: "-=20",
-        duration: 400,
+        y: "-=30",
+        duration: 200,
+        ease: "Power2.easeIn",
         onComplete: () => {
           this.bannerText.setVisible(false).setY(360);
           this.bannerBg.setVisible(false).setY(360);
