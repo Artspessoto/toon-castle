@@ -164,11 +164,29 @@ export class ToonButton extends Phaser.GameObjects.Container {
   }
 
   public updatePhase(turn: string, phaseText: string, color?: number) {
+    this.config.alpha = 1;
+
+    this.label.setAlpha(1);
+    if (this.headerLabel) {
+      this.headerLabel.setAlpha(0.8);
+    }
+
     this.setHeaderText(turn);
     this.setText(phaseText.toUpperCase());
 
-    if (color) {
+    if (color !== undefined) {
       this.setButtonColor(color);
     }
+  }
+
+  public setDisabledState(text: string, color: number = 0x333333) {
+    this.disableInteractive();
+    this.config.color = color;
+    this.config.alpha = 0.7;
+    this.setText(text.toUpperCase());
+    this.drawBackground(this.config.color);
+
+    this.label.setAlpha(0.5);
+    if (this.headerLabel) this.headerLabel.setAlpha(0.5);
   }
 }

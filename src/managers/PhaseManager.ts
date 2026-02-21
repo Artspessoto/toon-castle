@@ -29,7 +29,7 @@ export class PhaseManager {
       case "DRAW":
         if (isPlayerTurn) {
           currentUI.showNotice(translations.draw_phase, "PHASE");
-          phaseButton.updatePhase(this.turn, "DRAW");
+          phaseButton.setAlpha(1).updatePhase(this.turn, "DRAW", 0x242424);
           phaseButton.disableInteractive();
         } else {
           currentUI.showNotice(translations.opponent_draw, "PHASE");
@@ -45,9 +45,8 @@ export class PhaseManager {
               ? translations.battle_buttons.end_turn
               : translations.battle_buttons.to_battle;
 
-          phaseButton.setInteractive();
-          phaseButton.updatePhase(this.turn, buttonText);
-          // this.handleButtonTransition(buttonText);
+          phaseButton.setInteractive().setAlpha(1);
+          phaseButton.updatePhase(this.turn, buttonText, 0x242424);
         } else {
           this.setOpponentState(phaseButton);
         }
@@ -58,14 +57,21 @@ export class PhaseManager {
         if (isPlayerTurn) {
           phaseButton
             .setInteractive()
-            .updatePhase(this.turn, translations.battle_buttons.end_turn);
+            .setAlpha(1)
+            .updatePhase(
+              this.turn,
+              translations.battle_buttons.end_turn,
+              0x242424,
+            );
         } else {
           this.setOpponentState(phaseButton);
         }
         break;
       case "CHANGE_TURN":
         this.scene.tweens.killTweensOf(phaseButton);
-        phaseButton.setAlpha(1).disableInteractive();
+        phaseButton.disableInteractive();
+
+        phaseButton.setDisabledState(this.scene.translationText.opponent);
 
         currentUI.showNotice(translations.turn_ended, "NEUTRAL");
 
@@ -80,9 +86,7 @@ export class PhaseManager {
   }
 
   private setOpponentState(button: ToonButton) {
-    button
-      .disableInteractive()
-      .setAlpha(0.7)
-      .updatePhase(this.turn, this.scene.translationText.opponent, 0x333333);
+    this.scene.tweens.killTweensOf(button);
+    button.setDisabledState(this.scene.translationText.opponent);
   }
 }
