@@ -110,7 +110,7 @@ export class BattleScene extends Phaser.Scene {
       text: "",
       fontSize: "18px",
       textColor: "#fff",
-      color: 0x000000,
+      color: 0x242424,
       hoverColor: 0x242424,
       width: 200,
       height: 60,
