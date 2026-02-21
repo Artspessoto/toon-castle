@@ -22,6 +22,7 @@ export class Card extends Phaser.GameObjects.Container {
   private originalData: CardData;
   public cardType: CardType;
   public setTurn: number = -1;
+  public hasChangedPosition: boolean = false;
 
   public visualElements: Phaser.GameObjects.Container;
 
