@@ -264,6 +264,7 @@ export class FieldManager {
         if (card) {
           card.hasAttacked = false;
           card.setAlpha(1);
+          card.hasChangedPosition = false
         }
       });
     });
