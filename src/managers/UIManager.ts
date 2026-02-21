@@ -340,106 +340,17 @@ export class UIManager {
     this.clearSelectionMenu();
     if (this.side !== "PLAYER") return;
 
-    const battleTexts = this.translations["battle_scene"];
-    const buttonTexts = battleTexts.battle_buttons;
-
-    //npc monster slot limit -> y: 270 | npc spell slot limit -> y: 120,
-    const isPlayerCard = card.y > 270;
+    const myTurn = this.scene.gameState.activePlayer == "PLAYER";
+    if (!myTurn) return;
 
     const buttons: ToonButton[] = [];
-    const cardData = card.getCardData();
-    const currentTurn = this.scene.gameState.currentTurn;
-    const myTurn = this.scene.gameState.activePlayer == "PLAYER";
 
-    //attack phase
-    const currentPhase = this.scene.currentPhase;
-    const isAttackPosition = card.angle == 0;
-    const canAttack =
-      cardData.atk !== undefined &&
-      isAttackPosition &&
-      card.owner == "PLAYER" &&
-      !card.isFaceDown &&
-      !card.hasAttacked;
+    const buttonArgs: ButtonParams = { card, buttons, x, y };
 
-    const isEffectCard =
-      card.getType() === "TRAP" || card.getType() == "EFFECT_MONSTER";
-    const hasWaitedOneTurn = currentTurn > card.setTurn;
-
-    if (card.isFaceDown && isPlayerCard && myTurn) {
-      const canActive = isEffectCard ? hasWaitedOneTurn : true;
-
-      //trap or effect monster need wait 1 turn to active
-      if (canActive && card.getType() !== "MONSTER") {
-        const activeBtn = new ToonButton(this.scene, {
-          text: buttonTexts.active,
-          x: x - 70,
-          y: y - 80,
-          height: 42,
-          width: 120,
-          fontSize: "16px",
-          color: 0x302b1f,
-          textColor: "#FFD966",
-          hoverColor: 0x4d4533,
-          borderColor: 0xeee5ae,
-        }).setDepth(10002);
-
-        activeBtn.on("pointerdown", () => {
-          this.clearSelectionMenu();
-          this.scene.cardActivation(card, this.side);
-        });
-
-        buttons.push(activeBtn);
-      }
-    }
-
-    if (currentPhase == "BATTLE" && canAttack && myTurn) {
-      const attackBtn = new ToonButton(this.scene, {
-        text: buttonTexts.attack,
-        x: x + 70,
-        y: y - 35,
-        height: 42,
-        width: 120,
-        fontSize: "16px",
-        color: 0x302b1f,
-        textColor: "#FFD966",
-        hoverColor: 0x4d4533,
-        borderColor: 0xeee5ae,
-      }).setDepth(10002);
-
-      attackBtn.on("pointerdown", () => {
-        this.clearSelectionMenu();
-        this.scene.onAttackDeclared(card);
-      });
-
-      buttons.push(attackBtn);
-    }
-
-    //always visible
-    if (!card.isFaceDown || isPlayerCard) {
-      const detailsBtn = new ToonButton(this.scene, {
-        text: buttonTexts.details,
-        x: x - 70,
-        y: y - 35,
-        height: 42,
-        width: 120,
-        fontSize: "16px",
-        color: 0x302b1f,
-        textColor: "#FFD966",
-        hoverColor: 0x4d4533,
-        borderColor: 0xeee5ae,
-      }).setDepth(10002);
-      detailsBtn.on("pointerdown", () => {
-        this.clearSelectionMenu();
-        this.scene.playerHand.showHand();
-        this.scene.scene.launch("CardDetailScene", {
-          cardData: cardData,
-          owner: card.owner,
-          location: card.location,
-        });
-      });
-
-      buttons.push(detailsBtn);
-    }
+    this.addPositionButtons(buttonArgs);
+    this.addAttackButton(buttonArgs);
+    this.addActivationButton(buttonArgs);
+    this.addDetailsButton(buttonArgs);
 
     this.selectionButtons = buttons;
   }
@@ -450,25 +361,183 @@ export class UIManager {
     const battleTexts = this.translations["battle_scene"];
     const buttonTexts = battleTexts.battle_buttons;
 
-    const detailsBtn = new ToonButton(this.scene, {
-      text: buttonTexts.details,
-      x: x + 70,
-      y: y - 35,
-      height: 42,
+    this.selectionButtons.push(
+      this.createMenuButton(buttonTexts.details, x + 70, y - 35, () => {
+        this.scene.scene.launch("CardListScene", graveyardCards);
+      }),
+    );
+  }
+
+  private addPositionButtons({ card, buttons, x, y }: ButtonParams) {
+    const mainPhase = this.scene.currentPhase == "MAIN";
+    const currentTurn = this.scene.gameState.currentTurn;
+    const hasWaited = currentTurn > card.setTurn;
+    const monsterCard = card.getType().includes("MONSTER");
+    const battleTexts = this.translations["battle_scene"];
+    const buttonTexts = battleTexts.battle_buttons;
+
+    const canChangePos =
+      mainPhase &&
+      hasWaited &&
+      !card.hasChangedPosition &&
+      card.owner == "PLAYER" &&
+      monsterCard;
+
+    if (!canChangePos) return;
+
+    if (card.isFaceDown) {
+      buttons.push(
+        this.createMenuButton("VIRAR", x + 70, y - 35, () =>
+          this.handleFlipSummon(card),
+        ),
+      );
+    } else {
+      const label = buttonTexts.change_pos;
+      buttons.push(
+        this.createMenuButton(label, x + 70, y - 35, () =>
+          this.handleChangePosition(card),
+        ),
+      );
+    }
+  }
+
+  private addAttackButton({ card, buttons, x, y }: ButtonParams) {
+    const currentPhase = this.scene.currentPhase;
+    const cardData = card.getCardData();
+    const battleTexts = this.translations["battle_scene"];
+    const buttonTexts = battleTexts.battle_buttons;
+
+    //attack phase
+    const isAttackPosition = card.angle == 0;
+    const canAttack =
+      cardData.atk !== undefined &&
+      isAttackPosition &&
+      card.owner == "PLAYER" &&
+      !card.isFaceDown &&
+      !card.hasAttacked;
+    //atk btn
+    if (currentPhase === "BATTLE" && canAttack) {
+      buttons.push(
+        this.createMenuButton(buttonTexts.attack, x + 70, y - 35, () => {
+          this.scene.onAttackDeclared(card);
+        }),
+      );
+    }
+  }
+
+  private addActivationButton({ card, buttons, x, y }: ButtonParams) {
+    const battleTexts = this.translations["battle_scene"];
+    const buttonTexts = battleTexts.battle_buttons;
+
+    const currentTurn = this.scene.gameState.currentTurn;
+    const hasWaited = currentTurn > card.setTurn;
+    const isEffectCard =
+      card.getType() === "TRAP" || card.getType() == "EFFECT_MONSTER";
+
+    if (card.isFaceDown && card.owner == "PLAYER") {
+      const canActive = isEffectCard ? hasWaited : true;
+
+      //trap or effect monster need wait 1 turn to active
+      if (canActive && card.getType() !== "MONSTER") {
+        buttons.push(
+          this.createMenuButton(buttonTexts.active, x - 70, y - 35, () => {
+            this.scene.cardActivation(card, this.side);
+          }),
+        );
+      }
+    }
+  }
+
+  private addDetailsButton({ card, buttons, x, y }: ButtonParams) {
+    const battleTexts = this.translations["battle_scene"];
+    const buttonTexts = battleTexts.battle_buttons;
+
+    //details btn always visible
+    if (!card.isFaceDown || card.owner == "PLAYER") {
+      buttons.push(
+        this.createMenuButton(buttonTexts.details, x - 70, y - 35, () => {
+          this.scene.scene.launch("CardDetailScene", {
+            cardData: card.getCardData(),
+            owner: card.owner,
+          });
+        }),
+      );
+    }
+  }
+
+  private createMenuButton(
+    text: string,
+    x: number,
+    y: number,
+    callback: () => void,
+  ): ToonButton {
+    const btn = new ToonButton(this.scene, {
+      text: text.toUpperCase(),
+      x: x,
+      y: y,
+      height: 40,
       width: 120,
-      fontSize: "16px",
+      fontSize: "14px",
       color: 0x302b1f,
       textColor: "#FFD966",
       hoverColor: 0x4d4533,
       borderColor: 0xeee5ae,
     }).setDepth(10002);
 
-    detailsBtn.on("pointerdown", () => {
+    btn.on("pointerdown", () => {
       this.clearSelectionMenu();
-      this.scene.scene.launch("CardListScene", graveyardCards);
+      callback();
     });
 
-    this.selectionButtons = [detailsBtn];
+    return btn;
+  }
+
+  private handleFlipSummon(card: Card) {
+    card.hasChangedPosition = true;
+
+    this.scene.tweens.add({
+      targets: card,
+      angle: 0,
+      scale: 0.45,
+      duration: 250,
+      ease: "Back.easeOut",
+      onStart: () => card.setFaceUp(),
+      onComplete: () => {
+        this.scene.tweens.add({
+          targets: card,
+          scale: 0.32, // back to original scale
+          duration: 150,
+        });
+        // card impact animation effect
+        this.scene.cameras.main.shake(100, 0.002);
+        this.scene.playerHand.showHand();
+      },
+    });
+  }
+
+  private handleChangePosition(card: Card) {
+    card.hasChangedPosition = true;
+    const isAtk = card.angle == 0;
+    const targetAngle = isAtk ? 270 : 0;
+
+    // rotation animation
+    this.scene.tweens.add({
+      targets: card,
+      angle: targetAngle,
+      scale: 0.45,
+      duration: 250,
+      ease: "Power2",
+      onComplete: () => {
+        this.scene.tweens.add({
+          targets: card,
+          scale: 0.32, // back to original scale
+          duration: 150,
+        });
+        // card impact animation effect
+        this.scene.cameras.main.shake(100, 0.002);
+        this.scene.playerHand.showHand();
+      },
+    });
   }
 
   private animateLPImpact(amount: number) {
@@ -494,4 +563,11 @@ export class UIManager {
       this.scene.cameras.main.shake(200, 0.005);
     }
   }
+}
+
+export interface ButtonParams {
+  card: Card;
+  x: number;
+  y: number;
+  buttons: ToonButton[];
 }
