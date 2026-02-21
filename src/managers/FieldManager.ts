@@ -122,6 +122,67 @@ export class FieldManager {
     }
   }
 
+  public getValidSlotToPlay(
+    card: Card,
+    side: GameSide,
+    zoneType: "MONSTER" | "SPELL",
+  ) {
+    const cardType = card.getType();
+    const cardData = card.getCardData();
+    const currentMana = this.scene.gameState.getMana(side);
+
+    //type card validation
+    const isMonsterValid =
+      cardType.includes("MONSTER") && zoneType === "MONSTER";
+    const isSupportValid =
+      (cardType === "SPELL" || cardType === "TRAP") && zoneType === "SPELL";
+
+    if (!isMonsterValid && !isSupportValid) {
+      return { valid: false }; // Tipo incompatível com a zona
+    }
+
+    //mana cost validation
+    if (cardData.manaCost > currentMana)
+      return { valid: false, reason: "MANA" };
+
+    //phase validation
+    if (this.scene.currentPhase !== "MAIN") return { valid: false };
+
+    //available slot validation
+    const slot = this.getFirstAvailableSlot(side, zoneType);
+    if (!slot) return { valid: false, reason: "SLOT" };
+
+    return { valid: true, slot };
+  }
+
+  public validatePlay(
+    card: Card,
+    zone: Phaser.GameObjects.Zone,
+  ): {
+    valid: boolean;
+    reason?: string;
+    slot?: { x: number; y: number; index: number };
+  } {
+    const zoneType: "MONSTER" | "SPELL" = zone.getData("type");
+    const zoneSide: GameSide = zone.getData("side");
+    const activeSide = this.scene.gameState.activePlayer;
+
+    //block to drop card into opponent slot
+    if (zoneSide !== activeSide) return { valid: false };
+
+    const result = this.getValidSlotToPlay(card, zoneSide, zoneType);
+
+    if (!result.valid && result.reason) {
+      const reason =
+        result.reason === "MANA"
+          ? this.scene.translationText.insufficient_mana
+          : this.scene.translationText.zone_occupied;
+      return { valid: false, reason };
+    }
+
+    return result;
+  }
+
   public playCardToZone(
     card: Card,
     targetX: number,
@@ -264,7 +325,7 @@ export class FieldManager {
         if (card) {
           card.hasAttacked = false;
           card.setAlpha(1);
-          card.hasChangedPosition = false
+          card.hasChangedPosition = false;
         }
       });
     });

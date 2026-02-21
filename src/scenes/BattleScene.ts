@@ -205,62 +205,41 @@ export class BattleScene extends Phaser.Scene {
   }
 
   public handleCardDrop(targetZone: Phaser.GameObjects.Zone, card: Card) {
-    const zoneType: "MONSTER" | "SPELL" = targetZone.getData("type");
-    const zoneSide: GameSide = targetZone.getData("side");
-    const cardType = card.getType();
-    const activeSide = this.gameState.activePlayer;
+    const result = this.fieldManager.validatePlay(card, targetZone);
 
-    const monsterValid = cardType.includes("MONSTER") && zoneType === "MONSTER";
-    const suportValid =
-      (cardType === "SPELL" || cardType === "TRAP") && zoneType === "SPELL";
-    const canPlay =
-      (monsterValid || suportValid) && this.currentPhase == "MAIN";
-
-    //block to drop card into opponent slot
-    if (zoneSide !== activeSide || !canPlay) {
+    if (!result.valid) {
+      //mana or slot invalid
+      if (result.reason) {
+        this.currentUI.showNotice(result.reason, "WARNING");
+      }
       this.currentHand.reorganizeHand();
       return;
     }
 
-    const slot = this.requestPlayCard(card, activeSide, zoneType);
+    const slot = result.slot!;
+    const activeSide = this.gameState.activePlayer;
+    const zoneType: "MONSTER" | "SPELL" = targetZone.getData("type");
 
-    if (slot) {
-      this.gameState.setDragging(false);
-      this.selectedCard = card;
+    this.gameState.setDragging(false);
+    this.selectedCard = card;
 
-      const hand = this.currentHand;
-      hand.removeCard(card);
-      hand.hideHand();
+    this.currentHand.removeCard(card);
+    this.currentHand.hideHand();
 
-      this.fieldManager.previewPlacement(card, slot.x, slot.y);
-      this.currentUI.showSelectionMenu(
-        slot.x,
-        slot.y,
-        card,
-        (mode: PlacementMode) => {
-          this.selectedCard = null; //apply null to drop card
-          this.executePlay(card, activeSide, zoneType, slot, mode);
+    this.fieldManager.previewPlacement(card, slot.x, slot.y);
+    this.currentUI.showSelectionMenu(
+      slot.x,
+      slot.y,
+      card,
+      (mode: PlacementMode) => {
+        this.selectedCard = null; //apply null to drop card
+        this.executePlay(card, activeSide, zoneType, slot, mode);
 
-          if (mode == "FACE_UP") {
-            this.cardActivation(card, activeSide);
-          }
-        },
-      );
-    } else {
-      const canDrop = this.gameState.playerMana >= card.getCardData().manaCost;
-      if (!canDrop) {
-        this.currentUI.showNotice(
-          this.translationText.insufficient_mana,
-          "WARNING",
-        );
-      } else {
-        this.currentUI.showNotice(
-          this.translationText.zone_occupied,
-          "WARNING",
-        );
-      }
-      this.currentHand.reorganizeHand();
-    }
+        if (mode == "FACE_UP") {
+          this.cardActivation(card, activeSide);
+        }
+      },
+    );
   }
 
   public cancelPlacement() {
@@ -331,11 +310,21 @@ export class BattleScene extends Phaser.Scene {
         if (firstCard) {
           const cardType = firstCard.getType();
           const slotType = cardType.includes("MONSTER") ? "MONSTER" : "SPELL";
-          const slot = this.requestPlayCard(firstCard, "OPPONENT", slotType);
+          const result = this.fieldManager.getValidSlotToPlay(
+            firstCard,
+            "OPPONENT",
+            slotType,
+          );
 
-          if (slot) {
+          if (result.valid && result.slot) {
             const cardMode = slotType == "MONSTER" ? "ATK" : "SET";
-            this.executePlay(firstCard, "OPPONENT", slotType, slot, cardMode);
+            this.executePlay(
+              firstCard,
+              "OPPONENT",
+              slotType,
+              result.slot,
+              cardMode,
+            );
           }
         }
       });
