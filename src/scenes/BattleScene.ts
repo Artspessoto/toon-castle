@@ -16,6 +16,7 @@ import { InputManager } from "../managers/InputManager";
 import { DeckManager } from "../managers/DeckManager";
 import { UIManager } from "../managers/UIManager";
 import { CombatManager } from "../managers/CombatManager";
+import { EffectManager } from "../managers/EffectManager";
 
 export class BattleScene extends Phaser.Scene {
   public gameState: GameState;
@@ -26,10 +27,11 @@ export class BattleScene extends Phaser.Scene {
   public fieldManager: FieldManager;
   public inputManager: InputManager;
   public playerDeck: DeckManager;
-  public oponentDeck: DeckManager;
+  public opponentDeck: DeckManager;
   public playerUI: UIManager;
   public opponentUI: UIManager;
   public combatManager: CombatManager;
+  public effectManager: EffectManager
 
   public phaseButton!: ToonButton;
   public selectedCard: Card | null = null;
@@ -43,6 +45,7 @@ export class BattleScene extends Phaser.Scene {
     this.fieldManager = new FieldManager(this);
     this.inputManager = new InputManager(this);
     this.combatManager = new CombatManager(this);
+    this.effectManager = new EffectManager(this);
 
     this.playerUI = new UIManager(this, "PLAYER");
     this.opponentUI = new UIManager(this, "OPPONENT");
@@ -51,7 +54,7 @@ export class BattleScene extends Phaser.Scene {
     this.opponentHand = new HandManager(this, "OPPONENT");
 
     this.playerDeck = new DeckManager(this, "PLAYER");
-    this.oponentDeck = new DeckManager(this, "OPPONENT");
+    this.opponentDeck = new DeckManager(this, "OPPONENT");
   }
 
   public get currentPhase(): GamePhase {
@@ -99,7 +102,7 @@ export class BattleScene extends Phaser.Scene {
     this.opponentUI.setupLifePoints();
 
     this.playerDeck.createDeckVisual();
-    this.oponentDeck.createDeckVisual();
+    this.opponentDeck.createDeckVisual();
 
     this.fieldManager.setupFieldZones();
 
@@ -126,22 +129,38 @@ export class BattleScene extends Phaser.Scene {
     this.startInitialDraw();
   }
 
-  private getActiveManager<T>(playerManager: T, oponentMananger: T): T {
-    return this.gameState.activePlayer === "PLAYER"
-      ? playerManager
-      : oponentMananger;
+  private getManagerBySide<T>(
+    side: GameSide,
+    playerManager: T,
+    opponentManager: T,
+  ): T {
+    return side === "PLAYER" ? playerManager : opponentManager;
   }
 
+  //based on the target
+  public getUIManager(side: GameSide): UIManager {
+    return this.getManagerBySide(side, this.playerUI, this.opponentUI);
+  }
+
+  public getHandManager(side: GameSide): HandManager {
+    return this.getManagerBySide(side, this.playerHand, this.opponentHand);
+  }
+
+  public getDeckManager(side: GameSide): DeckManager {
+    return this.getManagerBySide(side, this.playerDeck, this.opponentDeck);
+  }
+
+  //based on the current player
   public get currentDeck(): DeckManager {
-    return this.getActiveManager(this.playerDeck, this.oponentDeck);
+    return this.getDeckManager(this.gameState.activePlayer);
   }
 
   public get currentHand(): HandManager {
-    return this.getActiveManager(this.playerHand, this.opponentHand);
+    return this.getHandManager(this.gameState.activePlayer);
   }
 
   public get currentUI(): UIManager {
-    return this.getActiveManager(this.playerUI, this.opponentUI);
+    return this.getUIManager(this.gameState.activePlayer);
   }
 
   private startInitialDraw() {
@@ -149,7 +168,7 @@ export class BattleScene extends Phaser.Scene {
     for (let i = 0; i < 5; i++) {
       this.time.delayedCall(delay, () => {
         this.playerHand.drawCard(this.playerDeck.position);
-        this.opponentHand.drawCard(this.oponentDeck.position);
+        this.opponentHand.drawCard(this.opponentDeck.position);
       });
       delay += 200;
     }
@@ -378,6 +397,8 @@ export class BattleScene extends Phaser.Scene {
           this.overlayLayer.remove(card);
           this.add.existing(card);
           this.currentHand.showHand();
+
+          this.effectManager.applyCardEffect(card);
 
           if (!isEffectMonster) {
             // remove card from slot
