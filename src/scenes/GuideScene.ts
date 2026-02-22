@@ -27,7 +27,7 @@ export class GuideScene extends Phaser.Scene {
     // panel.strokeRoundedRect(340, 110, 600, 500, 20);
     panel.fillStyle(0x0a0a0a, 1);
     panel.lineStyle(4, 0x996600, 1);
-  
+
     //box
     panel.fillRoundedRect(x, y, width, height, 20);
     panel.strokeRoundedRect(x, y, width, height, 20);

@@ -54,7 +54,7 @@ export class HandManager {
       deckPosition.x,
       deckPosition.y,
       cardData,
-      this.side
+      this.side,
     );
 
     if (this.side == "OPPONENT") {
@@ -64,7 +64,7 @@ export class HandManager {
       this.scene.inputManager.setupCardInteractions(newCard);
     }
 
-    newCard.setLocation("HAND")
+    newCard.setLocation("HAND");
 
     newCard.setDepth(200);
     this.hand.push(newCard);

@@ -55,14 +55,14 @@ describe("CombatManager", () => {
       opponentUI: {
         updateLP: vi.fn(),
       },
-      getUIManager: vi.fn((side) => 
-        side === "PLAYER" ? mockScene.playerUI : mockScene.opponentUI
+      getUIManager: vi.fn((side) =>
+        side === "PLAYER" ? mockScene.playerUI : mockScene.opponentUI,
       ),
-      getHandManager: vi.fn((side) => 
-        side === "PLAYER" ? mockScene.playerHand : mockScene.opponentHand
+      getHandManager: vi.fn((side) =>
+        side === "PLAYER" ? mockScene.playerHand : mockScene.opponentHand,
       ),
-      getDeckManager: vi.fn((side) => 
-        side === "PLAYER" ? mockScene.playerDeck : mockScene.opponentDeck
+      getDeckManager: vi.fn((side) =>
+        side === "PLAYER" ? mockScene.playerDeck : mockScene.opponentDeck,
       ),
       fieldManager: {
         releaseSlot: vi.fn(),

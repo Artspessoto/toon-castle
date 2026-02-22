@@ -45,14 +45,14 @@ export class NameScene extends Phaser.Scene {
     });
 
     const backToMenuBtn = new ToonButton(this, {
-        x: 640,
-        y: 560,
-        text: text.back,
-        fontSize: "1.5rem",
-        textColor: "#fff",
-        color: 0x1a1a1a,
-        hoverColor: 0x333333
-    })
+      x: 640,
+      y: 560,
+      text: text.back,
+      fontSize: "1.5rem",
+      textColor: "#fff",
+      color: 0x1a1a1a,
+      hoverColor: 0x333333,
+    });
 
     backToMenuBtn.on("pointerdown", () => {
       this.scene.start("MenuScene");
@@ -60,13 +60,13 @@ export class NameScene extends Phaser.Scene {
 
     confirmBtn.on("pointerdown", () => {
       const nameInput = inputElement.getChildByName(
-        "nameField"
+        "nameField",
       ) as HTMLInputElement;
       const playerName = nameInput.value.trim();
 
       if (playerName.length > 0) {
         console.log(
-          `Nome do jogador: ${playerName}, Dificuldade: ${this.difficulty}`
+          `Nome do jogador: ${playerName}, Dificuldade: ${this.difficulty}`,
         );
 
         //Battle scene transition

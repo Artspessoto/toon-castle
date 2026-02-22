@@ -137,7 +137,7 @@ export class MenuScene extends Phaser.Scene {
         graphics.lineStyle(
           3,
           Phaser.Display.Color.HexStringToColor(activeColor).color,
-          1
+          1,
         );
         graphics.fillStyle(0x111111, 0.9);
         btn.setStyle({ color: activeColor }).setScale(1.0);

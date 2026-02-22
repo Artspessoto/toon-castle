@@ -31,7 +31,7 @@ export class BattleScene extends Phaser.Scene {
   public playerUI: UIManager;
   public opponentUI: UIManager;
   public combatManager: CombatManager;
-  public effectManager: EffectManager
+  public effectManager: EffectManager;
 
   public phaseButton!: ToonButton;
   public selectedCard: Card | null = null;

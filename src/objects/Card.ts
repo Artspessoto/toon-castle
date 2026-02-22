@@ -1,7 +1,5 @@
 import Phaser, { Scene } from "phaser";
-import type {
-  GameSide,
-} from "../types/GameTypes";
+import type { GameSide } from "../types/GameTypes";
 import { CARD_CONFIG } from "../constants/CardConfig";
 import type { CardLocation, CardData, CardType } from "../types/CardTypes";
 

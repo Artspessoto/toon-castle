@@ -49,7 +49,7 @@ export class GameState {
     this._currentPhase = "DRAW"; //reset to initial phase in next turn
   }
 
-  public advanceTurnCount(){
+  public advanceTurnCount() {
     this.currentTurn++;
   }
 

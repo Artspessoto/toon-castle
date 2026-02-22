@@ -21,7 +21,7 @@ export const CARD_CONFIG = {
       wordWrap: { width: 200 },
       align: "left",
       fontFamily: "Arial",
-      fontStyle: "bold"
+      fontStyle: "bold",
     },
     STATS: {
       fontSize: "18px",
