@@ -1,6 +1,7 @@
 import { Card } from "../objects/Card";
 import { ToonButton } from "../objects/ToonButton";
-import type { CardData, CardLocation, GameSide } from "../types/GameTypes";
+import type { CardData, CardLocation } from "../types/CardTypes";
+import type { GameSide } from "../types/GameTypes";
 
 export class CardDetailScene extends Phaser.Scene {
   private cardData!: CardData;

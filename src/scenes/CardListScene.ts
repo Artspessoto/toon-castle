@@ -1,6 +1,6 @@
 import { Card } from "../objects/Card";
 import { ToonButton } from "../objects/ToonButton";
-import type { CardData } from "../types/GameTypes";
+import type { CardData } from "../types/CardTypes";
 
 export class CardListScene extends Phaser.Scene {
   public border: number = 0xffd966;

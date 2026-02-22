@@ -1,11 +1,9 @@
 import Phaser, { Scene } from "phaser";
 import type {
-  CardData,
-  CardLocation,
-  CardType,
   GameSide,
 } from "../types/GameTypes";
 import { CARD_CONFIG } from "../constants/CardConfig";
+import type { CardLocation, CardData, CardType } from "../types/CardTypes";
 
 export class Card extends Phaser.GameObjects.Container {
   public location: CardLocation = "DECK"; //card cinitial location
