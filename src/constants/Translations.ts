@@ -49,9 +49,13 @@ export const TRANSLATIONS = {
         change_pos: "MUDAR POS.",
       },
       combat_notices: {
-        select_target: "SELECIONE O ALVO DO ATAQUE",
+        select_attack_target: "SELECIONE O ALVO DO ATAQUE",
         invalid_own_card: "VOCÊ NÃO PODE ATACAR SUAS PRÓPRIAS CARTAS!",
         direct_attack: "ATAQUE DIRETO",
+      },
+      effect_notices: {
+        select_target: "SELECIONE O ALVO",
+        invalid_target: "ALVO INVÁLIDO"
       },
     },
   },
@@ -105,9 +109,13 @@ export const TRANSLATIONS = {
         change_pos: "CHANGE POS.",
       },
       combat_notices: {
-        select_target: "SELECT THE ATTACK TARGET",
+        select_attack_target: "SELECT THE ATTACK TARGET",
         invalid_own_card: "YOU CANNOT ATTACK YOUR OWN CARDS!",
         direct_attack: "DIRECT ATTACK",
+      },
+      effect_notices: {
+        select_target: "SELECt THE TARGET",
+        invalid_target: "INVALID TARGET"
       },
     },
   },
