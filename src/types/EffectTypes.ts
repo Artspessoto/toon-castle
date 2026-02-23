@@ -1,5 +1,10 @@
 export type EffectTargetSide = "OWNER" | "OPPONENT" | "BOTH";
 
+export type EffectTypes = 
+  | "BURN" | "HEAL" | "BOOST_ATK" | "NERF_ATK" | "GAIN_MANA"
+  | "DESTROY_MONSTER" | "DESTROY_SPELL" | "DESTROY_TRAP" | "CHANGE_POS" | "REVIVE" | "BOUNCE"
+  | "PROTECT" | "NEGATE" | "DRAW_CARD";
+
 interface NumericEffect {
   type: "BURN" | "HEAL" | "BOOST_ATK" | "NERF_ATK" | "GAIN_MANA";
   value: number;
