@@ -42,7 +42,7 @@ describe("CombatManager", () => {
     mockScene = {
       translationText: {
         combat_notices: {
-          select_target: "SELECT THE ATTACK TARGET",
+          select_attack_target: "SELECT THE ATTACK TARGET",
           invalid_own_card: "YOU CANNOT ATTACK YOUR OWN CARDS!",
           direct_attack: "DIRECT ATTACK",
         },
@@ -205,7 +205,7 @@ describe("CombatManager", () => {
       combatManager.prepareTargeting(attacker);
       combatManager.handleCardSelection(target);
       expect(mockScene.playerUI.showNotice).toHaveBeenCalledWith(
-        mockScene.translationText.combat_notices.select_target,
+        mockScene.translationText.combat_notices.select_attack_target,
         "WARNING",
       );
     });
