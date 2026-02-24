@@ -9,7 +9,7 @@ export class EffectManager {
   private pendingEffect: CardEffect | null = null;
   private pendingSource: Card | null = null;
   private handlerEffects: Record<
-    string,
+    EffectTypes,
     (effect: CardEffect, side: GameSide, source: Card) => void
   >;
 
@@ -26,6 +26,20 @@ export class EffectManager {
         this.scene.getUIManager(side).updateMana(effect.value || 0),
       BOOST_ATK: (effect, _side, source) =>
         this.prepareTargeting(effect, source),
+      CHANGE_POS: (effect, _side, source) =>
+        this.prepareTargeting(effect, source),
+      DESTROY_MONSTER: (effect, _side, source) =>
+        this.prepareTargeting(effect, source),
+      DESTROY_SPELL: (effect, _side, source) =>
+        this.prepareTargeting(effect, source),
+      DESTROY_TRAP: (effect, _side, source) =>
+        this.prepareTargeting(effect, source),
+      BOUNCE: (effect, _side, source) => this.prepareTargeting(effect, source),
+      NEGATE: (effect, _side, source) => this.prepareTargeting(effect, source),
+      NERF_ATK: (effect, _side, source) =>
+        this.prepareTargeting(effect, source),
+      REVIVE: (effect, _side, source) => this.prepareTargeting(effect, source),
+      PROTECT: () => console.log(""),
     };
   }
 
@@ -78,10 +92,40 @@ export class EffectManager {
     return ["PLAYER", "OPPONENT"];
   }
 
+  private targetResolution: Partial<
+    Record<
+      EffectTypes,
+      (target: Card, source: Card, effect: CardEffect) => void
+    >
+  > = (() => {
+    const destroyResolver = (target: Card) =>
+      this.scene.combatManager.destroyCard(target, target.owner);
+
+    return {
+      BOOST_ATK: (_target, _source, effect) => {
+        const bonus = effect.value;
+        console.log(bonus);
+      },
+      DESTROY_MONSTER: destroyResolver,
+      DESTROY_SPELL: destroyResolver,
+      DESTROY_TRAP: destroyResolver,
+      CHANGE_POS: (target, source) => {
+        if (target.isFaceDown) {
+          this.scene.getUIManager(source.owner).handleFlipSummon(target);
+        } else {
+          this.scene.getUIManager(source.owner).handleChangePosition(target);
+        }
+      },
+    };
+  })();
+
   private targetValidations: Partial<
     Record<EffectTypes, (target: Card) => boolean>
   > = {
     BOOST_ATK: (target) => target.getType().includes("MONSTER"),
+    NERF_ATK: (target) => target.getType().includes("MONSTER"),
+    CHANGE_POS: (target) => target.getType().includes("MONSTER"),
+    REVIVE: (target) => target.getType().includes("MONSTER"),
     DESTROY_MONSTER: (target) => target.getType().includes("MONSTER"),
     DESTROY_SPELL: (target) => target.getType() == "SPELL",
     DESTROY_TRAP: (target) => target.getType() == "TRAP",
@@ -89,8 +133,6 @@ export class EffectManager {
   };
 
   public handleCardSelection(target: Card) {
-    const monsterCard = target.getType().includes("MONSTER");
-
     if (!this.pendingEffect || !this.pendingSource) return;
 
     //prevents select source card to apply effect
@@ -104,10 +146,9 @@ export class EffectManager {
       return;
     }
 
-    if (this.pendingEffect?.type == "BOOST_ATK" && monsterCard) {
-      const bonus = this.pendingEffect.value;
-      const updatedAtk = (target.getCardData().atk || 0) + bonus;
-      console.log(target.getCardData().atk, updatedAtk);
+    const resolve = this.targetResolution[this.pendingEffect.type];
+    if (resolve) {
+      resolve(target, this.pendingSource, this.pendingEffect);
     }
 
     this.stopTargeting();
