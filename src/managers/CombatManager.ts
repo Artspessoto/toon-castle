@@ -34,7 +34,10 @@ export class CombatManager {
 
     this.currentAttacker = attacker;
     this.isSelectingTarget = true;
-    this.scene.playerUI.showNotice(this.notices.select_attack_target, "NEUTRAL");
+    this.scene.playerUI.showNotice(
+      this.notices.select_attack_target,
+      "NEUTRAL",
+    );
     attacker.setAlpha(0.7);
   }
 
@@ -54,7 +57,10 @@ export class CombatManager {
     }
 
     if (!isValidTargetType) {
-      this.scene.playerUI.showNotice(this.notices.select_attack_target, "WARNING");
+      this.scene.playerUI.showNotice(
+        this.notices.select_attack_target,
+        "WARNING",
+      );
       return;
     }
 
@@ -208,6 +214,7 @@ export class CombatManager {
         alpha: 0,
         duration: 300,
         onComplete: () => {
+          card.setFaceUp();
           this.scene.fieldManager.moveToGraveyard(card, side);
           card.setAlpha(1);
         },
@@ -225,6 +232,7 @@ export class CombatManager {
         this.applyTint(card, 0xff0000);
       },
       onComplete: () => {
+        card.setFaceUp();
         this.scene.fieldManager.moveToGraveyard(card, side);
 
         card.setAlpha(1);
