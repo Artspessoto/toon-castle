@@ -456,6 +456,7 @@ export class UIManager {
     if (!card.isFaceDown || card.owner == "PLAYER") {
       buttons.push(
         this.createMenuButton(buttonTexts.details, x - 70, y - 35, () => {
+          this.scene.playerHand.showHand();
           this.scene.scene.launch("CardDetailScene", {
             cardData: card.getCardData(),
             owner: card.owner,
