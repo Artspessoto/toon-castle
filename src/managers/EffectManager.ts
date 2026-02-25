@@ -26,6 +26,12 @@ export class EffectManager {
         this.scene.getUIManager(side).updateMana(effect.value || 0),
       BOOST_ATK: (effect, _side, source) =>
         this.prepareTargeting(effect, source),
+      NERF_ATK: (effect, _side, source) =>
+        this.prepareTargeting(effect, source),
+      BOOST_DEF: (effect, _side, source) =>
+        this.prepareTargeting(effect, source),
+      NERF_DEF: (effect, _side, source) =>
+        this.prepareTargeting(effect, source),
       CHANGE_POS: (effect, _side, source) =>
         this.prepareTargeting(effect, source),
       DESTROY_MONSTER: (effect, _side, source) =>
@@ -36,8 +42,6 @@ export class EffectManager {
         this.prepareTargeting(effect, source),
       BOUNCE: (effect, _side, source) => this.prepareTargeting(effect, source),
       NEGATE: (effect, _side, source) => this.prepareTargeting(effect, source),
-      NERF_ATK: (effect, _side, source) =>
-        this.prepareTargeting(effect, source),
       REVIVE: (effect, _side, source) => this.prepareTargeting(effect, source),
       PROTECT: () => console.log(""),
     };
@@ -101,11 +105,25 @@ export class EffectManager {
     const destroyResolver = (target: Card) =>
       this.scene.combatManager.destroyCard(target, target.owner);
 
+    const statResolver =
+      (type: "atk" | "def", isBuff: boolean) =>
+      (target: Card, _source: Card, effect: CardEffect) => {
+        const current =
+          type === "atk"
+            ? target.getCardData().atk || 0
+            : target.getCardData().def || 0;
+        const value = effect.value || 0;
+        const finalValue = isBuff
+          ? current + value
+          : Math.max(0, current - value); //prevents value lower than 0
+        target.updateStat(finalValue, type);
+      };
+
     return {
-      BOOST_ATK: (_target, _source, effect) => {
-        const bonus = effect.value;
-        console.log(bonus);
-      },
+      BOOST_ATK: statResolver("atk", true),
+      NERF_ATK: statResolver("atk", false),
+      BOOST_DEF: statResolver("def", true),
+      NERF_DEF: statResolver("def", false),
       DESTROY_MONSTER: destroyResolver,
       DESTROY_SPELL: destroyResolver,
       DESTROY_TRAP: destroyResolver,
@@ -124,6 +142,8 @@ export class EffectManager {
   > = {
     BOOST_ATK: (target) => target.getType().includes("MONSTER"),
     NERF_ATK: (target) => target.getType().includes("MONSTER"),
+    BOOST_DEF: (target) => target.getType().includes("MONSTER"),
+    NERF_DEF: (target) => target.getType().includes("MONSTER"),
     CHANGE_POS: (target) => target.getType().includes("MONSTER"),
     REVIVE: (target) => target.getType().includes("MONSTER"),
     DESTROY_MONSTER: (target) => target.getType().includes("MONSTER"),
