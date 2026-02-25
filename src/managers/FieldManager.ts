@@ -1,9 +1,13 @@
+import type { IBattleContext } from "../interfaces/IBattleContext";
+import type {
+  IFieldManager,
+  IFieldPlayResult,
+} from "../interfaces/IFieldManager";
 import type { Card } from "../objects/Card";
-import { BattleScene } from "../scenes/BattleScene";
 import type { GameSide, PlacementMode } from "../types/GameTypes";
 
-export class FieldManager {
-  private scene: BattleScene;
+export class FieldManager implements IFieldManager {
+  private context: IBattleContext;
 
   //null = empty slot, Card = slot full
   public monsterSlots = {
@@ -11,12 +15,12 @@ export class FieldManager {
     OPPONENT: [null, null, null] as (Card | null)[],
   };
 
-  private spellSlots = {
+  public spellSlots = {
     PLAYER: [null, null, null] as (Card | null)[],
     OPPONENT: [null, null, null] as (Card | null)[],
   };
 
-  private graveyardSlot = {
+  public graveyardSlot = {
     PLAYER: [] as Card[],
     OPPONENT: [] as Card[],
   };
@@ -50,8 +54,8 @@ export class FieldManager {
     },
   };
 
-  constructor(scene: BattleScene) {
-    this.scene = scene;
+  constructor(context: IBattleContext) {
+    this.context = context;
   }
 
   public setupFieldZones() {
@@ -60,7 +64,7 @@ export class FieldManager {
     sides.forEach((side) => {
       //Monster Zones
       this.fieldCoords[side].MONSTER.forEach((pos, i) => {
-        this.scene.add
+        this.context.add
           .zone(pos.x, pos.y, 110, 150)
           .setRectangleDropZone(110, 150)
           .setData("type", "MONSTER")
@@ -70,7 +74,7 @@ export class FieldManager {
 
       //Spell/Trap Zones
       this.fieldCoords[side].SPELL.forEach((pos, i) => {
-        this.scene.add
+        this.context.add
           .zone(pos.x, pos.y, 110, 150)
           .setRectangleDropZone(110, 150)
           .setData("type", "SPELL")
@@ -126,10 +130,10 @@ export class FieldManager {
     card: Card,
     side: GameSide,
     zoneType: "MONSTER" | "SPELL",
-  ) {
+  ): IFieldPlayResult {
     const cardType = card.getType();
     const cardData = card.getCardData();
-    const currentMana = this.scene.gameState.getMana(side);
+    const currentMana = this.context.gameState.getMana(side);
 
     //type card validation
     const isMonsterValid =
@@ -146,7 +150,7 @@ export class FieldManager {
       return { valid: false, reason: "MANA" };
 
     //phase validation
-    if (this.scene.currentPhase !== "MAIN") return { valid: false };
+    if (this.context.currentPhase !== "MAIN") return { valid: false };
 
     //available slot validation
     const slot = this.getFirstAvailableSlot(side, zoneType);
@@ -158,14 +162,10 @@ export class FieldManager {
   public validatePlay(
     card: Card,
     zone: Phaser.GameObjects.Zone,
-  ): {
-    valid: boolean;
-    reason?: string;
-    slot?: { x: number; y: number; index: number };
-  } {
+  ): IFieldPlayResult {
     const zoneType: "MONSTER" | "SPELL" = zone.getData("type");
     const zoneSide: GameSide = zone.getData("side");
-    const activeSide = this.scene.gameState.activePlayer;
+    const activeSide = this.context.gameState.activePlayer;
 
     //block to drop card into opponent slot
     if (zoneSide !== activeSide) return { valid: false };
@@ -175,9 +175,9 @@ export class FieldManager {
     if (!result.valid && result.reason) {
       const reason =
         result.reason === "MANA"
-          ? this.scene.translationText.insufficient_mana
-          : this.scene.translationText.zone_occupied;
-      return { valid: false, reason };
+          ? this.context.translationText.insufficient_mana
+          : this.context.translationText.zone_occupied;
+      return { valid: false, reason: result.reason, message: reason };
     }
 
     return result;
@@ -189,10 +189,10 @@ export class FieldManager {
     targetY: number,
     mode: PlacementMode,
   ) {
-    const currentTurn = this.scene.gameState.currentTurn;
+    const currentTurn = this.context.gameState.currentTurn;
     const { manaCost } = card.getCardData();
     card.disableInteractive();
-    this.scene.tweens.killTweensOf(card.visualElements);
+    this.context.tweens.killTweensOf(card.visualElements);
 
     card.visualElements.setY(0);
     card.visualElements.setScale(1);
@@ -214,10 +214,10 @@ export class FieldManager {
       card.setFaceUp();
     }
 
-    this.scene.currentUI.updateMana(-manaCost);
+    this.context.getUI(card.owner).updateMana(-manaCost);
 
     // Slot animation movement
-    this.scene.tweens.add({
+    this.context.tweens.add({
       targets: card,
       x: targetX,
       y: targetY,
@@ -227,7 +227,7 @@ export class FieldManager {
       ease: "Back.easeOut",
       onComplete: () => {
         // card impact animation effect
-        this.scene.cameras.main.shake(100, 0.002);
+        this.context.cameras.main.shake(100, 0.002);
         card.setDepth(10);
 
         this.setupFieldInteractions(card);
@@ -237,12 +237,12 @@ export class FieldManager {
 
   public previewPlacement(card: Card, targetX: number, targetY: number) {
     card.disableInteractive();
-    this.scene.tweens.killTweensOf(card);
+    this.context.tweens.killTweensOf(card);
 
     card.visualElements.setY(0);
     card.visualElements.setScale(1);
 
-    this.scene.tweens.add({
+    this.context.tweens.add({
       targets: card,
       x: targetX,
       y: targetY,
@@ -256,13 +256,13 @@ export class FieldManager {
   }
 
   public moveToGraveyard(card: Card, side: GameSide) {
-    this.scene.tweens.killTweensOf(card.visualElements);
+    this.context.tweens.killTweensOf(card.visualElements);
     const coords = this.fieldCoords[side].GRAVEYARD;
 
     this.graveyardSlot[side].unshift(card);
     card.setLocation("GRAVEYARD");
 
-    this.scene.tweens.add({
+    this.context.tweens.add({
       targets: card,
       x: coords.x,
       y: coords.y,
@@ -291,29 +291,33 @@ export class FieldManager {
       const currentY = card.y;
 
       //card in battle mode
-      if (this.scene.combatManager.isSelectingTarget) {
-        this.scene.combatManager.handleCardSelection(card);
+      if (this.context.combat.isSelectingTarget) {
+        this.context.combat.handleCardSelection(card);
         return;
       }
 
       //effect card activated
-      if (this.scene.effectManager.isSelectingTarget) {
-        this.scene.effectManager.handleCardSelection(card);
+      if (this.context.effects.isSelectingTarget) {
+        this.context.effects.handleCardSelection(card);
         return;
       }
 
       switch (card.location) {
         case "FIELD":
-          this.scene.playerUI.showFieldCardMenu(currentX, currentY, card);
-          this.scene.playerHand.hideHand();
+          this.context
+            .getUI(card.owner)
+            .showFieldCardMenu(currentX, currentY, card);
+          this.context.getHand(card.owner).hideHand();
           break;
         case "GRAVEYARD": {
           const cardOwner = card.owner;
-          this.scene.playerUI.showGraveyardMenu(
-            this.graveyardSlot[cardOwner],
-            currentX,
-            currentY,
-          );
+          this.context
+            .getUI(cardOwner)
+            .showGraveyardMenu(
+              this.graveyardSlot[cardOwner],
+              currentX,
+              currentY,
+            );
           break;
         }
         default:

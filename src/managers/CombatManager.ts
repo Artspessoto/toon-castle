@@ -1,31 +1,34 @@
+import type { IBattleContext } from "../interfaces/IBattleContext";
+import type { ICombatManager } from "../interfaces/ICombatManager";
 import type { Card } from "../objects/Card";
-import type { BattleScene } from "../scenes/BattleScene";
 import type { GameSide } from "../types/GameTypes";
 
-export class CombatManager {
-  private scene: BattleScene;
+export class CombatManager implements ICombatManager {
+  private context: IBattleContext;
   public isSelectingTarget: boolean = false;
   public currentAttacker: Card | null = null;
 
-  constructor(scene: BattleScene) {
-    this.scene = scene;
+  constructor(context: IBattleContext) {
+    this.context = context;
   }
 
   private get notices() {
-    return this.scene.translationText.combat_notices;
+    return this.context.translationText.combat_notices;
   }
 
   public prepareTargeting(attacker: Card) {
     const opponentSide = attacker.owner == "PLAYER" ? "OPPONENT" : "PLAYER";
-    const existsMonstersIntoField = this.scene.fieldManager.monsterSlots[
+    const existsMonstersIntoField = this.context.field.monsterSlots[
       opponentSide
     ].some((slot) => slot !== null);
 
     if (!existsMonstersIntoField) {
-      this.scene.playerUI.showNotice(this.notices.direct_attack, "WARNING");
+      this.context
+        .getUI(opponentSide)
+        .showNotice(this.notices.direct_attack, "WARNING");
       attacker.setAlpha(0.7);
 
-      this.scene.time.delayedCall(100, () => {
+      this.context.time.delayedCall(100, () => {
         this.executeDirectAttack(attacker, opponentSide);
         this.currentAttacker = null;
       });
@@ -34,17 +37,16 @@ export class CombatManager {
 
     this.currentAttacker = attacker;
     this.isSelectingTarget = true;
-    this.scene.playerUI.showNotice(
-      this.notices.select_attack_target,
-      "NEUTRAL",
-    );
+    this.context
+      .getUI(attacker.owner)
+      .showNotice(this.notices.select_attack_target, "NEUTRAL");
     attacker.setAlpha(0.7);
   }
 
   public handleCardSelection(target: Card) {
     if (!this.isSelectingTarget || !this.currentAttacker) return;
 
-    if (this.scene.currentPhase !== "BATTLE") {
+    if (this.context.gameState.currentPhase !== "BATTLE") {
       this.cancelTarget();
       return;
     }
@@ -52,15 +54,16 @@ export class CombatManager {
     const isValidTargetType = target.getType().includes("MONSTER");
 
     if (attackOwnCard) {
-      this.scene.playerUI.showNotice(this.notices.invalid_own_card, "WARNING");
+      this.context
+        .getUI(this.currentAttacker.owner)
+        .showNotice(this.notices.invalid_own_card, "WARNING");
       return;
     }
 
     if (!isValidTargetType) {
-      this.scene.playerUI.showNotice(
-        this.notices.select_attack_target,
-        "WARNING",
-      );
+      this.context
+        .getUI(this.currentAttacker.owner)
+        .showNotice(this.notices.select_attack_target, "WARNING");
       return;
     }
 
@@ -82,7 +85,7 @@ export class CombatManager {
   }
 
   private executeAttack(attacker: Card, target: Card) {
-    this.scene.tweens.add({
+    this.context.tweens.add({
       targets: attacker,
       x: target.x,
       y: target.y,
@@ -113,15 +116,15 @@ export class CombatManager {
 
     const targetY = targetSide === "OPPONENT" ? 50 : 650;
 
-    this.scene.tweens.add({
+    this.context.tweens.add({
       targets: attacker,
       y: targetY,
       duration: 300,
       ease: "Back.easeIn",
       yoyo: true, //attacker return into original pos
       onYoyo: () => {
-        this.scene.cameras.main.shake(100, 0.003);
-        this.scene.getUIManager(targetSide).updateLP(targetSide, -damage);
+        this.context.cameras.main.shake(100, 0.003);
+        this.context.getUI(targetSide).updateLP(targetSide, -damage);
       },
       onComplete: () => {
         attacker.hasAttacked = true;
@@ -145,7 +148,7 @@ export class CombatManager {
         break;
       case attackerAtk < targetDef:
         diff = targetDef - attackerAtk;
-        this.scene.getUIManager(attackerSide).updateLP(attackerSide, -diff);
+        this.context.getUI(attackerSide).updateLP(attackerSide, -diff);
         break;
       default:
         break;
@@ -165,17 +168,13 @@ export class CombatManager {
       case attackerAtk > targetAtk: {
         damageToApply = attackerAtk - targetAtk;
         this.destroyCard(target, targetSide);
-        this.scene
-          .getUIManager(targetSide)
-          .updateLP(targetSide, -damageToApply);
+        this.context.getUI(targetSide).updateLP(targetSide, -damageToApply);
         break;
       }
       case targetAtk > attackerAtk: {
         damageToApply = targetAtk - attackerAtk;
         this.destroyCard(attacker, attackerSide);
-        this.scene
-          .getUIManager(attackerSide)
-          .updateLP(attackerSide, -damageToApply);
+        this.context.getUI(attackerSide).updateLP(attackerSide, -damageToApply);
         break;
       }
       default:
@@ -187,10 +186,10 @@ export class CombatManager {
   }
 
   public triggerImpactEffects(target: Card) {
-    this.scene.cameras.main.shake(100, 0.003);
+    this.context.cameras.main.shake(100, 0.003);
 
     this.applyTint(target, 0xff0000);
-    this.scene.time.delayedCall(100, () => this.applyTint(target, null));
+    this.context.time.delayedCall(100, () => this.applyTint(target, null));
   }
 
   public destroyCard(
@@ -199,30 +198,30 @@ export class CombatManager {
     silentEffect: boolean = false,
   ) {
     const currentSlots = card.getType().includes("MONSTER")
-      ? this.scene.fieldManager["monsterSlots"][side]
-      : this.scene.fieldManager["spellSlots"][side];
+      ? this.context.field["monsterSlots"][side]
+      : this.context.field["spellSlots"][side];
 
     // if card isnt in slot returns
     if (currentSlots.indexOf(card) === -1) return;
 
-    this.scene.fieldManager.releaseSlot(card, side);
+    this.context.field.releaseSlot(card, side);
     card.disableInteractive();
 
     if (silentEffect) {
-      this.scene.tweens.add({
+      this.context.tweens.add({
         targets: card,
         alpha: 0,
         duration: 300,
         onComplete: () => {
           card.setFaceUp();
-          this.scene.fieldManager.moveToGraveyard(card, side);
+          this.context.field.moveToGraveyard(card, side);
           card.setAlpha(1);
         },
       });
       return;
     }
 
-    this.scene.tweens.add({
+    this.context.tweens.add({
       targets: card,
       alpha: 0,
       scale: 1.4,
@@ -233,7 +232,7 @@ export class CombatManager {
       },
       onComplete: () => {
         card.setFaceUp();
-        this.scene.fieldManager.moveToGraveyard(card, side);
+        this.context.field.moveToGraveyard(card, side);
 
         card.setAlpha(1);
         card.setScale(1);

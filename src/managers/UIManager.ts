@@ -1,6 +1,7 @@
+import type { IBattleContext } from "../interfaces/IBattleContext";
+import type { IUIManager } from "../interfaces/IUIManager";
 import type { Card } from "../objects/Card";
 import { ToonButton } from "../objects/ToonButton";
-import { BattleScene } from "../scenes/BattleScene";
 import type {
   GameSide,
   Notice,
@@ -8,8 +9,8 @@ import type {
   TranslationStructure,
 } from "../types/GameTypes";
 
-export class UIManager {
-  private scene: BattleScene;
+export class UIManager implements IUIManager {
+  private context: IBattleContext;
   private side: GameSide;
   private translations!: TranslationStructure;
   private bannerText!: Phaser.GameObjects.Text;
@@ -22,8 +23,8 @@ export class UIManager {
 
   private selectionButtons: ToonButton[] = [];
 
-  constructor(scene: BattleScene, side: GameSide) {
-    this.scene = scene;
+  constructor(context: IBattleContext, side: GameSide) {
+    this.context = context;
     this.side = side;
 
     this.manaPosition =
@@ -35,20 +36,20 @@ export class UIManager {
   }
 
   public setupUI() {
-    const initialMana = this.scene.gameState.getMana(this.side);
-    this.manaAura = this.scene.add
+    const initialMana = this.context.gameState.getMana(this.side);
+    this.manaAura = this.context.add
       .image(this.manaPosition.x, this.manaPosition.y, "mana_icon")
       .setScale(0.5)
       .setAlpha(0)
       .setTint(0xffffff)
       .setDepth(99);
 
-    this.manaIcon = this.scene.add
+    this.manaIcon = this.context.add
       .image(this.manaPosition.x, this.manaPosition.y, "mana_icon")
       .setScale(0.4)
       .setDepth(100);
 
-    this.manaText = this.scene.add
+    this.manaText = this.context.add
       .text(this.manaIcon.x, this.manaIcon.y, `${initialMana}`, {
         fontSize: "32px",
         fontFamily: "Arial Black",
@@ -60,12 +61,12 @@ export class UIManager {
       .setOrigin(0.5)
       .setDepth(101);
 
-    this.bannerBg = this.scene.add
+    this.bannerBg = this.context.add
       .rectangle(640, 360, 1280, 80, 0x000000, 0.85)
       .setVisible(false)
       .setDepth(10000);
 
-    this.bannerText = this.scene.add
+    this.bannerText = this.context.add
       .text(640, 360, "", {
         fontSize: "25px",
         color: "#FFFFFF",
@@ -80,23 +81,23 @@ export class UIManager {
   }
 
   public setupLifePoints() {
-    const currentHP = this.scene.gameState.getHP(this.side);
+    const currentHP = this.context.gameState.getHP(this.side);
     const yPos = this.side == "PLAYER" ? 630 : 40;
 
     this.createLPBar(30, yPos, currentHP);
   }
 
   public updateLP(side: GameSide, amount: number) {
-    const startLP = this.scene.gameState.getHP(side);
+    const startLP = this.context.gameState.getHP(side);
 
-    this.scene.gameState.modifyHP(side, amount);
+    this.context.gameState.modifyHP(side, amount);
 
     this.animateLPImpact(amount);
 
-    const targetLP = this.scene.gameState.getHP(side);
+    const targetLP = this.context.gameState.getHP(side);
     const lpCounter = { value: startLP };
 
-    this.scene.tweens.add({
+    this.context.tweens.add({
       targets: lpCounter,
       value: targetLP,
       duration: 1200,
@@ -108,12 +109,12 @@ export class UIManager {
   }
 
   public updateMana(amount: number) {
-    this.scene.gameState.modifyMana(this.side, amount);
+    this.context.gameState.modifyMana(this.side, amount);
 
-    const newMana = this.scene.gameState.getMana(this.side);
+    const newMana = this.context.gameState.getMana(this.side);
     this.manaText.setText(`${newMana}`);
 
-    this.scene.tweens.add({
+    this.context.tweens.add({
       targets: this.manaAura,
       alpha: { from: 0.8, to: 0 },
       scale: { from: 0.5, to: 0.8 }, //shock wave effect
@@ -154,7 +155,7 @@ export class UIManager {
   }
 
   private animateBanner(message: string, type: Notice) {
-    this.scene.tweens.killTweensOf([this.bannerText, this.bannerBg]);
+    this.context.tweens.killTweensOf([this.bannerText, this.bannerBg]);
 
     this.bannerText
       .setText(message.toUpperCase())
@@ -164,7 +165,7 @@ export class UIManager {
     this.bannerBg.setAlpha(1).setVisible(true).setScale(1, 0);
 
     // start animation
-    this.scene.tweens.add({
+    this.context.tweens.add({
       targets: this.bannerBg,
       scaleY: 1,
       alpha: 1,
@@ -173,7 +174,7 @@ export class UIManager {
     });
 
     // pop animation
-    this.scene.tweens.add({
+    this.context.tweens.add({
       targets: this.bannerText,
       scale: 1,
       duration: 150,
@@ -181,7 +182,7 @@ export class UIManager {
       onComplete: () => {
         //shake effect
         if (type === "WARNING") {
-          this.scene.tweens.add({
+          this.context.tweens.add({
             targets: [this.bannerText, this.bannerBg],
             x: "+=3",
             yoyo: true,
@@ -192,8 +193,8 @@ export class UIManager {
       },
     });
 
-    this.scene.time.delayedCall(600, () => {
-      this.scene.tweens.add({
+    this.context.time.delayedCall(600, () => {
+      this.context.tweens.add({
         targets: [this.bannerText, this.bannerBg],
         alpha: 0,
         y: "-=30",
@@ -219,8 +220,8 @@ export class UIManager {
     const metalGold = 0xcfb35d; // border
     const magicGlow = "#FFD966"; // color text
 
-    const container = this.scene.add.container(x, y);
-    const bg = this.scene.add.graphics();
+    const container = this.context.add.container(x, y);
+    const bg = this.context.add.graphics();
 
     bg.fillStyle(0x000000, 0.5);
     bg.fillRoundedRect(4, 4, width, height, radius);
@@ -236,7 +237,7 @@ export class UIManager {
 
     container.add(bg);
 
-    const labelLP = this.scene.add
+    const labelLP = this.context.add
       .text(20, 18, "LP", {
         fontFamily: "Arial Black",
         fontSize: "18px",
@@ -251,7 +252,7 @@ export class UIManager {
       color: magicGlow,
     };
 
-    this.hpText = this.scene.add
+    this.hpText = this.context.add
       .text(60, 30, `${initialHP}`, textStyle)
       .setOrigin(0, 0.5)
       .setShadow(2, 2, "#000000", 4, true, false);
@@ -289,7 +290,7 @@ export class UIManager {
     }
 
     if (leftConfig) {
-      const leftBtn = new ToonButton(this.scene, {
+      const leftBtn = new ToonButton(this.context.engine, {
         x: x - (rightConfig ? 75 : 0),
         y: y - 100,
         height: 42,
@@ -310,7 +311,7 @@ export class UIManager {
     }
 
     if (rightConfig) {
-      const rightBtn = new ToonButton(this.scene, {
+      const rightBtn = new ToonButton(this.context.engine, {
         x: x + 75,
         y: y - 100,
         height: 42,
@@ -340,7 +341,7 @@ export class UIManager {
     this.clearSelectionMenu();
     if (this.side !== "PLAYER") return;
 
-    const myTurn = this.scene.gameState.activePlayer == "PLAYER";
+    const myTurn = this.context.gameState.activePlayer == "PLAYER";
     if (!myTurn) return;
 
     const buttons: ToonButton[] = [];
@@ -363,14 +364,14 @@ export class UIManager {
 
     this.selectionButtons.push(
       this.createMenuButton(buttonTexts.details, x + 70, y - 35, () => {
-        this.scene.scene.launch("CardListScene", graveyardCards);
+        this.context.engine.scene.launch("CardListScene", graveyardCards);
       }),
     );
   }
 
   private addPositionButtons({ card, buttons, x, y }: ButtonParams) {
-    const mainPhase = this.scene.currentPhase == "MAIN";
-    const currentTurn = this.scene.gameState.currentTurn;
+    const mainPhase = this.context.currentPhase == "MAIN";
+    const currentTurn = this.context.gameState.currentTurn;
     const hasWaited = currentTurn > card.setTurn;
     const monsterCard = card.getType().includes("MONSTER");
     const battleTexts = this.translations["battle_scene"];
@@ -402,7 +403,7 @@ export class UIManager {
   }
 
   private addAttackButton({ card, buttons, x, y }: ButtonParams) {
-    const currentPhase = this.scene.currentPhase;
+    const currentPhase = this.context.currentPhase;
     const cardData = card.getCardData();
     const battleTexts = this.translations["battle_scene"];
     const buttonTexts = battleTexts.battle_buttons;
@@ -419,7 +420,7 @@ export class UIManager {
     if (currentPhase === "BATTLE" && canAttack) {
       buttons.push(
         this.createMenuButton(buttonTexts.attack, x + 70, y - 35, () => {
-          this.scene.onAttackDeclared(card);
+          this.context.onAttackDeclared(card);
         }),
       );
     }
@@ -429,7 +430,7 @@ export class UIManager {
     const battleTexts = this.translations["battle_scene"];
     const buttonTexts = battleTexts.battle_buttons;
 
-    const currentTurn = this.scene.gameState.currentTurn;
+    const currentTurn = this.context.gameState.currentTurn;
     const hasWaited = currentTurn > card.setTurn;
     const isEffectCard =
       card.getType() === "TRAP" || card.getType() == "EFFECT_MONSTER";
@@ -441,7 +442,7 @@ export class UIManager {
       if (canActive && card.getType() !== "MONSTER") {
         buttons.push(
           this.createMenuButton(buttonTexts.active, x - 70, y - 35, () => {
-            this.scene.cardActivation(card, this.side);
+            this.context.cardActivation(card, this.side);
           }),
         );
       }
@@ -456,8 +457,8 @@ export class UIManager {
     if (!card.isFaceDown || card.owner == "PLAYER") {
       buttons.push(
         this.createMenuButton(buttonTexts.details, x - 70, y - 35, () => {
-          this.scene.playerHand.showHand();
-          this.scene.scene.launch("CardDetailScene", {
+          this.context.getHand(card.owner).showHand();
+          this.context.engine.scene.launch("CardDetailScene", {
             cardData: card.getCardData(),
             owner: card.owner,
           });
@@ -472,7 +473,7 @@ export class UIManager {
     y: number,
     callback: () => void,
   ): ToonButton {
-    const btn = new ToonButton(this.scene, {
+    const btn = new ToonButton(this.context.engine, {
       text: text.toUpperCase(),
       x: x,
       y: y,
@@ -496,16 +497,16 @@ export class UIManager {
   public handleFlipSummon(card: Card) {
     card.animateFlip(() => {
       // card impact animation effect
-      this.scene.cameras.main.shake(100, 0.002);
-      this.scene.playerHand.showHand();
+      this.context.cameras.main.shake(100, 0.002);
+      this.context.getHand(card.owner).showHand();
     });
   }
 
   public handleChangePosition(card: Card) {
     card.animateChangePosition(() => {
       // card impact animation effect
-      this.scene.cameras.main.shake(100, 0.002);
-      this.scene.playerHand.showHand();
+      this.context.cameras.main.shake(100, 0.002);
+      this.context.getHand(card.owner).showHand();
     });
   }
 
@@ -516,7 +517,7 @@ export class UIManager {
 
     this.hpText.setColor(impactColor);
 
-    this.scene.tweens.add({
+    this.context.tweens.add({
       targets: this.hpText,
       scale: 1.4,
       duration: 150,
@@ -529,7 +530,7 @@ export class UIManager {
     });
 
     if (isDamage) {
-      this.scene.cameras.main.shake(200, 0.005);
+      this.context.cameras.main.shake(200, 0.005);
     }
   }
 }

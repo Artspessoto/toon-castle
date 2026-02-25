@@ -1,59 +1,64 @@
+import type { IInputManager } from "../interfaces/IInputManager";
+import type { IBattleContext } from "../interfaces/IBattleContext";
 import type { Card } from "../objects/Card";
-import type { BattleScene } from "../scenes/BattleScene";
 
-export class InputManager {
-  private scene: BattleScene;
+export class InputManager implements IInputManager {
+  private context: IBattleContext;
 
-  constructor(scene: BattleScene) {
-    this.scene = scene;
+  constructor(context: IBattleContext) {
+    this.context = context;
   }
 
   public setupGlobalInputs() {
-    this.scene.input.on(
+    this.context.engine.input.on(
       "pointerdown",
       (
         _pointer: Phaser.Input.Pointer,
         currentlyOver: Phaser.GameObjects.GameObject[],
       ) => {
         if (currentlyOver.length === 0) {
-          this.scene.currentUI.clearSelectionMenu();
-          this.scene.playerHand.showHand();
+          const activeSide = this.context.gameState.activePlayer;
+          this.context.getUI(activeSide).clearSelectionMenu();
+          this.context.getHand(activeSide).showHand();
         }
       },
     );
 
-    this.scene.input.keyboard?.on("keydown-SPACE", () => {
-      this.scene.handlePlayerCard();
+    this.context.engine.input.keyboard?.on("keydown-SPACE", () => {
+      this.context.handlePlayerCard();
     });
 
-    this.scene.input.keyboard?.on("keydown-ESC", () => {
-      if (this.scene.currentPhase == "BATTLE") {
-        this.scene.combatManager.cancelTarget();
+    this.context.engine.input.keyboard?.on("keydown-ESC", () => {
+      if (this.context.currentPhase == "BATTLE") {
+        this.context.combat.cancelTarget();
       }
-      this.scene.cancelPlacement();
+      this.context.cancelPlacement();
     });
 
-    this.scene.input.keyboard?.on("keydown-T", () => {
-      this.scene.gameState.nextTurn();
-      this.scene.setPhase("DRAW");
+    this.context.engine.input.keyboard?.on("keydown-T", () => {
+      this.context.gameState.nextTurn();
+      this.context.setPhase("DRAW");
     });
 
-    this.scene.input.on("pointerdown", () => {
-      if (this.scene.selectedCard) {
-        this.scene.time.delayedCall(50, () => this.scene.cancelPlacement());
+    this.context.engine.input.on("pointerdown", () => {
+      if (this.context.selectedCard) {
+        this.context.time.delayedCall(50, () => this.context.cancelPlacement());
       }
     });
 
-    this.scene.input.on("pointerdown", (pointer: { x: number; y: number }) => {
-      console.log(
-        `Debug: X: ${Math.round(pointer.x)}, Y: ${Math.round(pointer.y)}`,
-      );
-    });
+    this.context.engine.input.on(
+      "pointerdown",
+      (pointer: { x: number; y: number }) => {
+        console.log(
+          `Debug: X: ${Math.round(pointer.x)}, Y: ${Math.round(pointer.y)}`,
+        );
+      },
+    );
   }
 
   public setupCardInteractions(card: Card) {
     card.setInteractive({ draggable: true });
-    this.scene.input.setDraggable(card);
+    this.context.engine.input.setDraggable(card);
 
     // hover effect (Zoom)
     card.on("pointerover", () => this.handleCardHover(card));
@@ -64,9 +69,9 @@ export class InputManager {
 
   //card on focus (hand)
   private handleCardHover(card: Card) {
-    if (this.scene.gameState.isDragging) return;
+    if (this.context.gameState.isDragging) return;
 
-    this.scene.tweens.add({
+    this.context.tweens.add({
       targets: card.visualElements,
       y: -280,
       scale: 1.5,
@@ -78,9 +83,9 @@ export class InputManager {
 
   //card stop focus (hand)
   private handleCardOut(card: Card) {
-    if (this.scene.gameState.isDragging) return;
+    if (this.context.gameState.isDragging) return;
 
-    this.scene.tweens.add({
+    this.context.tweens.add({
       targets: card.visualElements,
       y: 0,
       scale: 1,
@@ -88,21 +93,21 @@ export class InputManager {
       ease: "Power2",
     });
 
-    this.scene.currentHand.reorganizeHand();
+    this.context.getHand(card.owner).reorganizeHand();
   }
 
   public setupDragEvents(card: Card) {
     card.on("dragstart", (pointer: Phaser.Input.Pointer) => {
-      if (this.scene.currentPhase !== "MAIN") {
-        this.scene.input.setDragState(pointer, 0);
+      if (this.context.currentPhase !== "MAIN") {
+        this.context.engine.input.setDragState(pointer, 0);
         return;
       }
 
-      this.scene.gameState.setDragging(true);
-      this.scene.tweens.killTweensOf(card);
-      this.scene.tweens.killTweensOf(card.visualElements);
+      this.context.gameState.setDragging(true);
+      this.context.tweens.killTweensOf(card);
+      this.context.tweens.killTweensOf(card.visualElements);
 
-      this.scene.tweens.add({
+      this.context.tweens.add({
         targets: card,
         scale: 0.35,
         duration: 150,
@@ -122,9 +127,10 @@ export class InputManager {
     );
 
     card.on("dragend", (_pointer: Phaser.Input.Pointer, dropped: boolean) => {
-      this.scene.gameState.setDragging(false);
-      if (!dropped) this.scene.currentHand.reorganizeHand();
-      this.scene.tweens.add({
+      this.context.gameState.setDragging(false);
+      const activeSide = this.context.gameState.activePlayer;
+      if (!dropped) this.context.getHand(activeSide).reorganizeHand();
+      this.context.tweens.add({
         targets: card,
         scale: 0.35,
         duration: 200,
@@ -135,7 +141,7 @@ export class InputManager {
     card.on(
       "drop",
       (_pointer: Phaser.Input.Pointer, targetZone: Phaser.GameObjects.Zone) => {
-        this.scene.handleCardDrop(targetZone, card);
+        this.context.handleCardDrop(targetZone, card);
       },
     );
   }

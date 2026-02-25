@@ -1,10 +1,11 @@
-import { BattleScene } from "../scenes/BattleScene";
+import type { IBattleContext } from "../interfaces/IBattleContext";
 import { Card } from "../objects/Card";
 import { CARD_DATABASE } from "../constants/CardDatabase";
 import type { GameSide } from "../types/GameTypes";
+import type { IHandManager } from "../interfaces/IHandManager";
 
-export class HandManager {
-  private scene: BattleScene;
+export class HandManager implements IHandManager {
+  private context: IBattleContext;
   public hand: Card[] = [];
   private side: GameSide;
 
@@ -13,8 +14,8 @@ export class HandManager {
   private readonly normalY: number;
   private readonly maxHandSize: number = 6;
 
-  constructor(scene: BattleScene, side: GameSide) {
-    this.scene = scene;
+  constructor(context: IBattleContext, side: GameSide) {
+    this.context = context;
     this.side = side;
 
     if (this.side === "PLAYER") {
@@ -39,7 +40,7 @@ export class HandManager {
 
   public showHand() {
     this.currentHandY = this.normalY;
-    this.scene.time.delayedCall(500, () => {
+    this.context.time.delayedCall(500, () => {
       this.reorganizeHand();
     });
   }
@@ -50,7 +51,7 @@ export class HandManager {
     const cardData = this.getRandomCardData();
 
     const newCard = new Card(
-      this.scene,
+      this.context.engine,
       deckPosition.x,
       deckPosition.y,
       cardData,
@@ -61,7 +62,7 @@ export class HandManager {
       newCard.setFaceDown(); //show back card in oponent hand
       newCard.disableInteractive();
     } else {
-      this.scene.inputManager.setupCardInteractions(newCard);
+      this.context.controls.setupCardInteractions(newCard);
     }
 
     newCard.setLocation("HAND");
@@ -81,7 +82,7 @@ export class HandManager {
   public animateCardEntry(card: Card) {
     card.setAngle(-22);
     card.setAlpha(0);
-    this.scene.tweens.add({ targets: card, alpha: 1, duration: 100 });
+    this.context.tweens.add({ targets: card, alpha: 1, duration: 100 });
   }
 
   public reorganizeHand() {
@@ -97,7 +98,7 @@ export class HandManager {
       const targetX = startX + index * spacing;
       card.setDepth(100 + index);
 
-      this.scene.tweens.add({
+      this.context.tweens.add({
         targets: card,
         x: targetX,
         y: this.currentHandY,

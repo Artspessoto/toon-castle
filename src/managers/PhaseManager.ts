@@ -1,14 +1,15 @@
+import type { IBattleContext } from "../interfaces/IBattleContext";
+import type { IPhaseManager } from "../interfaces/IPhaseManager";
 import type { ToonButton } from "../objects/ToonButton";
-import { BattleScene } from "../scenes/BattleScene";
 import type { BattleTranslations, GamePhase } from "../types/GameTypes";
 
-export class PhaseManager {
-  private scene: BattleScene;
+export class PhaseManager implements IPhaseManager {
+  private context: IBattleContext;
   private phaseTimer?: Phaser.Time.TimerEvent;
   private turn!: string;
 
-  constructor(scene: BattleScene) {
-    this.scene = scene;
+  constructor(context: IBattleContext) {
+    this.context = context;
   }
 
   public updateUI(phase: GamePhase, translations: BattleTranslations) {
@@ -17,11 +18,12 @@ export class PhaseManager {
       this.phaseTimer = undefined;
     }
 
-    const { phaseButton, currentUI } = this.scene;
-    const isPlayerTurn = this.scene.gameState.activePlayer == "PLAYER";
-    const currentTurn = this.scene.gameState.currentTurn;
+    const { phaseButton } = this.context;
+    const currentUI = this.context.getUI(this.context.gameState.activePlayer);
+    const isPlayerTurn = this.context.gameState.activePlayer == "PLAYER";
+    const currentTurn = this.context.gameState.currentTurn;
 
-    this.turn = `${this.scene.translationText.turn_label} ${currentTurn}`;
+    this.turn = `${this.context.translationText.turn_label} ${currentTurn}`;
 
     phaseButton.setVisible(true);
 
@@ -68,17 +70,17 @@ export class PhaseManager {
         }
         break;
       case "CHANGE_TURN":
-        this.scene.tweens.killTweensOf(phaseButton);
+        this.context.tweens.killTweensOf(phaseButton);
         phaseButton.disableInteractive();
 
-        phaseButton.setDisabledState(this.scene.translationText.opponent);
+        phaseButton.setDisabledState(this.context.translationText.opponent);
 
         currentUI.showNotice(translations.turn_ended, "NEUTRAL");
 
-        this.scene.fieldManager.resetAttackFlags();
+        this.context.field.resetAttackFlags();
 
-        this.scene.time.delayedCall(1500, () => {
-          this.scene.finalizeTurnTransition();
+        this.context.time.delayedCall(1500, () => {
+          this.context.finalizeTurnTransition();
         });
 
         return;
@@ -86,7 +88,7 @@ export class PhaseManager {
   }
 
   private setOpponentState(button: ToonButton) {
-    this.scene.tweens.killTweensOf(button);
-    button.setDisabledState(this.scene.translationText.opponent);
+    this.context.tweens.killTweensOf(button);
+    button.setDisabledState(this.context.translationText.opponent);
   }
 }

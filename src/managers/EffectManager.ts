@@ -1,10 +1,11 @@
+import type { IEffectManager } from "../interfaces/IEffectManager";
+import type { IBattleContext } from "../interfaces/IBattleContext";
 import type { Card } from "../objects/Card";
-import type { BattleScene } from "../scenes/BattleScene";
 import type { CardEffect, EffectTypes } from "../types/EffectTypes";
 import type { GameSide } from "../types/GameTypes";
 
-export class EffectManager {
-  private scene: BattleScene;
+export class EffectManager implements IEffectManager {
+  private context: IBattleContext;
   public isSelectingTarget: boolean = false;
   private pendingEffect: CardEffect | null = null;
   private pendingSource: Card | null = null;
@@ -13,17 +14,17 @@ export class EffectManager {
     (effect: CardEffect, side: GameSide, source: Card) => void
   >;
 
-  constructor(scene: BattleScene) {
-    this.scene = scene;
+  constructor(context: IBattleContext) {
+    this.context = context;
 
     this.handlerEffects = {
       BURN: (effect, side) =>
-        this.scene.getUIManager(side).updateLP(side, -(effect.value || 0)),
+        this.context.getUI(side).updateLP(side, -(effect.value || 0)),
       HEAL: (effect, side) =>
-        this.scene.getUIManager(side).updateLP(side, effect.value || 0),
+        this.context.getUI(side).updateLP(side, effect.value || 0),
       DRAW_CARD: (effect, side) => this.handleDraw(effect, side),
       GAIN_MANA: (effect, side) =>
-        this.scene.getUIManager(side).updateMana(effect.value || 0),
+        this.context.getUI(side).updateMana(effect.value || 0),
       BOOST_ATK: (effect, _side, source) =>
         this.prepareTargeting(effect, source),
       NERF_ATK: (effect, _side, source) =>
@@ -48,7 +49,7 @@ export class EffectManager {
   }
 
   private get notices() {
-    return this.scene.translationText.effect_notices;
+    return this.context.translationText.effect_notices;
   }
 
   public applyCardEffect(card: Card) {
@@ -81,8 +82,8 @@ export class EffectManager {
 
   private handleDraw(effect: CardEffect, side: GameSide) {
     const count = effect.value || 0;
-    const hand = this.scene.getHandManager(side);
-    const deck = this.scene.getDeckManager(side);
+    const hand = this.context.getHand(side);
+    const deck = this.context.getDeck(side);
     for (let i = 0; i < count; i++) {
       hand.drawCard(deck.position);
     }
@@ -103,7 +104,7 @@ export class EffectManager {
     >
   > = (() => {
     const destroyResolver = (target: Card) =>
-      this.scene.combatManager.destroyCard(target, target.owner);
+      this.context.combat.destroyCard(target, target.owner);
 
     const statResolver =
       (type: "atk" | "def", isBuff: boolean) =>
@@ -129,9 +130,9 @@ export class EffectManager {
       DESTROY_TRAP: destroyResolver,
       CHANGE_POS: (target, source) => {
         if (target.isFaceDown) {
-          this.scene.getUIManager(source.owner).handleFlipSummon(target);
+          this.context.getUI(source.owner).handleFlipSummon(target);
         } else {
-          this.scene.getUIManager(source.owner).handleChangePosition(target);
+          this.context.getUI(source.owner).handleChangePosition(target);
         }
       },
     };
@@ -162,7 +163,9 @@ export class EffectManager {
 
     //check if validator exists for pendingEffect type and apply validation
     if (validator && !validator(target)) {
-      this.scene.playerUI.showNotice(this.notices.invalid_target, "WARNING");
+      this.context
+        .getUI(this.pendingSource.owner)
+        .showNotice(this.notices.invalid_target, "WARNING");
       return;
     }
 
@@ -178,7 +181,9 @@ export class EffectManager {
     this.isSelectingTarget = true;
     this.pendingEffect = effect;
     this.pendingSource = source;
-    this.scene.playerUI.showNotice(this.notices.select_target, "NEUTRAL");
+    this.context
+      .getUI(source.owner)
+      .showNotice(this.notices.select_target, "NEUTRAL");
   }
 
   private stopTargeting() {

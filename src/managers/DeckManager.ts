@@ -1,13 +1,14 @@
-import { BattleScene } from "../scenes/BattleScene";
+import type { IBattleContext } from "../interfaces/IBattleContext";
+import type { IDeckManager } from "../interfaces/IDeckManager";
 import type { GameSide } from "../types/GameTypes";
 
-export class DeckManager {
-  private scene: BattleScene;
+export class DeckManager implements IDeckManager {
+  private context: IBattleContext;
   private side: GameSide;
   private deckPosition: { x: number; y: number };
 
-  constructor(scene: BattleScene, side: GameSide) {
-    this.scene = scene;
+  constructor(context: IBattleContext, side: GameSide) {
+    this.context = context;
     this.side = side;
 
     this.deckPosition =
@@ -22,7 +23,7 @@ export class DeckManager {
     for (let i = 8; i >= 0; i--) {
       const xOffset = i * 2;
       const yOffset = 0;
-      const deckCard = this.scene.add.plane(
+      const deckCard = this.context.add.plane(
         this.deckPosition.x - xOffset,
         this.deckPosition.y - yOffset,
         "card_back",
@@ -39,7 +40,7 @@ export class DeckManager {
       if (i == 0 && this.side == "PLAYER") {
         deckCard.setInteractive({ useHandCursor: true });
         deckCard.on("pointerdown", () => {
-          this.scene.handlePlayerCard();
+          this.context.handlePlayerCard();
         });
       }
 
