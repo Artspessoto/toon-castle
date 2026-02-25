@@ -200,6 +200,58 @@ export class Card extends Phaser.GameObjects.Container {
     this.setFaceUp();
   }
 
+  public updateStat(newValue: number, statType: "atk" | "def") {
+    const text = statType == "atk" ? this.atkText : this.defText;
+    const baseValue =
+      text == this.atkText ? this.originalData.atk : this.originalData.def;
+
+    this.originalData[statType] = newValue;
+
+    if (baseValue == undefined || !text) return;
+
+    text.setText(newValue.toString());
+
+    const isBuff = newValue > baseValue;
+    const isNerf = newValue < baseValue;
+
+    const jumpConfig = this._isFaceDown ? { x: -30, y: 0 } : { x: 0, y: -30 };
+
+    if (isBuff) {
+      text.setColor("#4dff4d"); //buff
+    } else if (isNerf) {
+      text.setColor("#ff4d4d"); //nerf
+    } else {
+      text.setColor("#FFD966"); //original
+    }
+
+    this.scene.tweens.add({
+      targets: this.visualElements,
+      ...jumpConfig,
+      scale: 1.1,
+      y: -30,
+      duration: 200,
+      yoyo: true,
+      ease: "Back.easeOut",
+      onStart: () => {
+        this.frame.setTint(newValue > baseValue ? 0x4dff4d : 0xff4d4d);
+      },
+      onComplete: () => {
+        this.frame.clearTint();
+        this.visualElements.setPosition(0, 0);
+      },
+    });
+
+    if (!this.isFaceDown) {
+      this.scene.tweens.add({
+        targets: this.atkText,
+        scale: 1.8,
+        duration: 200,
+        yoyo: true,
+        ease: "Quad.easeOut",
+      });
+    }
+  }
+
   public animateFlip(onComplete?: () => void) {
     this.hasChangedPosition = true;
 
