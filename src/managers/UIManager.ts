@@ -1,3 +1,4 @@
+import { LAYOUT_CONFIG } from "../constants/LayoutConfig";
 import type { IBattleContext } from "../interfaces/IBattleContext";
 import type { IUIManager } from "../interfaces/IUIManager";
 import type { Card } from "../objects/Card";
@@ -27,8 +28,7 @@ export class UIManager implements IUIManager {
     this.context = context;
     this.side = side;
 
-    this.manaPosition =
-      this.side == "PLAYER" ? { x: 1232, y: 650 } : { x: 1232, y: 73 };
+    this.manaPosition = LAYOUT_CONFIG.UI.MANA[this.side];
   }
 
   public setTranslations(translations: TranslationStructure) {
@@ -36,7 +36,9 @@ export class UIManager implements IUIManager {
   }
 
   public setupUI() {
+    const { SCREEN } = LAYOUT_CONFIG;
     const initialMana = this.context.gameState.getMana(this.side);
+
     this.manaAura = this.context.add
       .image(this.manaPosition.x, this.manaPosition.y, "mana_icon")
       .setScale(0.5)
@@ -62,12 +64,19 @@ export class UIManager implements IUIManager {
       .setDepth(101);
 
     this.bannerBg = this.context.add
-      .rectangle(640, 360, 1280, 80, 0x000000, 0.85)
+      .rectangle(
+        SCREEN.CENTER_X,
+        SCREEN.CENTER_Y,
+        SCREEN.WIDTH,
+        80,
+        0x000000,
+        0.85,
+      )
       .setVisible(false)
       .setDepth(10000);
 
     this.bannerText = this.context.add
-      .text(640, 360, "", {
+      .text(SCREEN.CENTER_X, SCREEN.CENTER_Y, "", {
         fontSize: "25px",
         color: "#FFFFFF",
         fontStyle: "bold italic",
@@ -81,10 +90,12 @@ export class UIManager implements IUIManager {
   }
 
   public setupLifePoints() {
+    const { UI } = LAYOUT_CONFIG;
     const currentHP = this.context.gameState.getHP(this.side);
-    const yPos = this.side == "PLAYER" ? 630 : 40;
+    const yPos =
+      this.side == "PLAYER" ? UI.LP_BAR.Y_PLAYER : UI.LP_BAR.Y_OPPONENT;
 
-    this.createLPBar(30, yPos, currentHP);
+    this.createLPBar(UI.LP_BAR.X, yPos, currentHP);
   }
 
   public updateLP(side: GameSide, amount: number) {
@@ -155,6 +166,7 @@ export class UIManager implements IUIManager {
   }
 
   private animateBanner(message: string, type: Notice) {
+    const { SCREEN } = LAYOUT_CONFIG;
     this.context.tweens.killTweensOf([this.bannerText, this.bannerBg]);
 
     this.bannerText
@@ -201,20 +213,18 @@ export class UIManager implements IUIManager {
         duration: 200,
         ease: "Power2.easeIn",
         onComplete: () => {
-          this.bannerText.setVisible(false).setY(360);
-          this.bannerBg.setVisible(false).setY(360);
+          this.bannerText.setVisible(false).setY(SCREEN.CENTER_Y);
+          this.bannerBg.setVisible(false).setY(SCREEN.CENTER_Y);
 
-          this.bannerText.setX(640);
-          this.bannerBg.setX(640);
+          this.bannerText.setX(SCREEN.CENTER_X);
+          this.bannerBg.setX(SCREEN.CENTER_X);
         },
       });
     });
   }
 
   private createLPBar(x: number, y: number, initialHP: number) {
-    const width = 180;
-    const height = 60;
-    const radius = 12;
+    const { HEIGHT, RADIUS, WIDTH } = LAYOUT_CONFIG.UI.LP_BAR;
 
     const stoneDark = 0x262626; // background
     const metalGold = 0xcfb35d; // border
@@ -224,16 +234,16 @@ export class UIManager implements IUIManager {
     const bg = this.context.add.graphics();
 
     bg.fillStyle(0x000000, 0.5);
-    bg.fillRoundedRect(4, 4, width, height, radius);
+    bg.fillRoundedRect(4, 4, WIDTH, HEIGHT, RADIUS);
 
     bg.fillStyle(stoneDark, 1);
-    bg.fillRoundedRect(0, 0, width, height, radius);
+    bg.fillRoundedRect(0, 0, WIDTH, HEIGHT, RADIUS);
 
     bg.lineStyle(4, metalGold, 1);
-    bg.strokeRoundedRect(0, 0, width, height, radius);
+    bg.strokeRoundedRect(0, 0, WIDTH, HEIGHT, RADIUS);
 
     bg.lineStyle(2, 0x000000, 0.3);
-    bg.strokeRoundedRect(3, 3, width - 6, height - 6, radius - 2);
+    bg.strokeRoundedRect(3, 3, WIDTH - 6, HEIGHT - 6, RADIUS - 2);
 
     container.add(bg);
 
@@ -339,18 +349,19 @@ export class UIManager implements IUIManager {
 
   public showFieldCardMenu(x: number, y: number, card: Card) {
     this.clearSelectionMenu();
-    if (this.side !== "PLAYER") return;
-
-    const myTurn = this.context.gameState.activePlayer == "PLAYER";
-    if (!myTurn) return;
 
     const buttons: ToonButton[] = [];
-
     const buttonArgs: ButtonParams = { card, buttons, x, y };
 
-    this.addPositionButtons(buttonArgs);
-    this.addAttackButton(buttonArgs);
-    this.addActivationButton(buttonArgs);
+    const isPlayerCard = card.owner === "PLAYER";
+    const myTurn = this.context.gameState.activePlayer == "PLAYER";
+
+    if (isPlayerCard && myTurn) {
+      this.addPositionButtons(buttonArgs);
+      this.addAttackButton(buttonArgs);
+      this.addActivationButton(buttonArgs);
+    }
+
     this.addDetailsButton(buttonArgs);
 
     this.selectionButtons = buttons;
@@ -454,10 +465,10 @@ export class UIManager implements IUIManager {
     const buttonTexts = battleTexts.battle_buttons;
 
     //details btn always visible
-    if (!card.isFaceDown || card.owner == "PLAYER") {
+    if (!card.isFaceDown || card.owner === "PLAYER") {
       buttons.push(
         this.createMenuButton(buttonTexts.details, x - 70, y - 35, () => {
-          this.context.getHand(card.owner).showHand();
+          this.context.getHand("PLAYER").showHand();
           this.context.engine.scene.launch("CardDetailScene", {
             cardData: card.getCardData(),
             owner: card.owner,
