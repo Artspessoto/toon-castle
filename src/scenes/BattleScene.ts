@@ -27,6 +27,7 @@ import type { IInputManager } from "../interfaces/IInputManager";
 import type { IPhaseManager } from "../interfaces/IPhaseManager";
 import type { IUIManager } from "../interfaces/IUIManager";
 import { LAYOUT_CONFIG } from "../constants/LayoutConfig";
+import { THEME_CONFIG } from "../constants/ThemeConfig";
 
 export class BattleScene extends Phaser.Scene implements IBattleContext {
   public engine = this;
@@ -95,6 +96,8 @@ export class BattleScene extends Phaser.Scene implements IBattleContext {
 
   create() {
     const { SCREEN, BATTLE } = LAYOUT_CONFIG;
+    const { DEPTHS, COMPONENTS } = THEME_CONFIG;
+
     const lang = LanguageManager.getInstance().currentLanguage;
     const currentTranslations = TRANSLATIONS[lang];
     this.translationText = TRANSLATIONS[lang].battle_scene;
@@ -104,10 +107,12 @@ export class BattleScene extends Phaser.Scene implements IBattleContext {
       SCREEN.CENTER_Y,
       "battle-scene-background",
     );
-    bg.setDisplaySize(1280, 720).setDepth(-100);
+    bg.setDisplaySize(SCREEN.WIDTH, SCREEN.HEIGHT).setDepth(DEPTHS.BACKGROUND);
 
     //global stage: temp container ensures activated cards always render on top
-    this.overlayLayer = this.add.container(0, 0).setDepth(BATTLE.OVERLAY_DEPTH);
+    this.overlayLayer = this.add
+      .container(0, 0)
+      .setDepth(DEPTHS.OVERLAY_ACTIVATION);
 
     this.playerUI.setTranslations(currentTranslations);
     this.opponentUI.setTranslations(currentTranslations);
@@ -129,12 +134,12 @@ export class BattleScene extends Phaser.Scene implements IBattleContext {
       text: "",
       fontSize: "18px",
       textColor: "#fff",
-      color: 0x242424,
-      hoverColor: 0x242424,
+      color: COMPONENTS.BUTTONS.PHASE.color,
+      hoverColor: COMPONENTS.BUTTONS.PHASE.color,
       width: BATTLE.PHASE_BUTTON.width,
       height: BATTLE.PHASE_BUTTON.height,
     });
-    this.phaseButton.setVisible(false).setDepth(5000);
+    this.phaseButton.setVisible(false).setDepth(DEPTHS.PHASE_BUTTON);
 
     this.phaseButton.on("pointerdown", () => {
       this.handleNextPhase();
@@ -354,6 +359,7 @@ export class BattleScene extends Phaser.Scene implements IBattleContext {
 
   public cardActivation(card: Card, side: GameSide) {
     const { SCREEN, BATTLE } = LAYOUT_CONFIG;
+    const { COLORS, ANIMATIONS } = THEME_CONFIG;
     const isEffectMonster = card.getType() === "EFFECT_MONSTER";
 
     //save original position
@@ -379,7 +385,7 @@ export class BattleScene extends Phaser.Scene implements IBattleContext {
         SCREEN.CENTER_Y,
         SCREEN.WIDTH,
         SCREEN.HEIGHT,
-        0x000000,
+        COLORS.OVERLAY_BLACK,
         0.7,
       )
       .setAlpha(0)
@@ -388,7 +394,7 @@ export class BattleScene extends Phaser.Scene implements IBattleContext {
     this.tweens.add({
       targets: background,
       alpha: 0.7,
-      duration: 300,
+      duration: ANIMATIONS.DURATIONS.NORMAL,
     });
 
     if (card.parentContainer) {
@@ -407,15 +413,15 @@ export class BattleScene extends Phaser.Scene implements IBattleContext {
       y: BATTLE.ACTIVATION_CENTER.y, // y center (720 / 2)
       angle: 0,
       scale: 1,
-      duration: 400,
-      ease: "Back.easeOut",
+      duration: ANIMATIONS.DURATIONS.ACTIVATION,
+      ease: ANIMATIONS.EASING.BOUNCE,
     });
 
     this.time.delayedCall(1000, () => {
       this.tweens.add({
         targets: background,
         alpha: 0,
-        duration: 300,
+        duration: ANIMATIONS.DURATIONS.NORMAL,
         onComplete: () => {
           background.destroy();
           this.overlayLayer.remove(card);
@@ -438,8 +444,8 @@ export class BattleScene extends Phaser.Scene implements IBattleContext {
               y: originalPos.y,
               angle: originalPos.angle,
               scale: originalPos.scale,
-              duration: 400,
-              ease: "Power2.easeOut",
+              duration: ANIMATIONS.DURATIONS.ACTIVATION,
+              ease: ANIMATIONS.EASING.POWER_OUT,
               onComplete: () => {
                 this.currentHand.showHand();
               },
