@@ -240,6 +240,7 @@ export class FieldManager implements IFieldManager {
     const coords = FIELD[side].GRAVEYARD;
 
     this.graveyardSlot[side].unshift(card);
+    card.resetStats();
     card.setLocation("GRAVEYARD");
 
     this.context.tweens.add({

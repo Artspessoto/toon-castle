@@ -4,7 +4,7 @@ import { CARD_CONFIG } from "../constants/CardConfig";
 import type { CardLocation, CardData, CardType } from "../types/CardTypes";
 
 export class Card extends Phaser.GameObjects.Container {
-  public location: CardLocation = "DECK"; //card cinitial location
+  public location: CardLocation = "DECK"; //card initial location
   public owner: GameSide;
   public hasAttacked: boolean = false;
   private frame: Phaser.GameObjects.Image;
@@ -15,7 +15,8 @@ export class Card extends Phaser.GameObjects.Container {
   private atkText?: Phaser.GameObjects.Text;
   private defText?: Phaser.GameObjects.Text;
   private _isFaceDown: boolean = false;
-  private originalData: CardData;
+  private baseData: CardData;
+  private currentData: CardData;
   public cardType: CardType;
   public setTurn: number = -1;
   public hasChangedPosition: boolean = false;
@@ -31,7 +32,9 @@ export class Card extends Phaser.GameObjects.Container {
   ) {
     super(scene, x, y);
     this.owner = owner;
-    this.originalData = data;
+
+    this.currentData = { ...data };
+    this.baseData = { ...data };
 
     this.visualElements = scene.add.container(0, 0);
     this.add(this.visualElements);
@@ -142,7 +145,7 @@ export class Card extends Phaser.GameObjects.Container {
 
   public setFaceUp() {
     this._isFaceDown = false;
-    this.frame.setTexture(this.getFrameKey(this.originalData.type));
+    this.frame.setTexture(this.getFrameKey(this.currentData.type));
 
     this.nameText.setVisible(true);
     this.manaText.setVisible(true);
@@ -162,12 +165,17 @@ export class Card extends Phaser.GameObjects.Container {
   }
 
   public getCardData(): CardData {
-    return this.originalData;
+    return this.currentData;
+  }
+
+  public getBaseData(): CardData {
+    return this.baseData;
   }
 
   public updateData(data: CardData): this {
     //update card data without create new instance
-    this.originalData = data;
+    this.baseData = { ...data };
+    this.currentData = { ...data };
     this.cardType = data.type;
 
     this.frame.setTexture(this.getFrameKey(data.type));
@@ -194,6 +202,18 @@ export class Card extends Phaser.GameObjects.Container {
     return this;
   }
 
+  public resetStats() {
+    this.currentData = { ...this.baseData };
+
+    if (this.atkText && this.defText) {
+      this.atkText.setText(this.baseData.atk?.toString() || "0");
+      this.defText.setText(this.baseData.def?.toString() || "0");
+
+      this.atkText.setColor("#FFD966");
+      this.defText.setColor("#FFD966");
+    }
+  }
+
   public activate() {
     if (!this._isFaceDown) return;
 
@@ -203,9 +223,9 @@ export class Card extends Phaser.GameObjects.Container {
   public updateStat(newValue: number, statType: "atk" | "def") {
     const text = statType == "atk" ? this.atkText : this.defText;
     const baseValue =
-      text == this.atkText ? this.originalData.atk : this.originalData.def;
+      text == this.atkText ? this.baseData.atk : this.baseData.def;
 
-    this.originalData[statType] = newValue;
+    this.currentData[statType] = newValue;
 
     if (baseValue == undefined || !text) return;
 
