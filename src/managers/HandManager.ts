@@ -104,6 +104,7 @@ export class HandManager implements IHandManager {
       const cardScale = COMPONENTS.CARD.SCALES;
       const finalScale =
         this.side == "PLAYER" ? cardScale.PLAYER_HAND : cardScale.DEFAULT_HAND;
+
       card.setDepth(100 + index);
 
       this.context.tweens.add({
@@ -125,8 +126,26 @@ export class HandManager implements IHandManager {
   }
 
   public addCardBack(card: Card) {
+    this.context.tweens.killTweensOf(card);
+    this.context.tweens.killTweensOf(card.visualElements);
+
+    card.setHandVisuals();
+
+    // reset internal scale
+    card.visualElements.setScale(1);
+    card.visualElements.setY(0);
+
+    card.removeAllListeners();
+
+    if (card.owner == "OPPONENT") {
+      card.setFaceDown();
+      card.disableInteractive();
+    } else {
+      this.context.controls.setupCardInteractions(card);
+      card.setFaceUp();
+    }
+
     this.hand.push(card);
     this.showHand();
-    this.reorganizeHand();
   }
 }
