@@ -149,6 +149,7 @@ export const createMockBattleContext = (): IBattleContext => {
       handleCardSelection: vi.fn(),
       applyCardEffect: vi.fn(),
       prepareTargeting: vi.fn(),
+      cancelTargeting: vi.fn(),
     },
     engine: {
       scene: { launch: vi.fn() } as unknown as Phaser.Scenes.ScenePlugin,
