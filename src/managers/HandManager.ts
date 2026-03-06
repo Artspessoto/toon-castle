@@ -11,10 +11,10 @@ export class HandManager implements IHandManager {
   public hand: Card[] = [];
   private side: GameSide;
 
-  private currentHandY: number; //hand position
-  private readonly hiddenY: number; //hidden hand cards
-  private readonly normalY: number;
-  private readonly maxHandSize: number;
+  public currentHandY: number; //hand position
+  public readonly hiddenY: number; //hidden hand cards
+  public readonly normalY: number;
+  public readonly maxHandSize: number;
 
   constructor(context: IBattleContext, side: GameSide) {
     this.context = context;
@@ -73,7 +73,7 @@ export class HandManager implements IHandManager {
     this.reorganizeHand();
   }
 
-  private getRandomCardData() {
+  public getRandomCardData() {
     const keys = Object.keys(CARD_DATABASE);
     const randomKey = keys[Phaser.Math.Between(0, keys.length - 1)];
     return CARD_DATABASE[randomKey];

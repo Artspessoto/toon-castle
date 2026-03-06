@@ -1,0 +1,194 @@
+import { vi } from "vitest";
+import type { ToonButton } from "../objects/ToonButton";
+import type { IBattleContext } from "../interfaces/IBattleContext";
+import type { Card } from "../objects/Card";
+
+export const createMockGameObject = () => {
+  return {
+    setRectangleDropZone: vi.fn().mockReturnThis(),
+    setData: vi.fn().mockReturnThis(),
+    setVisible: vi.fn().mockReturnThis(),
+    setDepth: vi.fn().mockReturnThis(),
+    setAlpha: vi.fn().mockReturnThis(),
+    setScale: vi.fn().mockReturnThis(),
+    setX: vi.fn().mockReturnThis(),
+    setY: vi.fn().mockReturnThis(),
+    setStrokeStyle: vi.fn().mockReturnThis(),
+    fillStyle: vi.fn().mockReturnThis(),
+    fillRoundedRect: vi.fn().mockReturnThis(),
+    lineStyle: vi.fn().mockReturnThis(),
+    strokeRoundedRect: vi.fn().mockReturnThis(),
+    destroy: vi.fn(),
+    on: vi.fn(),
+    removeAllListeners: vi.fn(),
+    getData: vi.fn(),
+  };
+};
+
+export const createMockCard = (overrides: Partial<Card> = {}): Card => {
+  return {
+    getType: vi.fn().mockReturnValue("MONSTER"),
+    getCardData: vi.fn().mockReturnValue({ manaCost: 1, atk: 1000 }),
+    owner: "PLAYER",
+    location: "HAND",
+    x: 0,
+    y: 0,
+    angle: 0,
+    scale: 1,
+    visualElements:
+      createMockGameObject() as unknown as Phaser.GameObjects.Container,
+    setLocation: vi.fn(),
+    setFieldVisuals: vi.fn(),
+    setFaceDown: vi.fn(),
+    setFaceUp: vi.fn(),
+    setDepth: vi.fn(),
+    setAlpha: vi.fn(),
+    setAngle: vi.fn(),
+    disableInteractive: vi.fn(),
+    setInteractive: vi.fn(),
+    removeAllListeners: vi.fn(),
+    on: vi.fn(),
+    resetStats: vi.fn(),
+    setHandVisuals: vi.fn(),
+    parentContainer: undefined,
+    ...overrides,
+  } as Card;
+};
+
+export const createMockBattleContext = (): IBattleContext => {
+  return {
+    add: {
+      zone: vi
+        .fn()
+        .mockReturnValue({ ...createMockGameObject(), getData: undefined }),
+      graphics: vi.fn().mockReturnValue(createMockGameObject()),
+      container: vi.fn().mockReturnValue({ add: vi.fn(), setY: vi.fn() }),
+      text: vi.fn().mockReturnValue({ setOrigin: vi.fn(), setShadow: vi.fn() }),
+      image: vi.fn().mockReturnValue(createMockGameObject()),
+    } as unknown as Phaser.GameObjects.GameObjectFactory,
+    gameState: {
+      getMana: vi.fn().mockReturnValue(10),
+      modifyMana: vi.fn(),
+      activePlayer: "PLAYER",
+      currentTurn: 1,
+      getHP: vi.fn().mockReturnValue(600),
+      currentPhase: "MAIN",
+      isDragging: false,
+      modifyHP: vi.fn(),
+      setPhase: vi.fn(),
+      setDragging: vi.fn(),
+      nextTurn: vi.fn(),
+      advanceTurnCount: vi.fn(),
+    },
+    currentPhase: "MAIN",
+    translationText: {
+      opponent: "Oponente",
+      draw_phase: "Fase de compra",
+      opponent_draw: "Oponente comprou",
+      main_phase: "Fase principal",
+      battle_phase: "Fase de batalha",
+      turn_ended: "Turno finalizado",
+      zone_occupied: "Zona ocupada",
+      insufficient_mana: "Mana insuficiente",
+      turn_label: "Turno",
+      battle_buttons: {
+        to_battle: "",
+        end_turn: "",
+        details: "",
+        active: "",
+        set: "",
+        attack: "",
+        change_pos: "",
+      },
+      combat_notices: {
+        select_attack_target: "",
+        invalid_own_card: "",
+        direct_attack: "",
+      },
+      effect_notices: { select_target: "Alvo", invalid_target: "Invalido" },
+    },
+    tweens: {
+      killTweensOf: vi.fn(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      add: vi.fn((config: any) => {
+        if (typeof config.onComplete === "function") config.onComplete();
+        if (typeof config.onStart === "function") config.onStart();
+        return {
+          stop: () => {},
+          pause: () => {},
+          play: () => {},
+        } as Phaser.Tweens.Tween;
+      }),
+    } as unknown as Phaser.Tweens.TweenManager,
+    cameras: {
+      main: {
+        shake: vi.fn(),
+      } as unknown as Phaser.Cameras.Scene2D.Camera,
+    } as unknown as Phaser.Cameras.Scene2D.CameraManager,
+    getUI: vi.fn().mockReturnValue({
+      updateMana: vi.fn(),
+      showFieldCardMenu: vi.fn(),
+      showGraveyardMenu: vi.fn(),
+      updateLP: vi.fn(),
+    }),
+    getHand: vi.fn().mockReturnValue({
+      hideHand: vi.fn(),
+      showHand: vi.fn(),
+      reorganizeHand: vi.fn(),
+      addCardBack: vi.fn(),
+    }),
+    combat: {
+      isSelectingTarget: false,
+      handleCardSelection: vi.fn(),
+      prepareTargeting: vi.fn(),
+      destroyCard: vi.fn(),
+      cancelTarget: vi.fn(),
+    },
+    effects: {
+      isSelectingTarget: false,
+      handleCardSelection: vi.fn(),
+      applyCardEffect: vi.fn(),
+      prepareTargeting: vi.fn(),
+    },
+    engine: {
+      scene: { launch: vi.fn() } as unknown as Phaser.Scenes.ScenePlugin,
+    } as unknown as Phaser.Scene,
+    controls: { setupGlobalInputs: vi.fn(), setupCardInteractions: vi.fn() },
+    field: {
+      monsterSlots: {
+        PLAYER: [null, null, null],
+        OPPONENT: [null, null, null],
+      },
+      spellSlots: {
+        PLAYER: [null, null, null],
+        OPPONENT: [null, null, null],
+      },
+      graveyardSlot: { PLAYER: [], OPPONENT: [] },
+      setupFieldZones: vi.fn(),
+      occupySlot: vi.fn(),
+      releaseSlot: vi.fn(),
+      getValidSlotToPlay: vi.fn(),
+      validatePlay: vi.fn(),
+      playCardToZone: vi.fn(),
+      previewPlacement: vi.fn(),
+      moveToGraveyard: vi.fn(),
+      resetAttackFlags: vi.fn(),
+    },
+    sequences: { add: vi.fn(), wait: vi.fn() },
+    time: {
+      delayedCall: vi.fn((_, cb) => {
+        if (typeof cb === "function") cb();
+      }),
+    } as unknown as Phaser.Time.Clock,
+    phaseButton: {} as unknown as ToonButton,
+    selectedCard: null,
+    getDeck: vi.fn(),
+    handlePlayerCard: vi.fn(),
+    cancelPlacement: vi.fn(),
+    setPhase: vi.fn(),
+    finalizeTurnTransition: vi.fn(),
+    handleCardDrop: vi.fn(),
+    cardActivation: vi.fn(),
+    onAttackDeclared: vi.fn(),
+  };
+};
