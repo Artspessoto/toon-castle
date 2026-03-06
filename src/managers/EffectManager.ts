@@ -38,7 +38,7 @@ export class EffectManager implements IEffectManager {
       DESTROY: (effect, _side, source) => this.prepareTargeting(effect, source),
       BOUNCE: (effect, _side, source) => this.prepareTargeting(effect, source),
       NEGATE: (effect, _side, source) => this.prepareTargeting(effect, source),
-      REVIVE: (effect, _side, source) => this.prepareTargeting(effect, source),
+      REVIVE: (effect, _side, source) => this.handleRevive(effect, source),
       PROTECT: () => console.log(""),
     };
   }
@@ -85,6 +85,36 @@ export class EffectManager implements IEffectManager {
     }
   }
 
+  private handleRevive(effect: CardEffect, source: Card) {
+    const targetSide = effect.targetSide || "OWNER";
+
+    if (targetSide == "BOTH") {
+      //TODO: menu to player choice which graveyard he wants
+    } else {
+      //if target side is owner open source owner graveyard, else open contrary graveyard
+      const sideOpen =
+        targetSide == "OWNER" ? source.owner : this.getOpponentSide(targetSide);
+      this.openGraveyardList(sideOpen, effect, source);
+    }
+  }
+
+  private openGraveyardList(side: GameSide, effect: CardEffect, source: Card) {
+    const graveyardCards = this.context.field.graveyardSlot[side];
+
+    const validCards = graveyardCards.filter((card) =>
+      this.validateType(card, effect),
+    );
+
+    if (validCards.length == 0) {
+      this.context
+        .getUI(source.owner)
+        .showNotice("NENHUM ALVO VÁLIDO", "NEUTRAL");
+      return;
+    }
+
+    this.context.engine.scene.launch("CardListScene", validCards);
+  }
+
   private getEffectTargets(owner: GameSide, targetSide: string): GameSide[] {
     const opponent = owner == "PLAYER" ? "OPPONENT" : "PLAYER";
     if (targetSide == "OWNER") return [owner];
@@ -96,6 +126,10 @@ export class EffectManager implements IEffectManager {
   public cancelTargeting(): void {
     this.stopTargeting();
     this.context.getUI("PLAYER").showNotice("CANCELADO", "NEUTRAL");
+  }
+
+  private getOpponentSide(side: GameSide): GameSide {
+    return side == "PLAYER" ? "OPPONENT" : "PLAYER";
   }
 
   private targetResolution: Partial<
