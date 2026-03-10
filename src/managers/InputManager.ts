@@ -26,7 +26,7 @@ export class InputManager implements IInputManager {
         if (currentlyOver.length === 0) {
           const activeSide = this.context.gameState.activePlayer;
 
-          this.context.getUI(activeSide).clearSelectionMenu();
+          this.context.clearAllMenus();
           this.context.getHand(activeSide).showHand();
 
           //cancel effect target
