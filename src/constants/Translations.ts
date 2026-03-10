@@ -26,8 +26,8 @@ export const TRANSLATIONS = {
     },
     name_scene: {
       title: "Digite seu nome",
-      confirm: "Confirmar",
-      back: "Voltar ao Menu",
+      confirm: "CONFIRMAR",
+      back: "VOLTAR AO MENU",
     },
     battle_scene: {
       opponent: "OPONENTE",
@@ -39,6 +39,7 @@ export const TRANSLATIONS = {
       zone_occupied: "ZONA JÁ OCUPADA",
       insufficient_mana: "MANA INSUFICIENTE",
       turn_label: "TURNO",
+      revive: "REVIVER",
       battle_buttons: {
         to_battle: "INICIAR BATALHA",
         end_turn: "ENCERRAR TURNO",
@@ -48,6 +49,12 @@ export const TRANSLATIONS = {
         attack: "ATACAR",
         change_pos: "MUDAR POS.",
       },
+      card_types: {
+        MONSTER: "MONSTRO",
+        SPELL: "MAGIA",
+        TRAP: "ARMADILHA",
+        EFFECT_MONSTER: "MONSTRO DE EFEITO",
+      },
       combat_notices: {
         select_attack_target: "SELECIONE O ALVO DO ATAQUE",
         invalid_own_card: "VOCÊ NÃO PODE ATACAR SUAS PRÓPRIAS CARTAS!",
@@ -55,7 +62,12 @@ export const TRANSLATIONS = {
       },
       effect_notices: {
         select_target: "SELECIONE O ALVO",
-        invalid_target: "ALVO INVÁLIDO"
+        invalid_target: "ALVO INVÁLIDO",
+        no_target_type_found: "ESTE CEMITÉRIO NÃO POSSUI {type}!",
+        no_valid_graveyard: "NENHUM ALVO VÁLIDO NO CEMITÉRIO",
+        select_graveyard: "SELECIONE UM CEMITÉRIO",
+        action_canceled: "AÇÃO CANCELADA",
+        field_full: "CAMPO CHEIO!",
       },
     },
   },
@@ -86,8 +98,8 @@ export const TRANSLATIONS = {
     },
     name_scene: {
       title: "Enter your name",
-      confirm: "Confirm",
-      back: "Back to Menu",
+      confirm: "CONFIRM",
+      back: "BACK TO MENU",
     },
     battle_scene: {
       opponent: "OPPONENT",
@@ -99,14 +111,21 @@ export const TRANSLATIONS = {
       zone_occupied: "ZONE ALREADY OCCUPIED",
       insufficient_mana: "INSUFFICIENT MANA",
       turn_label: "TURN",
+      revive: "REVIVE",
       battle_buttons: {
         to_battle: "START BATTLE",
         end_turn: "END TURN",
         details: "DETAILS",
-        active: "ACTIVE",
+        active: "ACTIVATE",
         set: "SET",
         attack: "ATTACK",
         change_pos: "CHANGE POS.",
+      },
+      card_types: {
+        MONSTER: "MONSTER",
+        SPELL: "SPELL",
+        TRAP: "TRAP",
+        EFFECT_MONSTER: "EFFECT MONSTER",
       },
       combat_notices: {
         select_attack_target: "SELECT THE ATTACK TARGET",
@@ -114,8 +133,13 @@ export const TRANSLATIONS = {
         direct_attack: "DIRECT ATTACK",
       },
       effect_notices: {
-        select_target: "SELECt THE TARGET",
-        invalid_target: "INVALID TARGET"
+        select_target: "SELECT THE TARGET",
+        invalid_target: "INVALID TARGET",
+        no_target_type_found: "NO {type} IN THIS GRAVEYARD!",
+        no_valid_graveyard: "NO VALID TARGETS IN GRAVEYARD",
+        select_graveyard: "SELECT A GRAVEYARD",
+        action_canceled: "ACTION CANCELED",
+        field_full: "FIELD FULL!",
       },
     },
   },
