@@ -1,8 +1,12 @@
 import type { IEffectManager } from "../interfaces/IEffectManager";
 import type { IBattleContext } from "../interfaces/IBattleContext";
 import type { Card } from "../objects/Card";
-import type { CardEffect, EffectTypes } from "../types/EffectTypes";
-import type { GameSide } from "../types/GameTypes";
+import type {
+  ActionEffect,
+  CardEffect,
+  EffectTypes,
+} from "../types/EffectTypes";
+import type { GameSide, PlacementMode } from "../types/GameTypes";
 
 export class EffectManager implements IEffectManager {
   private context: IBattleContext;
@@ -88,12 +92,34 @@ export class EffectManager implements IEffectManager {
   private handleRevive(effect: CardEffect, source: Card) {
     const targetSide = effect.targetSide || "OWNER";
 
+    const allowedSides = this.getEffectTargets(source.owner, targetSide);
+
+    const hasAnyValidCard = allowedSides.some((side) =>
+      this.context.field.graveyardSlot[side].some((card) =>
+        this.validateType(card, effect),
+      ),
+    );
+
+    if (!hasAnyValidCard) {
+      this.context
+        .getUI(source.owner)
+        .showNotice(this.notices.no_valid_graveyard, "WARNING");
+      this.stopTargeting();
+      return;
+    }
+
+    //option to choose between both cemeteries
     if (targetSide == "BOTH") {
-      //TODO: menu to player choice which graveyard he wants
+      this.prepareTargeting(effect, source, false);
+      this.context
+        .getUI(source.owner)
+        .showNotice(this.notices.select_graveyard, "NEUTRAL");
     } else {
       //if target side is owner open source owner graveyard, else open contrary graveyard
       const sideOpen =
-        targetSide == "OWNER" ? source.owner : this.getOpponentSide(targetSide);
+        targetSide == "OWNER"
+          ? source.owner
+          : this.getOpponentSide(source.owner);
       this.openGraveyardList(sideOpen, effect, source);
     }
   }
@@ -106,15 +132,45 @@ export class EffectManager implements IEffectManager {
     );
 
     if (validCards.length == 0) {
-      this.context
-        .getUI(source.owner)
-        .showNotice("NENHUM ALVO VÁLIDO", "NEUTRAL");
+      const targetType = (effect as ActionEffect).targetType || "SPELL";
+
+      const typeLabel =
+        this.context.translationText.card_types[targetType] || targetType;
+
+      const message = this.notices.no_target_type_found.replace(
+        "{type}",
+        typeLabel,
+      );
+      this.context.getUI(source.owner).showNotice(message, "NEUTRAL");
+
+      if (effect.targetSide !== "BOTH") {
+        this.stopTargeting();
+      }
       return;
     }
 
-    this.context.engine.scene.launch("CardListScene", validCards);
+    if (source.owner == "PLAYER") {
+      this.prepareTargeting(effect, source, false);
+
+      this.context.engine.scene.launch("CardListScene", {
+        cards: validCards,
+        isSelectionMode: true,
+        onSelect: (selectedCard: Card) => {
+          this.handleCardSelection(selectedCard);
+        },
+      });
+    } else {
+      //TODO: opponent logic to select better card by: atk, def, spell or target effect
+    }
   }
 
+  public onGraveyardClicked(side: GameSide) {
+    if (!this.pendingEffect || this.pendingEffect.type !== "REVIVE") return;
+
+    this.openGraveyardList(side, this.pendingEffect, this.pendingSource!);
+  }
+
+  //translated by the card's owner and defines the final target (player || opponent || player & opponent)
   private getEffectTargets(owner: GameSide, targetSide: string): GameSide[] {
     const opponent = owner == "PLAYER" ? "OPPONENT" : "PLAYER";
     if (targetSide == "OWNER") return [owner];
@@ -125,7 +181,9 @@ export class EffectManager implements IEffectManager {
 
   public cancelTargeting(): void {
     this.stopTargeting();
-    this.context.getUI("PLAYER").showNotice("CANCELADO", "NEUTRAL");
+    this.context
+      .getUI("PLAYER")
+      .showNotice(this.notices.action_canceled, "NEUTRAL");
   }
 
   private getOpponentSide(side: GameSide): GameSide {
@@ -144,7 +202,6 @@ export class EffectManager implements IEffectManager {
     const statResolver =
       (type: "atk" | "def", isBuff: boolean) =>
       (target: Card, _source: Card, effect: CardEffect) => {
-        //BUG: this effect apply into all same cards (need to apply just to target selected)
         const current =
           type === "atk"
             ? target.getCardData().atk || 0
@@ -179,6 +236,70 @@ export class EffectManager implements IEffectManager {
 
         hand.addCardBack(target);
       },
+      REVIVE: (target, source) => {
+        const side = source.owner;
+        const isMonster = target.getCardData().type.includes("MONSTER");
+
+        //remove from graveyard
+        this.context.field.releaseSlot(target, target.owner);
+
+        //update target owner to enable btn attack option
+        target.setOwner(source.owner);
+
+        if (isMonster) {
+          const slot = this.context.field.getFirstAvailableSlot(
+            side,
+            "MONSTER",
+          );
+
+          if (slot) {
+            if (side == "PLAYER") {
+              this.context.field.previewPlacement(target, slot.x, slot.y);
+              this.context
+                .getUI("PLAYER")
+                .showSelectionMenu(
+                  slot.x,
+                  slot.y,
+                  target,
+                  (mode: PlacementMode) => {
+                    this.context.field.occupySlot(
+                      side,
+                      "MONSTER",
+                      slot.index,
+                      target,
+                    );
+
+                    this.context.field.playCardToZone(
+                      target,
+                      slot.x,
+                      slot.y,
+                      mode,
+                    );
+                  },
+                );
+            } else {
+              this.context.field.occupySlot(
+                side,
+                "MONSTER",
+                slot.index,
+                target,
+              );
+              this.context.field.playCardToZone(target, slot.x, slot.y, "ATK");
+            }
+          } else {
+            this.context
+              .getUI(side)
+              .showNotice(this.notices.field_full, "WARNING");
+            this.context.field.moveToGraveyard(target, target.owner);
+          }
+        } else {
+          const hand = this.context.getHand(side);
+
+          target.setLocation("HAND");
+
+          hand.addCardBack(target);
+        }
+      },
     };
   })();
 
@@ -205,6 +326,7 @@ export class EffectManager implements IEffectManager {
 
   public handleCardSelection(target: Card) {
     if (!this.pendingEffect || !this.pendingSource) return;
+    console.log("caiu aqui 3");
 
     //prevents select source card to apply effect
     if (target == this.pendingSource) return;
@@ -227,13 +349,20 @@ export class EffectManager implements IEffectManager {
     this.stopTargeting();
   }
 
-  public prepareTargeting(effect: CardEffect, source: Card) {
+  public prepareTargeting(
+    effect: CardEffect,
+    source: Card,
+    showMsg: boolean = true,
+  ) {
     this.isSelectingTarget = true;
     this.pendingEffect = effect;
     this.pendingSource = source;
-    this.context
-      .getUI(source.owner)
-      .showNotice(this.notices.select_target, "NEUTRAL");
+
+    if (showMsg) {
+      this.context
+        .getUI(source.owner)
+        .showNotice(this.notices.select_target, "NEUTRAL");
+    }
   }
 
   private stopTargeting() {
