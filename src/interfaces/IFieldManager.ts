@@ -24,6 +24,15 @@ export interface IFieldManager {
     card: Card,
   ): void;
 
+  getFirstAvailableSlot(
+    side: GameSide,
+    type: "MONSTER" | "SPELL",
+  ): {
+    index: number;
+    x: number;
+    y: number;
+  } | null;
+
   getValidSlotToPlay(
     card: Card,
     side: GameSide,

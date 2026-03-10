@@ -32,6 +32,7 @@ export interface IBattleContext {
   handleCardDrop(zone: Phaser.GameObjects.Zone, card: Card): void;
   cardActivation(card: Card, side: GameSide): void;
   onAttackDeclared(attacker: Card): void;
+  clearAllMenus(): void;
 
   add: Phaser.GameObjects.GameObjectFactory;
   tweens: Phaser.Tweens.TweenManager;
