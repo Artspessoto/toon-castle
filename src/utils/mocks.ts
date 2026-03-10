@@ -91,6 +91,7 @@ export const createMockBattleContext = (): IBattleContext => {
       zone_occupied: "Zona ocupada",
       insufficient_mana: "Mana insuficiente",
       turn_label: "Turno",
+      revive: "REVIVER",
       battle_buttons: {
         to_battle: "",
         end_turn: "",
@@ -100,12 +101,26 @@ export const createMockBattleContext = (): IBattleContext => {
         attack: "",
         change_pos: "",
       },
+      card_types: {
+        MONSTER: "MONSTRO",
+        SPELL: "MAGIA",
+        TRAP: "ARMADILHA",
+        EFFECT_MONSTER: "MONSTRO DE EFEITO",
+      },
       combat_notices: {
         select_attack_target: "",
         invalid_own_card: "",
         direct_attack: "",
       },
-      effect_notices: { select_target: "Alvo", invalid_target: "Invalido" },
+      effect_notices: {
+        select_target: "SELECIONE O ALVO",
+        invalid_target: "ALVO INVÁLIDO",
+        no_target_type_found: "ESTE CEMITÉRIO NÃO POSSUI {type}!",
+        no_valid_graveyard: "NENHUM ALVO VÁLIDO NO CEMITÉRIO",
+        select_graveyard: "SELECIONE UM CEMITÉRIO",
+        action_canceled: "AÇÃO CANCELADA",
+        field_full: "CAMPO CHEIO!",
+      },
     },
     tweens: {
       killTweensOf: vi.fn(),
@@ -150,6 +165,7 @@ export const createMockBattleContext = (): IBattleContext => {
       applyCardEffect: vi.fn(),
       prepareTargeting: vi.fn(),
       cancelTargeting: vi.fn(),
+      onGraveyardClicked: vi.fn(),
     },
     engine: {
       scene: { launch: vi.fn() } as unknown as Phaser.Scenes.ScenePlugin,
@@ -166,6 +182,7 @@ export const createMockBattleContext = (): IBattleContext => {
       },
       graveyardSlot: { PLAYER: [], OPPONENT: [] },
       setupFieldZones: vi.fn(),
+      getFirstAvailableSlot: vi.fn(),
       occupySlot: vi.fn(),
       releaseSlot: vi.fn(),
       getValidSlotToPlay: vi.fn(),
@@ -191,5 +208,6 @@ export const createMockBattleContext = (): IBattleContext => {
     handleCardDrop: vi.fn(),
     cardActivation: vi.fn(),
     onAttackDeclared: vi.fn(),
+    clearAllMenus: vi.fn(),
   };
 };
