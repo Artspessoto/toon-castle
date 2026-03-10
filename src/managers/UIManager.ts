@@ -263,7 +263,7 @@ export class UIManager implements IUIManager {
     card: Card,
     cb: (mode: PlacementMode) => void,
   ) {
-    this.clearSelectionMenu();
+    this.context.clearAllMenus();
     const { COMPONENTS, DEPTHS } = THEME_CONFIG;
     const cardType = card.getType();
     const isMonster = cardType.includes("MONSTER");
@@ -297,7 +297,7 @@ export class UIManager implements IUIManager {
 
       this.selectionButtons.push(btn);
       btn.on("pointerdown", () => {
-        this.clearSelectionMenu();
+        this.context.clearAllMenus();
         cb(isMonster ? (isLeft ? "ATK" : "DEF") : isLeft ? "FACE_UP" : "SET");
       });
     };
@@ -312,7 +312,7 @@ export class UIManager implements IUIManager {
   }
 
   public showFieldCardMenu(x: number, y: number, card: Card) {
-    this.clearSelectionMenu();
+    this.context.clearAllMenus();
 
     const buttons: ToonButton[] = [];
     const buttonArgs: ButtonParams = { card, buttons, x, y };
@@ -332,7 +332,7 @@ export class UIManager implements IUIManager {
   }
 
   public showGraveyardMenu(graveyardCards: Card[], x: number, y: number) {
-    this.clearSelectionMenu();
+    this.context.clearAllMenus();
 
     const battleTexts = this.translations["battle_scene"];
     const buttonTexts = battleTexts.battle_buttons;
@@ -459,7 +459,7 @@ export class UIManager implements IUIManager {
     }).setDepth(THEME_CONFIG.DEPTHS.SELECTION_MENU);
 
     btn.on("pointerdown", () => {
-      this.clearSelectionMenu();
+      this.context.clearAllMenus();
       callback();
     });
 

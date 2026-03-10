@@ -209,7 +209,7 @@ export class BattleScene extends Phaser.Scene implements IBattleContext {
   }
 
   public setPhase(newPhase: GamePhase) {
-    this.playerUI.clearSelectionMenu();
+    this.clearAllMenus();
     this.combat.cancelTarget();
     this.playerHand.showHand();
 
@@ -462,5 +462,10 @@ export class BattleScene extends Phaser.Scene implements IBattleContext {
 
   public onAttackDeclared(attacker: Card) {
     this.combat.prepareTargeting(attacker);
+  }
+
+  public clearAllMenus(){
+    this.playerUI.clearSelectionMenu();
+    this.opponentUI.clearSelectionMenu();
   }
 }
