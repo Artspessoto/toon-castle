@@ -87,14 +87,24 @@ export class FieldManager implements IFieldManager {
 
   public releaseSlot(card: Card, side: GameSide) {
     const isMonster = card.getType().includes("MONSTER");
-    const slots = isMonster ? this.monsterSlots[side] : this.spellSlots[side];
+    const fieldSlots = isMonster
+      ? this.monsterSlots[side]
+      : this.spellSlots[side];
 
     //find card position into array
-    const index = slots.indexOf(card);
+    const fieldIndex = fieldSlots.indexOf(card);
 
     //card found and remove from slots
-    if (index !== -1) {
-      slots[index] = null;
+    if (fieldIndex !== -1) {
+      fieldSlots[fieldIndex] = null;
+      return;
+    }
+
+    // try to remove from graveyard
+    const graveyard = this.graveyardSlot[side];
+    const gyIndex = graveyard.indexOf(card);
+    if (gyIndex !== -1) {
+      graveyard.splice(gyIndex, 1);
     }
   }
 
@@ -274,6 +284,14 @@ export class FieldManager implements IFieldManager {
       //card in battle mode
       if (this.context.combat.isSelectingTarget) {
         this.context.combat.handleCardSelection(card);
+        return;
+      }
+
+      if (
+        this.context.effects.isSelectingTarget &&
+        card.location === "GRAVEYARD"
+      ) {
+        this.context.effects.onGraveyardClicked(card.owner);
         return;
       }
 
