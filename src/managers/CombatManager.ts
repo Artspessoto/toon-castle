@@ -63,6 +63,8 @@ export class CombatManager implements ICombatManager {
   public handleCardSelection(target: Card) {
     if (!this.isSelectingTarget || !this.currentAttacker) return;
 
+    this.isSelectingTarget = false;
+
     if (this.context.gameState.currentPhase !== "BATTLE") {
       this.cancelTarget();
       return;
@@ -103,6 +105,9 @@ export class CombatManager implements ICombatManager {
 
   private executeAttack(attacker: Card, target: Card) {
     const { DURATIONS, EASING } = THEME_CONFIG.ANIMATIONS;
+
+    EventBus.emit(GameEvent.ATTACK_DECLARED, { attacker, target });
+
     this.context.tweens.add({
       targets: attacker,
       x: target.x,
@@ -110,7 +115,7 @@ export class CombatManager implements ICombatManager {
       duration: DURATIONS.NORMAL,
       ease: EASING.BOUNCE,
       yoyo: true, //attacker return into original pos
-      onYoyo: () => {
+      onYoyoAll: () => {
         this.triggerImpactEffects(target);
 
         if (target.isFaceDown) target.setFaceUp();
@@ -143,12 +148,16 @@ export class CombatManager implements ICombatManager {
       duration: DURATIONS.NORMAL,
       ease: EASING.BOUNCE,
       yoyo: true, //attacker return into original pos
-      onYoyo: () => {
+      onYoyoAll: () => {
         this.context.cameras.main.shake(
           SHAKES.MEDIUM.duration,
           SHAKES.MEDIUM.intensity,
         );
-        this.context.getUI(targetSide).updateLP(targetSide, -damage);
+        EventBus.emit(GameEvent.DIRECT_ATTACK, {
+          attacker,
+          targetSide,
+          damage,
+        });
       },
       onComplete: () => {
         attacker.hasAttacked = true;
@@ -161,22 +170,30 @@ export class CombatManager implements ICombatManager {
     const attackerAtk = attacker.getCardData().atk ?? 0;
     const targetDef = target.getCardData().def ?? 0;
 
-    const attackerSide = attacker.owner;
     const targetSide = target.owner;
 
-    let diff: number;
+    let diff: number = 0;
+    let winner: Card | null = null;
 
     switch (true) {
       case attackerAtk > targetDef:
+        winner = attacker;
         this.destroyCard(target, targetSide);
         break;
       case attackerAtk < targetDef:
+        winner = target;
         diff = targetDef - attackerAtk;
-        this.context.getUI(attackerSide).updateLP(attackerSide, -diff);
         break;
       default:
         break;
     }
+
+    EventBus.emit(GameEvent.BATTLE_RESOLVED, {
+      attacker,
+      target,
+      damage: diff,
+      winner,
+    });
   }
 
   private resolveAtkVsAtk(attacker: Card, target: Card) {
@@ -186,19 +203,20 @@ export class CombatManager implements ICombatManager {
     const attackerSide = attacker.owner;
     const targetSide = target.owner;
 
-    let damageToApply: number;
+    let winner: Card | null = null;
+    let damageToApply: number = 0;
 
     switch (true) {
       case attackerAtk > targetAtk: {
+        winner = attacker;
         damageToApply = attackerAtk - targetAtk;
         this.destroyCard(target, targetSide);
-        this.context.getUI(targetSide).updateLP(targetSide, -damageToApply);
         break;
       }
       case targetAtk > attackerAtk: {
+        winner = target;
         damageToApply = targetAtk - attackerAtk;
         this.destroyCard(attacker, attackerSide);
-        this.context.getUI(attackerSide).updateLP(attackerSide, -damageToApply);
         break;
       }
       default:
@@ -207,6 +225,13 @@ export class CombatManager implements ICombatManager {
         this.destroyCard(attacker, attackerSide, true);
         break;
     }
+
+    EventBus.emit(GameEvent.BATTLE_RESOLVED, {
+      attacker,
+      damage: damageToApply,
+      target,
+      winner,
+    });
   }
 
   public triggerImpactEffects(target: Card) {
