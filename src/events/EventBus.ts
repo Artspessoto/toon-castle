@@ -6,7 +6,10 @@ class TypedEventBus extends Phaser.Events.EventEmitter {
     event: K,
     payload: GameEventMap[K],
   ): boolean {
-    if (process.env.NODE_ENV == "development") {
+    if (
+      process.env.NODE_ENV == "development" ||
+      process.env.NODE_ENV == "test"
+    ) {
       console.log(
         `%c[EVENT]%c ${event}%c`,
         "color: #00ff00; font-weight: bold; background: #111; padding: 2px 5px; border-radius: 3px 0 0 3px;",

@@ -22,6 +22,9 @@ export const createMockGameObject = () => {
     on: vi.fn(),
     removeAllListeners: vi.fn(),
     getData: vi.fn(),
+    iterate: vi.fn((cb) => cb({ setTint: vi.fn(), clearTint: vi.fn(), setAlpha: vi.fn() })),
+    clearTint: vi.fn(),
+    setTint: vi.fn(),
   };
 };
 
@@ -44,6 +47,7 @@ export const createMockCard = (overrides: Partial<Card> = {}): Card => {
     setDepth: vi.fn(),
     setAlpha: vi.fn(),
     setAngle: vi.fn(),
+    setScale: vi.fn(),
     disableInteractive: vi.fn(),
     setInteractive: vi.fn(),
     removeAllListeners: vi.fn(),
@@ -128,6 +132,8 @@ export const createMockBattleContext = (): IBattleContext => {
       add: vi.fn((config: any) => {
         if (typeof config.onComplete === "function") config.onComplete();
         if (typeof config.onStart === "function") config.onStart();
+        if (config.onYoyoAll) config.onYoyoAll();
+        if (config.onYoyo) config.onYoyo();
         return {
           stop: () => {},
           pause: () => {},
@@ -145,6 +151,7 @@ export const createMockBattleContext = (): IBattleContext => {
       showFieldCardMenu: vi.fn(),
       showGraveyardMenu: vi.fn(),
       updateLP: vi.fn(),
+      showNotice: vi.fn(),
     }),
     getHand: vi.fn().mockReturnValue({
       hideHand: vi.fn(),

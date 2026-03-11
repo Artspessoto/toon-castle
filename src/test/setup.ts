@@ -1,4 +1,4 @@
-// src/test/setup.ts
+/* eslint-disable @typescript-eslint/no-unsafe-function-type */
 import { vi } from "vitest";
 
 vi.mock("phaser", () => {
@@ -6,12 +6,36 @@ vi.mock("phaser", () => {
     default: {
       Events: {
         EventEmitter: class {
-          on = vi.fn();
-          emit = vi.fn();
-          once = vi.fn();
-          off = vi.fn();
-          removeAllListeners = vi.fn();
-        }
+          private listeners: Record<string, Function[]> = {};
+
+          on(event: string, fn: Function) {
+            if (!this.listeners[event]) this.listeners[event] = [];
+            this.listeners[event].push(fn);
+            return this;
+          }
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          emit(event: string, ...args: any[]) {
+            if (this.listeners[event]) {
+              this.listeners[event].forEach((fn) => fn(...args));
+            }
+            return true;
+          }
+
+          off(event: string, fn: Function) {
+            if (this.listeners[event]) {
+              this.listeners[event] = this.listeners[event].filter(
+                (f) => f !== fn,
+              );
+            }
+            return this;
+          }
+
+          removeAllListeners() {
+            this.listeners = {};
+            return this;
+          }
+        },
       },
       GameObjects: {
         GameObject: class {},
