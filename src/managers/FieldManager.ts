@@ -174,7 +174,7 @@ export class FieldManager implements IFieldManager {
     const { SCALES } = THEME_CONFIG.COMPONENTS.CARD;
     const { DURATIONS, SHAKES, EASING } = THEME_CONFIG.ANIMATIONS;
     const currentTurn = this.context.gameState.currentTurn;
-    const { manaCost } = card.getCardData();
+    
     card.disableInteractive();
     this.context.tweens.killTweensOf(card.visualElements);
 
@@ -197,8 +197,6 @@ export class FieldManager implements IFieldManager {
       //opponent need this to face up card into field slot (default -> card face down into opponent hand)
       card.setFaceUp();
     }
-
-    this.context.getUI(card.owner).updateMana(-manaCost);
 
     // Slot animation movement
     this.context.tweens.add({

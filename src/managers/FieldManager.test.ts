@@ -130,12 +130,11 @@ describe("FieldManager", () => {
     expect(result.message).toBe("Zona ocupada");
   });
 
-  it("playCardToZone executa animação e atualiza mana", () => {
+  it("playCardToZone executa animação", () => {
     const card = createMockCard();
     fieldManager.playCardToZone(card, 100, 100, "ATK");
     expect(mockContext.cameras.main.shake).toHaveBeenCalled();
     expect(card.setLocation).toHaveBeenCalledWith("FIELD", 1);
-    expect(mockContext.getUI(card.owner).updateMana).toHaveBeenCalled();
   });
 
   it("previewPlacement executa animação de preview", () => {

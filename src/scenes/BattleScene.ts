@@ -309,6 +309,9 @@ export class BattleScene extends Phaser.Scene implements IBattleContext {
     mode: PlacementMode,
   ) {
     const hand = side == "PLAYER" ? this.playerHand : this.opponentHand;
+    const { manaCost } = card.getCardData();
+
+    this.getUI(card.owner).updateMana(-manaCost);
 
     hand.removeCard(card);
     this.field.occupySlot(side, type, slot.index, card);
