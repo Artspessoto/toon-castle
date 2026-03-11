@@ -36,6 +36,24 @@ export class UIManager implements IUIManager {
     EventBus.on(GameEvent.PHASE_CHANGED, () => {
       this.clearSelectionMenu();
     });
+
+    EventBus.on(GameEvent.DIRECT_ATTACK, (data) => {
+      if (data.targetSide == this.side) {
+        this.updateLP(this.side, -data.damage);
+      }
+    });
+
+    EventBus.on(GameEvent.BATTLE_RESOLVED, (data) => {
+      //attacker wins
+      if (data.winner == data.attacker && data.target.owner == this.side) {
+        this.updateLP(this.side, -data.damage);
+      }
+
+      //defender wins
+      else if (data.winner == data.target && data.attacker.owner == this.side) {
+        this.updateLP(this.side, -data.damage);
+      }
+    });
   }
 
   public setTranslations(translations: TranslationStructure) {
