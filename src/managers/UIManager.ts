@@ -7,6 +7,7 @@ import type { IUIManager } from "../interfaces/IUIManager";
 import type { Card } from "../objects/Card";
 import { ToonButton } from "../objects/ToonButton";
 import type {
+  GamePhase,
   GameSide,
   Notice,
   PlacementMode,
@@ -33,8 +34,10 @@ export class UIManager implements IUIManager {
 
     this.manaPosition = LAYOUT_CONFIG.UI.MANA[this.side];
 
-    EventBus.on(GameEvent.PHASE_CHANGED, () => {
+    EventBus.on(GameEvent.PHASE_CHANGED, (data) => {
       this.clearSelectionMenu();
+
+      this.handlePhaseNotice(data.newPhase, data.activePlayer);
     });
 
     EventBus.on(GameEvent.DIRECT_ATTACK, (data) => {
@@ -52,6 +55,30 @@ export class UIManager implements IUIManager {
       //defender wins
       else if (data.winner == data.target && data.attacker.owner == this.side) {
         this.updateLP(this.side, -data.damage);
+      }
+    });
+
+    EventBus.on(GameEvent.MANA_CHANGED, (data) => {
+      if (data.side == this.side) {
+        this.updateMana(data.amount);
+      }
+    });
+
+    EventBus.on(GameEvent.INSUFFICIENT_MANA, (data) => {
+      if (data.side == this.side) {
+        this.showNotice(
+          this.translations.battle_scene.insufficient_mana,
+          "WARNING",
+        );
+      }
+    });
+
+    EventBus.on(GameEvent.ZONE_OCCUPIED, (data) => {
+      if (data.side == this.side) {
+        this.showNotice(
+          this.translations.battle_scene.zone_occupied,
+          "WARNING",
+        );
       }
     });
   }
@@ -154,6 +181,30 @@ export class UIManager implements IUIManager {
         this.manaAura.setScale(0.5).setAlpha(0);
       },
     });
+  }
+
+  private handlePhaseNotice(phase: GamePhase, activePlayer: GameSide) {
+    const { battle_scene } = this.translations;
+
+    switch (phase) {
+      case "DRAW": {
+        const drawMsg =
+          activePlayer == "PLAYER"
+            ? battle_scene.draw_phase
+            : battle_scene.opponent_draw;
+        this.showNotice(drawMsg, "PHASE");
+        break;
+      }
+      case "MAIN":
+        this.showNotice(battle_scene.main_phase, "PHASE");
+        break;
+      case "BATTLE":
+        this.showNotice(battle_scene.battle_phase, "PHASE");
+        break;
+      case "CHANGE_TURN":
+        this.showNotice(battle_scene.turn_ended, "NEUTRAL");
+        break;
+    }
   }
 
   public showNotice(message: string, type: Notice) {
