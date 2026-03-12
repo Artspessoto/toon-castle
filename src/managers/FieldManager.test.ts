@@ -93,7 +93,7 @@ describe("FieldManager", () => {
     expect(result.valid).toBe(false);
   });
 
-  it("validatePlay retorna mensagem de mana insuficiente", () => {
+  it("validatePlay retorna mana insuficiente", () => {
     const card = createMockCard({
       getCardData: vi.fn().mockReturnValue({ manaCost: 20 }),
     });
@@ -107,10 +107,9 @@ describe("FieldManager", () => {
     );
     expect(result.valid).toBe(false);
     expect(result.reason).toBe("MANA");
-    expect(result.message).toBe("Mana insuficiente");
   });
 
-  it("validatePlay retorna mensagem de slot ocupado", () => {
+  it("validatePlay retorna slot ocupado", () => {
     fieldManager.monsterSlots.PLAYER = [
       createMockCard(),
       createMockCard(),
@@ -127,7 +126,6 @@ describe("FieldManager", () => {
     );
     expect(result.valid).toBe(false);
     expect(result.reason).toBe("SLOT");
-    expect(result.message).toBe("Zona ocupada");
   });
 
   it("playCardToZone executa animação", () => {

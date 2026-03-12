@@ -167,11 +167,7 @@ export class FieldManager implements IFieldManager {
     const result = this.getValidSlotToPlay(card, zoneSide, zoneType);
 
     if (!result.valid && result.reason) {
-      const reason =
-        result.reason === "MANA"
-          ? this.context.translationText.insufficient_mana
-          : this.context.translationText.zone_occupied;
-      return { valid: false, reason: result.reason, message: reason };
+      return { valid: false, reason: result.reason };
     }
 
     return result;
