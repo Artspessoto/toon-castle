@@ -65,10 +65,6 @@ export class NameScene extends Phaser.Scene {
       const playerName = nameInput.value.trim();
 
       if (playerName.length > 0) {
-        console.log(
-          `Nome do jogador: ${playerName}, Dificuldade: ${this.difficulty}`,
-        );
-
         //Battle scene transition
         this.cameras.main.fadeOut(500, 0, 0, 0);
         this.cameras.main.once("camerafadeoutcomplete", () => {

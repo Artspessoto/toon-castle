@@ -326,7 +326,6 @@ export class EffectManager implements IEffectManager {
 
   public handleCardSelection(target: Card) {
     if (!this.pendingEffect || !this.pendingSource) return;
-    console.log("caiu aqui 3");
 
     //prevents select source card to apply effect
     if (target == this.pendingSource) return;
