@@ -73,6 +73,24 @@ export class BattleScene extends Phaser.Scene implements IBattleContext {
 
     this.playerDeck = new DeckManager(this, "PLAYER");
     this.opponentDeck = new DeckManager(this, "OPPONENT");
+
+    EventBus.on(GameEvent.TURN_STARTED, (data) => {
+      const isFirstTurn = data.turnCount == 1;
+      const side = data.side;
+
+      if (!isFirstTurn || side === "OPPONENT") {
+        const manaGain = 2;
+        EventBus.emit(GameEvent.MANA_CHANGED, {
+          side: this.gameState.activePlayer,
+          amount: manaGain,
+        });
+      }
+
+      if (side === "OPPONENT") {
+        this.opponentHand.drawCard(this.opponentDeck.position);
+        this.handleOpponentTurn();
+      }
+    });
   }
 
   public get currentPhase(): GamePhase {
@@ -206,7 +224,11 @@ export class BattleScene extends Phaser.Scene implements IBattleContext {
     if (this.currentPhase == "DRAW" && this.gameState.currentTurn !== 1) {
       this.setPhase("MAIN");
       this.currentHand.drawCard(this.currentDeck.position);
-      this.currentUI.updateMana(2);
+
+      EventBus.emit(GameEvent.MANA_CHANGED, {
+        side: this.gameState.activePlayer,
+        amount: 2,
+      });
     }
   }
 
@@ -223,11 +245,10 @@ export class BattleScene extends Phaser.Scene implements IBattleContext {
     });
 
     if (newPhase === "DRAW") {
-      if (this.gameState.activePlayer === "OPPONENT") {
-        this.currentHand.drawCard(this.currentDeck.position);
-        this.currentUI.updateMana(2);
-        this.handleOpponentTurn();
-      }
+      EventBus.emit(GameEvent.TURN_STARTED, {
+        side: this.gameState.activePlayer,
+        turnCount: this.gameState.currentTurn,
+      });
     }
   }
 
@@ -251,19 +272,20 @@ export class BattleScene extends Phaser.Scene implements IBattleContext {
 
   public handleCardDrop(targetZone: Phaser.GameObjects.Zone, card: Card) {
     const result = this.field.validatePlay(card, targetZone);
+    const slot = result.slot!;
+    const activeSide = this.gameState.activePlayer;
+    const zoneType: "MONSTER" | "SPELL" = targetZone.getData("type");
 
     if (!result.valid) {
       //mana or slot invalid
-      if (result.reason) {
-        this.currentUI.showNotice(result.reason, "WARNING");
+      if (result.reason == "MANA") {
+        EventBus.emit(GameEvent.INSUFFICIENT_MANA, { side: activeSide });
+      } else if (result.reason == "SLOT") {
+        EventBus.emit(GameEvent.ZONE_OCCUPIED, { side: activeSide });
       }
       this.currentHand.reorganizeHand();
       return;
     }
-
-    const slot = result.slot!;
-    const activeSide = this.gameState.activePlayer;
-    const zoneType: "MONSTER" | "SPELL" = targetZone.getData("type");
 
     this.gameState.setDragging(false);
     this.selectedCard = card;
@@ -312,7 +334,10 @@ export class BattleScene extends Phaser.Scene implements IBattleContext {
     const hand = side == "PLAYER" ? this.playerHand : this.opponentHand;
     const { manaCost } = card.getCardData();
 
-    this.getUI(card.owner).updateMana(-manaCost);
+    EventBus.emit(GameEvent.MANA_CHANGED, {
+      side: card.owner,
+      amount: -manaCost,
+    });
 
     hand.removeCard(card);
     this.field.occupySlot(side, type, slot.index, card);
