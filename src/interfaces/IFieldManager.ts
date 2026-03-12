@@ -4,7 +4,6 @@ import type { GameSide, PlacementMode } from "../types/GameTypes";
 export interface IFieldPlayResult {
   valid: boolean;
   reason?: "MANA" | "SLOT" | "TYPE" | "PHASE";
-  message?: string;
   slot?: { x: number; y: number; index: number };
 }
 
