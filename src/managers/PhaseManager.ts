@@ -26,28 +26,22 @@ export class PhaseManager implements IPhaseManager {
     }
     const { PHASE } = THEME_CONFIG.COMPONENTS.BUTTONS;
     const { phaseButton } = this.context;
-    const currentUI = this.context.getUI(this.context.gameState.activePlayer);
     const isPlayerTurn = this.context.gameState.activePlayer == "PLAYER";
     const currentTurn = this.context.gameState.currentTurn;
 
     this.turn = `${this.context.translationText.turn_label} ${currentTurn}`;
-
     phaseButton.setVisible(true);
 
     switch (phase) {
       case "DRAW":
         if (isPlayerTurn) {
-          currentUI.showNotice(translations.draw_phase, "PHASE");
           phaseButton.setAlpha(1).updatePhase(this.turn, "DRAW", PHASE.color);
           phaseButton.disableInteractive();
         } else {
-          currentUI.showNotice(translations.opponent_draw, "PHASE");
           this.setOpponentState(phaseButton);
         }
         break;
       case "MAIN":
-        currentUI.showNotice(translations.main_phase, "PHASE");
-
         if (isPlayerTurn) {
           const buttonText =
             currentTurn == 1
@@ -61,8 +55,6 @@ export class PhaseManager implements IPhaseManager {
         }
         break;
       case "BATTLE":
-        currentUI.showNotice(translations.battle_phase, "PHASE");
-
         if (isPlayerTurn) {
           phaseButton
             .setInteractive()
@@ -80,8 +72,6 @@ export class PhaseManager implements IPhaseManager {
         this.context.tweens.killTweensOf(phaseButton);
         phaseButton.disableInteractive();
         phaseButton.setDisabledState(this.context.translationText.opponent);
-
-        currentUI.showNotice(translations.turn_ended, "NEUTRAL");
 
         this.context.time.delayedCall(1500, () => {
           this.context.finalizeTurnTransition();
