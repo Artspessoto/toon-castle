@@ -58,7 +58,10 @@ export class HandManager implements IHandManager {
 
   public drawCard(deckPosition: { x: number; y: number }) {
     const { DEPTHS } = THEME_CONFIG;
-    if (this.hand.length >= this.maxHandSize) return;
+    if (this.hand.length >= this.maxHandSize) {
+      EventBus.emit(GameEvent.HAND_FULL, { side: this.side });
+      return;
+    }
 
     const cardData = this.getRandomCardData();
 
@@ -81,6 +84,9 @@ export class HandManager implements IHandManager {
 
     newCard.setDepth(DEPTHS.HAND_CARDS);
     this.hand.push(newCard);
+
+    EventBus.emit(GameEvent.CARD_DRAW, { card: newCard, side: this.side });
+
     this.animateCardEntry(newCard);
     this.reorganizeHand();
   }

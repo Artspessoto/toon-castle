@@ -18,9 +18,11 @@ export class InputManager implements IInputManager {
         currentlyOver: Phaser.GameObjects.GameObject[],
       ) => {
         //DEBUG LOG
-        console.log(
-          `Debug: X: ${Math.round(pointer.x)}, Y: ${Math.round(pointer.y)}`,
-        );
+        if (process.env.NODE_ENV == "development") {
+          console.log(
+            `Debug: X: ${Math.round(pointer.x)}, Y: ${Math.round(pointer.y)}`,
+          );
+        }
 
         //click action into void
         if (currentlyOver.length === 0) {

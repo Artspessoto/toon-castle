@@ -2,8 +2,11 @@ import type { Card } from "../objects/Card";
 import type { GamePhase, GameSide, PlacementMode } from "../types/GameTypes";
 
 export enum GameEvent {
+  TURN_STARTED = "TURN_STARTED",
   PHASE_CHANGED = "PHASE_CHANGED",
   CARD_PLAYED = "CARD_PLAYED",
+  CARD_DRAW = "CARD_DRAW",
+  HAND_FULL = "HAND_FULL",
   CARD_SENT_TO_GRAVEYARD = "CARD_SENT_TO_GRAVEYARD",
   CARD_LEFT_FIELD = "CARD_LEFT_FIELD",
   FIELD_STATS_RESET = "FIELD_STATS_RESET",
@@ -15,7 +18,6 @@ export enum GameEvent {
   MANA_CHANGED = "MANA_CHANGED",
   INSUFFICIENT_MANA = "INSUFFICIENT_MANA",
   ZONE_OCCUPIED = "ZONE_OCCUPIED",
-  TURN_STARTED = "TURN_STARTED",
 }
 
 export type PhaseChangedPayload = {
@@ -52,6 +54,7 @@ export type ManaChangedPayload = {
 };
 export type ErrorPayload = { side: GameSide };
 export type TurnStartedPayload = { side: GameSide; turnCount: number };
+export type CardDrawPayload = { card: Card; side: GameSide };
 
 export interface GameEventMap {
   [GameEvent.PHASE_CHANGED]: PhaseChangedPayload;
@@ -68,4 +71,6 @@ export interface GameEventMap {
   [GameEvent.INSUFFICIENT_MANA]: ErrorPayload;
   [GameEvent.ZONE_OCCUPIED]: ErrorPayload;
   [GameEvent.TURN_STARTED]: TurnStartedPayload;
+  [GameEvent.CARD_DRAW]: CardDrawPayload;
+  [GameEvent.HAND_FULL]: ErrorPayload;
 }
