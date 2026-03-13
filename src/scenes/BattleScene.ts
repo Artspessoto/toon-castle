@@ -224,11 +224,6 @@ export class BattleScene extends Phaser.Scene implements IBattleContext {
     if (this.currentPhase == "DRAW" && this.gameState.currentTurn !== 1) {
       this.setPhase("MAIN");
       this.currentHand.drawCard(this.currentDeck.position);
-
-      EventBus.emit(GameEvent.MANA_CHANGED, {
-        side: this.gameState.activePlayer,
-        amount: 2,
-      });
     }
   }
 
