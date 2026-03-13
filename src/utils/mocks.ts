@@ -22,7 +22,9 @@ export const createMockGameObject = () => {
     on: vi.fn(),
     removeAllListeners: vi.fn(),
     getData: vi.fn(),
-    iterate: vi.fn((cb) => cb({ setTint: vi.fn(), clearTint: vi.fn(), setAlpha: vi.fn() })),
+    iterate: vi.fn((cb) =>
+      cb({ setTint: vi.fn(), clearTint: vi.fn(), setAlpha: vi.fn() }),
+    ),
     clearTint: vi.fn(),
     setTint: vi.fn(),
   };
@@ -33,6 +35,7 @@ export const createMockCard = (overrides: Partial<Card> = {}): Card => {
     getType: vi.fn().mockReturnValue("MONSTER"),
     getCardData: vi.fn().mockReturnValue({ manaCost: 1, atk: 1000 }),
     owner: "PLAYER",
+    originalOwner: "PLAYER",
     location: "HAND",
     x: 0,
     y: 0,
@@ -48,6 +51,7 @@ export const createMockCard = (overrides: Partial<Card> = {}): Card => {
     setAlpha: vi.fn(),
     setAngle: vi.fn(),
     setScale: vi.fn(),
+    setOwner: vi.fn(),
     disableInteractive: vi.fn(),
     setInteractive: vi.fn(),
     removeAllListeners: vi.fn(),
