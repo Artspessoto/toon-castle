@@ -25,8 +25,7 @@ class TypedEventBus extends Phaser.Events.EventEmitter {
   public on<K extends keyof GameEventMap>(
     event: K,
     fn: (payload: GameEventMap[K]) => void,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    context?: any,
+    context?: object,
   ): this {
     return super.on(event, fn, context);
   }
