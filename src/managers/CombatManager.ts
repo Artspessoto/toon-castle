@@ -57,14 +57,15 @@ export class CombatManager implements ICombatManager {
     this.currentAttacker = attacker;
     this.isSelectingTarget = true;
 
-    EventBus.emit(GameEvent.TARGETING_STARTED, { source: attacker, type: "ATTACK"});
+    EventBus.emit(GameEvent.TARGETING_STARTED, {
+      source: attacker,
+      type: "ATTACK",
+    });
     attacker.setAlpha(0.7);
   }
 
   public handleCardSelection(target: Card) {
     if (!this.isSelectingTarget || !this.currentAttacker) return;
-
-    this.isSelectingTarget = false;
 
     if (this.context.gameState.currentPhase !== "BATTLE") {
       this.cancelTarget();
@@ -77,6 +78,7 @@ export class CombatManager implements ICombatManager {
       this.context
         .getUI(this.currentAttacker.owner)
         .showNotice(this.notices.invalid_own_card, "WARNING");
+      this.cancelTarget();
       return;
     }
 
@@ -87,9 +89,8 @@ export class CombatManager implements ICombatManager {
       return;
     }
 
-    if (target.owner !== this.currentAttacker.owner) {
-      this.executeAttack(this.currentAttacker, target);
-    }
+    this.isSelectingTarget = false;
+    this.executeAttack(this.currentAttacker, target);
 
     this.cancelTarget();
   }
