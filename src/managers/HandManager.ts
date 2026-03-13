@@ -1,3 +1,4 @@
+import Phaser from "phaser";
 import type { IBattleContext } from "../interfaces/IBattleContext";
 import { Card } from "../objects/Card";
 import { CARD_DATABASE } from "../constants/CardDatabase";

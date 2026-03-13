@@ -4,6 +4,10 @@ import { vi } from "vitest";
 vi.mock("phaser", () => {
   return {
     default: {
+      Math: {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        Between: vi.fn((min: number, _max: number) => min),
+      },
       Events: {
         EventEmitter: class {
           private listeners: Record<string, Function[]> = {};
