@@ -58,6 +58,12 @@ export class UIManager implements IUIManager {
       }
     });
 
+    EventBus.on(GameEvent.LP_CHANGED, (data) => {
+      if (data.side == this.side) {
+        this.updateLP(side, data.amount);
+      }
+    });
+
     EventBus.on(GameEvent.MANA_CHANGED, (data) => {
       if (data.side == this.side) {
         this.updateMana(data.amount);
@@ -83,9 +89,20 @@ export class UIManager implements IUIManager {
     });
 
     EventBus.on(GameEvent.TARGETING_STARTED, (data) => {
-      if (data.source.owner == this.side) {
+      if (data.source.owner == this.side && data.type == "ATTACK") {
         this.showNotice(
           this.translations.battle_scene.combat_notices.select_attack_target,
+          "NEUTRAL",
+        );
+      } else if (data.source.owner == this.side && data.type == "EFFECT") {
+        this.showNotice(data.message!, "NEUTRAL");
+      }
+    });
+
+    EventBus.on(GameEvent.TARGETING_CANCELED, () => {
+      if (this.side == "PLAYER") {
+        this.showNotice(
+          this.translations.battle_scene.effect_notices.action_canceled,
           "NEUTRAL",
         );
       }

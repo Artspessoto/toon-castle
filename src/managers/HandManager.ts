@@ -39,8 +39,8 @@ export class HandManager implements IHandManager {
       }
     });
 
-    EventBus.on(GameEvent.TARGETING_STARTED, () => {
-      if (this.side == "PLAYER") {
+    EventBus.on(GameEvent.TARGETING_STARTED, (data) => {
+      if (this.side == "PLAYER" && data.type == "ATTACK") {
         this.hideHand();
       }
     });
