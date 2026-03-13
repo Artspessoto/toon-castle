@@ -3,27 +3,44 @@ import type { CardEffect } from "../types/EffectTypes";
 import type { GamePhase, GameSide, PlacementMode } from "../types/GameTypes";
 
 export enum GameEvent {
+  //TURN AND PHASE
   TURN_STARTED = "TURN_STARTED",
   PHASE_CHANGED = "PHASE_CHANGED",
+
+  //CARD
   CARD_PLAYED = "CARD_PLAYED",
   CARD_DRAW = "CARD_DRAW",
+
+  //HAND
   HAND_FULL = "HAND_FULL",
+
+  //FIELD
   CARD_SENT_TO_GRAVEYARD = "CARD_SENT_TO_GRAVEYARD",
   CARD_LEFT_FIELD = "CARD_LEFT_FIELD",
   FIELD_STATS_RESET = "FIELD_STATS_RESET",
   CARD_REMOVED_FROM_GRAVEYARD = "CARD_REMOVED_FROM_GRAVEYARD",
+
+  //INPUT
   TARGETING_STARTED = "TARGETING_STARTED",
   TARGETING_CANCELED = "TARGETING_CANCELED",
+
+  //COMBAT
   ATTACK_DECLARED = "ATTACK_DECLARED",
   BATTLE_RESOLVED = "BATTLE_RESOLVED",
   DIRECT_ATTACK = "DIRECT_ATTACK",
   ATTACK_CANCELED = "ATTACK_CANCELED",
+
+  //UI
   MANA_CHANGED = "MANA_CHANGED",
   LP_CHANGED = "LP_CHANGED",
   INSUFFICIENT_MANA = "INSUFFICIENT_MANA",
   ZONE_OCCUPIED = "ZONE_OCCUPIED",
+
+  //EFFECTS
   EFFECT_ACTIVATED = "EFFECT_ACTIVATED",
   EFFECT_RESOLVED = "EFFECT_RESOLVED",
+  CARD_STATS_CHANGED = "CARD_STATS_CHANGED",
+  CARD_POSITION_CHANGED = "CARD_POSITION_CHANGED",
 }
 
 export type PhaseChangedPayload = {
@@ -76,6 +93,17 @@ export type TurnStartedPayload = { side: GameSide; turnCount: number };
 export type CardDrawPayload = { card: Card; side: GameSide };
 export type EffectActivatedPayload = { card: Card; effect: CardEffect };
 export type EffectResolvedPayload = { source: Card; target: Card };
+export type CardStatsChanged = {
+  card: Card;
+  statType: "atk" | "def";
+  newValue: number;
+  isBuff: boolean;
+};
+export type CardPositionChangedPayload = {
+  card: Card;
+  newMode: PlacementMode;
+  isFlip: boolean;
+};
 
 export interface GameEventMap {
   [GameEvent.PHASE_CHANGED]: PhaseChangedPayload;
@@ -99,4 +127,6 @@ export interface GameEventMap {
   [GameEvent.LP_CHANGED]: LPChangedPayload;
   [GameEvent.EFFECT_ACTIVATED]: EffectActivatedPayload;
   [GameEvent.EFFECT_RESOLVED]: EffectResolvedPayload;
+  [GameEvent.CARD_STATS_CHANGED]: CardStatsChanged;
+  [GameEvent.CARD_POSITION_CHANGED]: CardPositionChangedPayload;
 }
