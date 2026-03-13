@@ -90,6 +90,7 @@ export class HandManager implements IHandManager {
       deckPosition.y,
       cardData,
       this.side,
+      this.side
     );
 
     if (this.side == "OPPONENT") {

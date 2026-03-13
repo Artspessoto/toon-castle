@@ -559,6 +559,8 @@ export class UIManager implements IUIManager {
           this.context.engine.scene.launch("CardDetailScene", {
             cardData: card.getCardData(),
             owner: card.owner,
+            originalOwner: card.originalOwner,
+            location: card.location
           });
         }),
       );

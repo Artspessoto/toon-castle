@@ -114,6 +114,7 @@ export class CardListScene extends Phaser.Scene {
         y,
         card.getCardData(),
         card.owner,
+        card.originalOwner
       ).setScale(0.3);
 
       if (i === 0) firstCardItem = cardItem;
@@ -143,6 +144,7 @@ export class CardListScene extends Phaser.Scene {
       startY + 200,
       defaultCardView.getCardData(),
       defaultCardView.owner,
+      defaultCardView.originalOwner
     ).setScale(0.75);
 
     this.detailNameText = this.add

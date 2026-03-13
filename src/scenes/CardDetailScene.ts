@@ -8,14 +8,21 @@ import type { GameSide } from "../types/GameTypes";
 export class CardDetailScene extends Phaser.Scene {
   private cardData!: CardData;
   private owner!: GameSide;
+  private originalOwner!: GameSide;
 
   constructor() {
     super({ key: "CardDetailScene" });
   }
 
-  init(data: { cardData: CardData; owner: GameSide; location: CardLocation }) {
+  init(data: {
+    cardData: CardData;
+    owner: GameSide;
+    originalOwner: GameSide;
+    location: CardLocation;
+  }) {
     this.cardData = data.cardData;
     this.owner = data.owner;
+    this.originalOwner = data.originalOwner;
   }
 
   create() {
@@ -60,6 +67,7 @@ export class CardDetailScene extends Phaser.Scene {
       SCREEN.CENTER_Y,
       this.cardData,
       this.owner,
+      this.originalOwner,
     );
 
     displayCard.disableInteractive();
