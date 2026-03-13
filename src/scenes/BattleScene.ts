@@ -309,9 +309,19 @@ export class BattleScene extends Phaser.Scene implements IBattleContext {
     this.currentHand.showHand();
 
     if (!this.selectedCard) return;
+    const card = this.selectedCard;
 
-    //return card to hand
-    this.currentHand.addCardBack(this.selectedCard);
+    const isRevivingTarget = this.effects.isSelectingTarget;
+
+    this.tweens.killTweensOf(card);
+
+    if (isRevivingTarget) {
+      this.field.moveToGraveyard(card);
+      this.effects.cancelTargeting();
+    } else {
+      //return card to hand
+      this.currentHand.addCardBack(this.selectedCard);
+    }
 
     this.selectedCard.setInteractive();
     this.selectedCard.setDepth(100);
@@ -461,7 +471,7 @@ export class BattleScene extends Phaser.Scene implements IBattleContext {
             this.field.releaseSlot(card, side);
 
             // move card to graveyard
-            this.field.moveToGraveyard(card, side);
+            this.field.moveToGraveyard(card);
           } else {
             //effect monster returns into original position after active effect
             this.tweens.add({

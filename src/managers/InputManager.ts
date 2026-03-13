@@ -18,7 +18,7 @@ export class InputManager implements IInputManager {
         currentlyOver: Phaser.GameObjects.GameObject[],
       ) => {
         //DEBUG LOG
-        if (process.env.NODE_ENV == "development") {
+        if (process.env.NODE_ENV == "test") {
           console.log(
             `Debug: X: ${Math.round(pointer.x)}, Y: ${Math.round(pointer.y)}`,
           );
@@ -27,6 +27,8 @@ export class InputManager implements IInputManager {
         //click action into void
         if (currentlyOver.length === 0) {
           const activeSide = this.context.gameState.activePlayer;
+
+          this.context.cancelPlacement();
 
           this.context.clearAllMenus();
           this.context.getHand(activeSide).showHand();
@@ -40,15 +42,13 @@ export class InputManager implements IInputManager {
           if (this.context.currentPhase === "BATTLE") {
             this.context.combat.cancelTarget();
           }
-
-          this.context.cancelPlacement();
         }
 
-        if (this.context.selectedCard) {
-          this.context.time.delayedCall(50, () =>
-            this.context.cancelPlacement(),
-          );
-        }
+        // if (this.context.selectedCard) {
+        //   this.context.time.delayedCall(50, () =>
+        //     this.context.cancelPlacement(),
+        //   );
+        // }
       },
     );
 

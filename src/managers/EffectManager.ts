@@ -189,10 +189,19 @@ export class EffectManager implements IEffectManager {
   }
 
   public cancelTargeting(): void {
-    const source = this.pendingSource!;
+    if (!this.pendingSource || !this.pendingEffect) {
+      this.stopTargeting();
+      return;
+    }
+
+    const source = this.pendingSource;
+    const isRevive = this.pendingEffect.type === "REVIVE";
+
     this.stopTargeting();
 
-    EventBus.emit(GameEvent.TARGETING_CANCELED, { source, type: "EFFECT" });
+    if (!isRevive) {
+      EventBus.emit(GameEvent.TARGETING_CANCELED, { source, type: "EFFECT" });
+    }
   }
 
   private getOpponentSide(side: GameSide): GameSide {
@@ -236,11 +245,12 @@ export class EffectManager implements IEffectManager {
     const slot = this.context.field.getFirstAvailableSlot(side, "MONSTER");
     if (!slot) {
       EventBus.emit(GameEvent.ZONE_OCCUPIED, { side });
-      this.context.field.moveToGraveyard(target, side);
+      this.context.field.moveToGraveyard(target);
       return;
     }
 
     if (side == "PLAYER") {
+      this.context.selectedCard = target;
       this.context.field.previewPlacement(target, slot.x, slot.y);
       this.context
         .getUI("PLAYER")
@@ -248,6 +258,9 @@ export class EffectManager implements IEffectManager {
           this.context.field.occupySlot(side, "MONSTER", slot.index, target);
 
           this.context.field.playCardToZone(target, slot.x, slot.y, mode);
+
+          this.stopTargeting();
+          this.context.selectedCard = null;
         });
     } else {
       this.context.field.occupySlot(side, "MONSTER", slot.index, target);
@@ -328,13 +341,15 @@ export class EffectManager implements IEffectManager {
     if (resolve) {
       resolve(target, this.pendingSource, this.pendingEffect);
 
-      EventBus.emit(GameEvent.EFFECT_RESOLVED, {
-        source: this.pendingSource,
-        target,
-      });
-    }
+      if (this.pendingEffect.type !== "REVIVE") {
+        EventBus.emit(GameEvent.EFFECT_RESOLVED, {
+          source: this.pendingSource,
+          target,
+        });
 
-    this.stopTargeting();
+        this.stopTargeting();
+      }
+    }
   }
 
   public prepareTargeting(

@@ -144,7 +144,7 @@ describe("FieldManager", () => {
 
   it("moveToGraveyard move carta e executa animação", () => {
     const card = createMockCard();
-    fieldManager.moveToGraveyard(card, "PLAYER");
+    fieldManager.moveToGraveyard(card);
     expect(fieldManager.graveyardSlot.PLAYER[0]).toBe(card);
     expect(card.setLocation).toHaveBeenCalledWith("GRAVEYARD");
     expect(card.resetStats).toHaveBeenCalled();
